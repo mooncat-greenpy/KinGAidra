@@ -37,7 +37,7 @@ public class AiTest {
         diff.set_model(ai.get_support_model()[0]);
 
         diff = ai.guess(diff);
-        assertEquals(diff.get_name().get_new_name(), "func" + "Dummy");
+        assertEquals(diff.get_name().get_new_name(), "func_401000" + "Dummy");
         for (DiffPair pair : diff.get_params()) {
             assertEquals(
                     pair.get_new_name().substring(

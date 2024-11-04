@@ -11,10 +11,15 @@ import ghidra.program.model.listing.Listing;
 import ghidra.program.model.listing.Parameter;
 import ghidra.program.model.listing.Program;
 import ghidra.program.model.pcode.HighFunction;
+import ghidra.program.model.pcode.HighFunctionDBUtil;
 import ghidra.program.model.pcode.HighSymbol;
+import ghidra.program.model.symbol.SourceType;
+import ghidra.util.exception.DuplicateNameException;
+import ghidra.util.exception.InvalidInputException;
 import ghidra.util.task.TaskMonitor;
 import kingaidra.decom.DecomDiff;
 import kingaidra.decom.DiffPair;
+import kingaidra.log.Logger;
 
 public class GhidraUtilImpl implements GhidraUtil {
     private Program program;
@@ -90,6 +95,57 @@ public class GhidraUtilImpl implements GhidraUtil {
     }
 
     public boolean refact(DecomDiff diff) {
-        return false;
+        Function func = get_func(diff.get_addr());
+        if (func == null) {
+            Logger.append_message(
+                    String.format("Failed to find func %x", diff.get_addr().getOffset()));
+            return false;
+        }
+
+        int tid = program.startTransaction("KinGAidra decompiler");
+        try {
+            try {
+                func.setName(diff.get_name().get_new_name(), SourceType.USER_DEFINED);
+            } catch (DuplicateNameException | InvalidInputException e) {
+                Logger.append_message(String.format("Failed to rename func name \"%s\" to \"%s\"",
+                        diff.get_name().get_old_name(), diff.get_name().get_new_name()));
+            }
+
+            for (DiffPair pair : diff.get_params()) {
+                Parameter param = func.getParameter((int) pair.get_id());
+                if (param == null) {
+                    Logger.append_message(
+                            String.format("Failed to find param \\\"%s\\\"", pair.get_old_name()));
+                }
+                try {
+                    param.setName(pair.get_new_name(), SourceType.USER_DEFINED);
+                } catch (DuplicateNameException | InvalidInputException e) {
+                    Logger.append_message(
+                            String.format("Failed to rename param name \\\"%s\\\" to \\\"%s\\\"",
+                                    pair.get_old_name(), pair.get_new_name()));
+                }
+            }
+
+            HighFunction high_func = get_high_func(func);
+            for (DiffPair pair : diff.get_vars()) {
+                HighSymbol sym = high_func.getLocalSymbolMap().getSymbol(pair.get_id());
+                if (sym == null) {
+                    Logger.append_message(String.format("Failed to find var name \\\"%s\\\"",
+                            pair.get_old_name()));
+                }
+                try {
+                    HighFunctionDBUtil.updateDBVariable(sym, pair.get_new_name(), null,
+                            SourceType.USER_DEFINED);
+                } catch (InvalidInputException | DuplicateNameException e) {
+                    Logger.append_message(
+                            String.format("Failed to rename var name \\\"%s\\\" to \\\"%s\\\"",
+                                    pair.get_old_name(), pair.get_new_name()));
+                }
+            }
+
+        } finally {
+            program.endTransaction(tid, true);
+        }
+        return true;
     }
 }
