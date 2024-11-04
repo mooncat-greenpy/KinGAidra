@@ -37,14 +37,15 @@ class GhidraUtilImplTest {
                 "func_402000");
         assertTrue(gu.get_decomdiff(util.get_addr(program, 0x402000)).get_src_code()
                 .contains("int __fastcall func_402000(undefined *param_1)"));
+        assertEquals(gu.get_decomdiff(util.get_addr(program, 0x402000)).get_params_len(), 1);
+        assertEquals(gu.get_decomdiff(util.get_addr(program, 0x402000)).get_vars_len(), 7);
 
         DecomDiff diff = gu.get_decomdiff(util.get_addr(program, 0x402000));
         diff.set_name("new_func");
         diff.set_param_new_name("param_1", "new_param_1");
-        diff.set_param_new_name("param_2", "new_param_2");
         gu.refact(diff);
         assertEquals(gu.get_func(util.get_addr(program, 0x402000)).getName(), "new_func");
-        assertTrue(gu.get_decom(util.get_addr(program, 0x402005))
+        assertTrue(gu.get_decom(util.get_addr(program, 0x402000))
                 .contains("int __fastcall new_func(undefined *new_param_1)"));
     }
 }

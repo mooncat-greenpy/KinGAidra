@@ -11,10 +11,18 @@ import docking.action.ToolBarData;
 import ghidra.app.ExamplesPluginPackage;
 import ghidra.app.plugin.PluginCategoryNames;
 import ghidra.app.plugin.ProgramPlugin;
+import ghidra.app.services.ProgramManager;
 import ghidra.framework.plugintool.*;
 import ghidra.framework.plugintool.util.PluginStatus;
+import ghidra.program.model.listing.Program;
 import ghidra.util.HelpLocation;
-import ghidra.util.Msg;
+import ghidra.util.task.TaskMonitor;
+import kingaidra.decom.ai.Ai;
+import kingaidra.decom.ai.Model;
+import kingaidra.decom.ai.ModelByScript;
+import kingaidra.decom.gui.GuessGUI;
+import kingaidra.ghidra.GhidraUtil;
+import kingaidra.ghidra.GhidraUtilImpl;
 import resources.Icons;
 
 /**
@@ -64,6 +72,8 @@ public class KinGAidraPlugin extends ProgramPlugin {
 		private JPanel panel;
 		private DockingAction action;
 
+		private GuessGUI ggui;
+
 		public MyProvider(Plugin plugin, String owner) {
 			super(plugin.getTool(), owner, owner);
 			buildPanel();
@@ -81,13 +91,29 @@ public class KinGAidraPlugin extends ProgramPlugin {
 
 		// TODO: Customize actions
 		private void createActions() {
-			action = new DockingAction("My Action", getName()) {
+			action = new DockingAction("Configure", getName()) {
 				@Override
 				public void actionPerformed(ActionContext context) {
-					Msg.showInfo(getClass(), panel, "Custom Action", "Hello!");
+					JPanel p = new JPanel();
+					if (ggui != null) {
+						p.add(ggui);
+					} else {
+						ProgramManager service = getTool().getService(ProgramManager.class);
+						if (service == null) {
+							return;
+						}
+						Program program = service.getCurrentProgram();
+						GhidraUtil ghidra = new GhidraUtilImpl(program, TaskMonitor.DUMMY);
+						Ai ai = new Ai(null, program, null);
+						ggui = new GuessGUI(ghidra, ai, new Model[] {new ModelByScript("ChatGPT4o", "chatgpt4o.py"),
+						        new ModelByScript("ChatGPT4omini", "chatgpt4omini.py")});
+						p.add(ggui);
+					}
+
+					JOptionPane.showMessageDialog(null, p, "Configure", JOptionPane.PLAIN_MESSAGE);
 				}
 			};
-			action.setToolBarData(new ToolBarData(Icons.ADD_ICON, null));
+			action.setToolBarData(new ToolBarData(Icons.CONFIGURE_FILTER_ICON, null));
 			action.setEnabled(true);
 			action.markHelpUnnecessary();
 			dockingTool.addLocalAction(this, action);
