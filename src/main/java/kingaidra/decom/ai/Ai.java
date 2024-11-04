@@ -6,20 +6,14 @@ import kingaidra.decom.DecomDiff;
 import kingaidra.decom.KinGAidraDecomTaskService;
 
 public class Ai {
-    private Model[] models;
     private PluginTool tool;
     private Program program;
     private KinGAidraDecomTaskService service;
 
-    public Ai(PluginTool tool, Program program, Model[] models, KinGAidraDecomTaskService service) {
+    public Ai(PluginTool tool, Program program, KinGAidraDecomTaskService service) {
         this.tool = tool;
         this.program = program;
-        this.models = models;
         this.service = service;
-    }
-
-    public Model[] get_support_model() {
-        return models;
     }
 
     public DecomDiff guess(DecomDiff diff) {
