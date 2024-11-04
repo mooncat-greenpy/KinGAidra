@@ -5,7 +5,7 @@ import ghidra.program.model.listing.Program;
 import kingaidra.decom.DecomDiff;
 import kingaidra.decom.DiffPair;
 import kingaidra.decom.KinGAidraDecomTaskService;
-import kingaidra.decom.model.Model;
+import kingaidra.decom.ai.Model;
 
 public class ModelDummy implements Model {
     String name;
