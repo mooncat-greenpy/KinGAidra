@@ -22,11 +22,11 @@ class DiffTableModel extends DefaultTableModel {
 
     public void add_diff(DecomDiff diff) {
         this.diff = diff;
-        addRow(new Object[] {Boolean.TRUE, "-1", "FuncName",
-                diff.get_name().get_old_name(), diff.get_name().get_new_name()});
+        addRow(new Object[] {Boolean.TRUE, "-1", "FuncName", diff.get_name().get_old_name(),
+                diff.get_name().get_new_name()});
         for (DiffPair pair : diff.get_params()) {
-            addRow(new Object[] {Boolean.TRUE, String.format("%d", pair.get_id()),
-                    "Param", pair.get_old_name(), pair.get_new_name()});
+            addRow(new Object[] {Boolean.TRUE, String.format("%d", pair.get_id()), "Param",
+                    pair.get_old_name(), pair.get_new_name()});
         }
         for (DiffPair pair : diff.get_vars()) {
             addRow(new Object[] {Boolean.TRUE, String.format("%d", pair.get_id()), "Var",
@@ -73,6 +73,7 @@ class DiffTableModel extends DefaultTableModel {
         return columnIndex == 0 ? Boolean.class : super.getColumnClass(columnIndex);
     }
 }
+
 
 public class RefactorGUI extends JPanel {
     private Address addr;
@@ -158,7 +159,7 @@ public class RefactorGUI extends JPanel {
             return null;
         }
 
-        DiffTableModel model = (DiffTableModel)t.getModel();
+        DiffTableModel model = (DiffTableModel) t.getModel();
         DecomDiff diff = model.get_diff();
 
         refactor.refact(diff);

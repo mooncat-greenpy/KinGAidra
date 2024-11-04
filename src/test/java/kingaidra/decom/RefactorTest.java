@@ -35,10 +35,7 @@ public class RefactorTest {
         assertTrue(gu.get_decom(util.get_addr(program, 0x402005))
                 .contains("int __fastcall new_func(undefined *new_param_1)"));
         for (DiffPair pair : gu.get_decomdiff(util.get_addr(program, 0x402000)).get_vars()) {
-            assertEquals(
-                    pair.get_new_name().substring(
-                            pair.get_new_name().length() - 4),
-                    "_new");
+            assertEquals(pair.get_new_name().substring(pair.get_new_name().length() - 4), "_new");
         }
     }
 }

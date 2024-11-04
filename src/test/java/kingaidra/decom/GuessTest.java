@@ -69,7 +69,8 @@ public class GuessTest {
         DecomDiff[] diffs = guess.guess_all(util.get_addr(program, 0x402000));
 
         for (DecomDiff diff : diffs) {
-            assertEquals(diff.get_name().get_new_name(), "func_402000" + diff.get_model().get_name());
+            assertEquals(diff.get_name().get_new_name(),
+                    "func_402000" + diff.get_model().get_name());
             for (DiffPair pair : diff.get_params()) {
                 assertEquals(
                         pair.get_new_name()
