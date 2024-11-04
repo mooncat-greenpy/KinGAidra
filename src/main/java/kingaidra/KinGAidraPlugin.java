@@ -1,7 +1,8 @@
 package kingaidra;
 
-import java.awt.BorderLayout;
-
+import java.awt.Dimension;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
 import javax.swing.*;
 
 import docking.ActionContext;
@@ -17,10 +18,12 @@ import ghidra.framework.plugintool.util.PluginStatus;
 import ghidra.program.model.listing.Program;
 import ghidra.util.HelpLocation;
 import ghidra.util.task.TaskMonitor;
+import kingaidra.decom.DecomDiff;
 import kingaidra.decom.ai.Ai;
 import kingaidra.decom.ai.Model;
 import kingaidra.decom.ai.ModelByScript;
 import kingaidra.decom.gui.GuessGUI;
+import kingaidra.decom.gui.RefactorGUI;
 import kingaidra.ghidra.GhidraUtil;
 import kingaidra.ghidra.GhidraUtilImpl;
 import resources.Icons;
@@ -70,53 +73,128 @@ public class KinGAidraPlugin extends ProgramPlugin {
 	private static class MyProvider extends ComponentProvider {
 
 		private JPanel panel;
-		private DockingAction action;
+		private JButton restart_btn;
+		private JButton guess_btn;
+		private JButton refact_btn;
 
+		private DockingAction conf_action;
+		private DockingAction refr_action;
+
+		GhidraUtil ghidra;
+		Ai ai;
 		private GuessGUI ggui;
+		private RefactorGUI rgui;
 
 		public MyProvider(Plugin plugin, String owner) {
 			super(plugin.getTool(), owner, owner);
-			buildPanel();
+			panel = new JPanel();
+			panel.setLayout(new BoxLayout(panel, BoxLayout.Y_AXIS));
+			init();
+			setVisible(true);
 			createActions();
+		}
+
+		private void init() {
+			if (ghidra != null && ggui != null && rgui != null) {
+				return;
+			}
+			ProgramManager service = getTool().getService(ProgramManager.class);
+			if (service == null) {
+				return;
+			}
+			Program program = service.getCurrentProgram();
+			if (program == null) {
+				return;
+			}
+			ghidra = new GhidraUtilImpl(program, TaskMonitor.DUMMY);
+			ai = new Ai(null, program, null);
+			ggui = new GuessGUI(ghidra, ai, new Model[] {new ModelByScript("ChatGPT4o", "chatgpt4o.py"),
+					new ModelByScript("ChatGPT4omini", "chatgpt4omini.py")});
+			rgui = new RefactorGUI(ghidra);
+
+			buildPanel();
+
+			panel.add(rgui);
+			panel.validate();
 		}
 
 		// Customize GUI
 		private void buildPanel() {
-			panel = new JPanel(new BorderLayout());
-			JTextArea textArea = new JTextArea(5, 25);
-			textArea.setEditable(false);
-			panel.add(new JScrollPane(textArea));
-			setVisible(true);
+			JPanel btn_panel = new JPanel();
+			restart_btn = new JButton("Clean");
+			guess_btn = new JButton("Guess");
+			refact_btn = new JButton("Refact");
+			refact_btn.setEnabled(false);
+			Dimension button_size = new Dimension(100, 40);
+
+			restart_btn.addActionListener(new ActionListener() {
+				@Override
+				public void actionPerformed(ActionEvent e) {
+					refact_btn.setEnabled(false);
+					rgui.reset();
+					panel.validate();
+				}
+			});
+			restart_btn.setPreferredSize(button_size);
+			btn_panel.add(restart_btn);
+
+			guess_btn.addActionListener(new ActionListener() {
+				@Override
+				public void actionPerformed(ActionEvent e) {
+					DecomDiff[] diffs = ggui.run_guess(ghidra.get_current_addr());
+
+					for (DecomDiff d : diffs) {
+						rgui.add_tab(d.get_model().get_name(), d);
+					}
+					refact_btn.setEnabled(true);
+					panel.validate();
+				}
+			});
+			guess_btn.setPreferredSize(button_size);
+			btn_panel.add(guess_btn);
+
+			refact_btn.addActionListener(new ActionListener() {
+				@Override
+				public void actionPerformed(ActionEvent e) {
+					rgui.run_refact();
+					refact_btn.setEnabled(false);
+					panel.validate();
+				}
+			});
+			refact_btn.setPreferredSize(button_size);
+			btn_panel.add(refact_btn);
+
+			panel.add(btn_panel);
 		}
 
 		// TODO: Customize actions
 		private void createActions() {
-			action = new DockingAction("Configure", getName()) {
+			conf_action = new DockingAction("Configure", getName()) {
 				@Override
 				public void actionPerformed(ActionContext context) {
 					JPanel p = new JPanel();
 					if (ggui != null) {
-						p.add(ggui);
-					} else {
-						ProgramManager service = getTool().getService(ProgramManager.class);
-						if (service == null) {
-							return;
-						}
-						Program program = service.getCurrentProgram();
-						GhidraUtil ghidra = new GhidraUtilImpl(program, TaskMonitor.DUMMY);
-						Ai ai = new Ai(null, program, null);
-						ggui = new GuessGUI(ghidra, ai, new Model[] {new ModelByScript("ChatGPT4o", "chatgpt4o.py"),
-						        new ModelByScript("ChatGPT4omini", "chatgpt4omini.py")});
 						p.add(ggui);
 					}
 
 					JOptionPane.showMessageDialog(null, p, "Configure", JOptionPane.PLAIN_MESSAGE);
 				}
 			};
-			action.setToolBarData(new ToolBarData(Icons.CONFIGURE_FILTER_ICON, null));
-			action.setEnabled(true);
-			action.markHelpUnnecessary();
-			dockingTool.addLocalAction(this, action);
+			conf_action.setToolBarData(new ToolBarData(Icons.CONFIGURE_FILTER_ICON, null));
+			conf_action.setEnabled(true);
+			conf_action.markHelpUnnecessary();
+			dockingTool.addLocalAction(this, conf_action);
+
+			refr_action = new DockingAction("Refresh", getName()) {
+				@Override
+					public void actionPerformed(ActionContext context) {
+					init();
+				}
+			};
+			refr_action.setToolBarData(new ToolBarData(Icons.REFRESH_ICON, null));
+			refr_action.setEnabled(true);
+			refr_action.markHelpUnnecessary();
+			dockingTool.addLocalAction(this, refr_action);
 		}
 
 		@Override

@@ -24,6 +24,6 @@ public class ModelByScript implements Model {
 
     public DecomDiff guess(DecomDiff diff, KinGAidraDecomTaskService service, PluginTool tool,
             Program program) {
-        return null;
+        return diff;
     }
 }
