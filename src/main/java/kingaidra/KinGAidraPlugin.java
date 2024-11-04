@@ -12,7 +12,9 @@ import docking.ActionContext;
 import docking.ComponentProvider;
 import docking.action.DockingAction;
 import docking.action.ToolBarData;
+import docking.action.builder.ActionBuilder;
 import ghidra.app.ExamplesPluginPackage;
+import ghidra.app.context.ProgramLocationActionContext;
 import ghidra.app.plugin.PluginCategoryNames;
 import ghidra.app.plugin.ProgramPlugin;
 import ghidra.app.services.ProgramManager;
@@ -20,6 +22,7 @@ import ghidra.framework.plugintool.*;
 import ghidra.framework.plugintool.util.PluginStatus;
 import ghidra.program.model.listing.Program;
 import ghidra.util.HelpLocation;
+import ghidra.util.Msg;
 import ghidra.util.task.TaskMonitor;
 import kingaidra.decom.DecomDiff;
 import kingaidra.decom.KinGAidraDecomTaskService;
@@ -214,6 +217,26 @@ public class KinGAidraPlugin extends ProgramPlugin implements KinGAidraDecomTask
 
         // TODO: Customize actions
         private void createActions() {
+            new ActionBuilder("Refactoring using AI", this.getName())
+                    .withContext(ProgramLocationActionContext.class).enabledWhen(context -> {
+                        var func = context.getProgram().getFunctionManager()
+                                .getFunctionContaining(context.getAddress());
+                        return func != null;
+                    }).onAction(context -> {
+                        var func = context.getProgram().getFunctionManager()
+                                .getFunctionContaining(context.getAddress());
+                        if (func == null) {
+                            Msg.showError(this, null, "Not found", "Not found.");
+                            return;
+                        }
+                        init();
+
+                        this.setVisible(true);
+                        this.toFront();
+                        guess_btn.doClick();
+                    }).popupMenuPath(new String[] {"Refactoring using AI"})
+                    .popupMenuGroup("KinGAidra").buildAndInstall(plugin);
+
             conf_action = new DockingAction("Configure", getName()) {
                 @Override
                 public void actionPerformed(ActionContext context) {
