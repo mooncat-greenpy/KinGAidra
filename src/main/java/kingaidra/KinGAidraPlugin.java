@@ -40,13 +40,13 @@ import resources.Icons;
  */
 //@formatter:off
 @PluginInfo(
-	status = PluginStatus.STABLE,
-	packageName = ExamplesPluginPackage.NAME,
-	category = PluginCategoryNames.EXAMPLES,
-	shortDescription = "Plugin short description goes here.",
-	description = "Plugin long description goes here.",
-	servicesProvided = { KinGAidraDecomTaskService.class },
-	servicesRequired = {}
+    status = PluginStatus.STABLE,
+    packageName = ExamplesPluginPackage.NAME,
+    category = PluginCategoryNames.EXAMPLES,
+    shortDescription = "Plugin short description goes here.",
+    description = "Plugin long description goes here.",
+    servicesProvided = { KinGAidraDecomTaskService.class },
+    servicesRequired = {}
 )
 //@formatter:on
 public class KinGAidraPlugin extends ProgramPlugin implements KinGAidraDecomTaskService {
@@ -157,7 +157,7 @@ public class KinGAidraPlugin extends ProgramPlugin implements KinGAidraDecomTask
             ghidra = new GhidraUtilImpl(program, TaskMonitor.DUMMY);
             ai = new Ai(plugin, program, srv);
             ggui = new GuessGUI(ghidra, ai, new Model[] {new ModelByScript("Sample", "sample.py"),
-                    new ModelByScript("None", "none.py")});
+                    new ModelByScript("None", "none.py"), new ModelByScript("ChatGPTLike", "chatgptlike.py")});
             rgui = new RefactorGUI(ghidra);
 
             buildPanel();
