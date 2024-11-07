@@ -131,10 +131,13 @@ public class KinGAidraPlugin extends ProgramPlugin implements KinGAidraDecomTask
         private GuessGUI ggui;
         private RefactorGUI rgui;
 
+        private boolean busy;
+
         public MyProvider(Plugin plugin, String owner, KinGAidraDecomTaskService srv) {
             super(plugin.getTool(), owner, owner);
             this.plugin = plugin.getTool();
             this.srv = srv;
+            check_and_set_busy(false);
             panel = new JPanel();
             panel.setLayout(new BoxLayout(panel, BoxLayout.Y_AXIS));
             init();
@@ -169,6 +172,9 @@ public class KinGAidraPlugin extends ProgramPlugin implements KinGAidraDecomTask
         // Customize GUI
         private void buildPanel() {
             JPanel btn_panel = new JPanel();
+            JLabel info_label = new JLabel();
+            info_label.setPreferredSize(new Dimension(0, 40));
+            panel.add(info_label);
             restart_btn = new JButton("Clean");
             guess_btn = new JButton("Guess");
             refact_btn = new JButton("Refact");
@@ -178,8 +184,21 @@ public class KinGAidraPlugin extends ProgramPlugin implements KinGAidraDecomTask
             restart_btn.addActionListener(new ActionListener() {
                 @Override
                 public void actionPerformed(ActionEvent e) {
+                    if (!check_and_set_busy(true)) {
+                        return;
+                    }
+                    restart_btn.setEnabled(false);
+                    guess_btn.setEnabled(false);
                     refact_btn.setEnabled(false);
+                    info_label.setText("Working ...");
+
                     rgui.reset();
+
+                    info_label.setText("Finished!");
+                    restart_btn.setEnabled(true);
+                    guess_btn.setEnabled(true);
+                    refact_btn.setEnabled(false);
+                    check_and_set_busy(false);
                     panel.validate();
                 }
             });
@@ -189,12 +208,31 @@ public class KinGAidraPlugin extends ProgramPlugin implements KinGAidraDecomTask
             guess_btn.addActionListener(new ActionListener() {
                 @Override
                 public void actionPerformed(ActionEvent e) {
-                    DecomDiff[] diffs = ggui.run_guess(ghidra.get_current_addr());
-
-                    for (DecomDiff d : diffs) {
-                        rgui.add_tab(d.get_model().get_name(), d);
+                    if (!check_and_set_busy(true)) {
+                        return;
                     }
-                    refact_btn.setEnabled(true);
+                    restart_btn.setEnabled(false);
+                    guess_btn.setEnabled(false);
+                    refact_btn.setEnabled(false);
+                    info_label.setText("Working ...");
+                    // TODO: Need to be fixed
+                    Thread th = new Thread(() -> {
+
+                        DecomDiff[] diffs = ggui.run_guess(ghidra.get_current_addr());
+
+                        for (DecomDiff d : diffs) {
+                            rgui.add_tab(d.get_model().get_name(), d);
+                        }
+
+                        info_label.setText("Finished!");
+                        restart_btn.setEnabled(true);
+                        guess_btn.setEnabled(true);
+                        refact_btn.setEnabled(true);
+                        check_and_set_busy(false);
+                        panel.validate();
+                    });
+                    th.start();
+
                     panel.validate();
                 }
             });
@@ -204,8 +242,21 @@ public class KinGAidraPlugin extends ProgramPlugin implements KinGAidraDecomTask
             refact_btn.addActionListener(new ActionListener() {
                 @Override
                 public void actionPerformed(ActionEvent e) {
-                    rgui.run_refact();
+                    if (!check_and_set_busy(true)) {
+                        return;
+                    }
+                    restart_btn.setEnabled(false);
+                    guess_btn.setEnabled(false);
                     refact_btn.setEnabled(false);
+                    info_label.setText("Working ...");
+
+                    rgui.run_refact();
+
+                    info_label.setText("Finished!");
+                    restart_btn.setEnabled(true);
+                    guess_btn.setEnabled(true);
+                    refact_btn.setEnabled(false);
+                    check_and_set_busy(false);
                     panel.validate();
                 }
             });
@@ -233,6 +284,7 @@ public class KinGAidraPlugin extends ProgramPlugin implements KinGAidraDecomTask
 
                         this.setVisible(true);
                         this.toFront();
+
                         guess_btn.doClick();
                     }).popupMenuPath(new String[] {"Refactoring using AI"})
                     .popupMenuGroup("KinGAidra").buildAndInstall(plugin);
@@ -263,6 +315,14 @@ public class KinGAidraPlugin extends ProgramPlugin implements KinGAidraDecomTask
             refr_action.setEnabled(true);
             refr_action.markHelpUnnecessary();
             dockingTool.addLocalAction(this, refr_action);
+        }
+
+        synchronized private boolean check_and_set_busy(boolean v) {
+            if (v && busy) {
+                return false;
+            }
+            busy = v;
+            return true;
         }
 
         @Override
