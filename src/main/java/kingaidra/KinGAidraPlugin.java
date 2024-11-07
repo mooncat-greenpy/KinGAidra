@@ -61,15 +61,6 @@ public class KinGAidraPlugin extends ProgramPlugin implements KinGAidraDecomTask
     public KinGAidraPlugin(PluginTool tool) {
         super(tool);
 
-        // TODO: Customize provider (or remove if a provider is not desired)
-        String pluginName = getName();
-        provider = new MyProvider(this, pluginName, this);
-
-        // TODO: Customize help (or remove if help is not desired)
-        String topicName = this.getClass().getPackage().getName();
-        String anchorName = "HelpAnchor";
-        provider.setHelpLocation(new HelpLocation(topicName, anchorName));
-
         diff_map = new HashMap<>();
     }
 
@@ -79,6 +70,19 @@ public class KinGAidraPlugin extends ProgramPlugin implements KinGAidraDecomTask
 
         // TODO: Acquire services if necessary
     }
+
+    @Override
+    public void programOpened(Program program) {
+        // TODO: Customize provider (or remove if a provider is not desired)
+        String pluginName = getName();
+        provider = new MyProvider(program, this, pluginName, this);
+
+        // TODO: Customize help (or remove if help is not desired)
+        String topicName = this.getClass().getPackage().getName();
+        String anchorName = "HelpAnchor";
+        provider.setHelpLocation(new HelpLocation(topicName, anchorName));
+    }
+
 
     private Map<String, DecomDiff> diff_map;
 
@@ -124,6 +128,7 @@ public class KinGAidraPlugin extends ProgramPlugin implements KinGAidraDecomTask
         private DockingAction conf_action;
         private DockingAction refr_action;
 
+        private Program program;
         private PluginTool plugin;
         private KinGAidraDecomTaskService srv;
         private GhidraUtil ghidra;
@@ -133,44 +138,32 @@ public class KinGAidraPlugin extends ProgramPlugin implements KinGAidraDecomTask
 
         private boolean busy;
 
-        public MyProvider(Plugin plugin, String owner, KinGAidraDecomTaskService srv) {
+        public MyProvider(Program program, Plugin plugin, String owner,
+                KinGAidraDecomTaskService srv) {
             super(plugin.getTool(), owner, owner);
             this.plugin = plugin.getTool();
             this.srv = srv;
+            this.program = program;
             check_and_set_busy(false);
             panel = new JPanel();
             panel.setLayout(new BoxLayout(panel, BoxLayout.Y_AXIS));
-            init();
+
+            buildPanel();
+
             setVisible(true);
             createActions();
         }
 
-        private void init() {
-            if (ghidra != null && ggui != null && rgui != null) {
-                return;
-            }
-            ProgramManager service = getTool().getService(ProgramManager.class);
-            if (service == null) {
-                return;
-            }
-            Program program = service.getCurrentProgram();
-            if (program == null) {
-                return;
-            }
-            ghidra = new GhidraUtilImpl(program, TaskMonitor.DUMMY);
-            ai = new Ai(plugin, program, srv);
-            ggui = new GuessGUI(ghidra, ai, new Model[] {new ModelByScript("Sample", "sample.py"),
-                    new ModelByScript("None", "none.py"), new ModelByScript("ChatGPTLike", "chatgptlike.py")});
-            rgui = new RefactorGUI(ghidra);
-
-            buildPanel();
-
-            panel.add(rgui);
-            panel.validate();
-        }
-
         // Customize GUI
         private void buildPanel() {
+            ghidra = new GhidraUtilImpl(program, TaskMonitor.DUMMY);
+            ai = new Ai(plugin, program, srv);
+            ggui = new GuessGUI(ghidra, ai,
+                    new Model[] {new ModelByScript("Sample", "sample.py"),
+                            new ModelByScript("None", "none.py"),
+                            new ModelByScript("ChatGPTLike", "chatgptlike.py")});
+            rgui = new RefactorGUI(ghidra);
+
             JPanel btn_panel = new JPanel();
             JLabel info_label = new JLabel();
             info_label.setPreferredSize(new Dimension(0, 40));
@@ -264,6 +257,7 @@ public class KinGAidraPlugin extends ProgramPlugin implements KinGAidraDecomTask
             btn_panel.add(refact_btn);
 
             panel.add(btn_panel);
+            panel.add(rgui);
         }
 
         // TODO: Customize actions
@@ -280,7 +274,6 @@ public class KinGAidraPlugin extends ProgramPlugin implements KinGAidraDecomTask
                             Msg.showError(this, null, "Not found", "Not found.");
                             return;
                         }
-                        init();
 
                         this.setVisible(true);
                         this.toFront();
@@ -308,7 +301,7 @@ public class KinGAidraPlugin extends ProgramPlugin implements KinGAidraDecomTask
             refr_action = new DockingAction("Refresh", getName()) {
                 @Override
                 public void actionPerformed(ActionContext context) {
-                    init();
+                    setVisible(true);
                 }
             };
             refr_action.setToolBarData(new ToolBarData(Icons.REFRESH_ICON, null));
