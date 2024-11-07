@@ -43,7 +43,11 @@ class DiffTableModel extends DefaultTableModel {
             String new_name = (String) getValueAt(i, 4);
 
             if (type.equals("FuncName")) {
-                diff.set_name(new_name);
+                if (flag) {
+                    diff.set_name(new_name);
+                } else {
+                    diff.set_name(diff.get_name().get_old_name());
+                }
             }
             if (type.equals("Param")) {
                 if (flag) {
@@ -65,7 +69,7 @@ class DiffTableModel extends DefaultTableModel {
 
     @Override
     public boolean isCellEditable(int row, int column) {
-        return row != 1 || column != 1 || column != 2;
+        return column != 1 && column != 2 && column != 3;
     }
 
     @Override
