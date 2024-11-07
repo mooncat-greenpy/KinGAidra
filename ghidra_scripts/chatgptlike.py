@@ -73,14 +73,14 @@ The format is as follows.
     "orig_func_name": "original function name",
     "parameters": [
         {
-            "new_parameter_name": "new parameter name",
-            "orig_parameter_name": "original parameter name"
+            "new_param_name": "new parameter name",
+            "orig_param_name": "original parameter name"
         },
     ],
     "variables": [
         {
-            "new_variable_name": "new variable name",
-            "original_variable_name": "original variable name"
+            "new_var_name": "new variable name",
+            "orig_var_name": "original variable name"
         }
     ]
 }
@@ -112,12 +112,12 @@ The format is as follows.
 
     params = {}
     for i in json_data.get("parameters", []):
-        if "new_parameter_name" in i and "original_parameter_name" in i:
-            params[i["original_parameter_name"]] = i["new_parameter_name"]
+        if "orig_param_name" in i and "new_param_name" in i:
+            params[i["orig_param_name"]] = i["new_param_name"]
     vars = {}
     for i in json_data.get("variables", []):
-        if "new_variable_name" in i and "original_variable_name" in i:
-            vars[i["original_variable_name"]] = i["new_variable_name"]
+        if "orig_var_name" in i and "new_var_name" in i:
+            vars[i["orig_var_name"]] = i["new_var_name"]
     service.commit_task(state.getEnvironmentVar("KEY"), json_data["new_func_name"], params, vars)
 
 if __name__ == "__main__":
