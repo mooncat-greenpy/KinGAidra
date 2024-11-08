@@ -39,7 +39,13 @@ public class ModelByScript implements Model {
         service.add_task(key, diff);
 
         ResourceFile file = GhidraScriptUtil.findScriptByName(script_file);
+        if (file == null) {
+            return diff;
+        }
         GhidraScriptProvider provider = GhidraScriptUtil.getProvider(file);
+        if (provider == null) {
+            return diff;
+        }
         PrintWriter writer;
         if (tool != null) {
             ConsoleService console = tool.getService(ConsoleService.class);

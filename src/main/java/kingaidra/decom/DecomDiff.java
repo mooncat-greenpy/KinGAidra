@@ -40,10 +40,10 @@ public class DecomDiff implements Cloneable {
     public DecomDiff clone() {
         DecomDiff diff = new DecomDiff(addr, name.clone(), src_code);
         diff.set_model(model);
-        for (DiffPair pair : diff.get_params()) {
+        for (DiffPair pair : get_params()) {
             diff.add_param(pair.clone());
         }
-        for (DiffPair pair : diff.get_vars()) {
+        for (DiffPair pair : get_vars()) {
             diff.add_var(pair.clone());
         }
         return diff;

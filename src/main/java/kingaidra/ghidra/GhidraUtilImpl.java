@@ -3,6 +3,7 @@ package kingaidra.ghidra;
 import java.util.Iterator;
 import ghidra.app.decompiler.DecompInterface;
 import ghidra.app.decompiler.DecompileResults;
+import ghidra.app.decompiler.DecompiledFunction;
 import ghidra.app.services.CodeViewerService;
 import ghidra.framework.plugintool.PluginTool;
 import ghidra.program.model.address.Address;
@@ -39,6 +40,9 @@ public class GhidraUtilImpl implements GhidraUtil {
             }
             PluginTool plugin_tool = (PluginTool) obj;
             CodeViewerService service = plugin_tool.getService(CodeViewerService.class);
+            if (service == null) {
+                continue;
+            }
             return service.getCurrentLocation().getAddress();
         }
         return null;
@@ -65,7 +69,11 @@ public class GhidraUtilImpl implements GhidraUtil {
             return null;
         }
         DecompileResults decom_result = get_decom_results(func);
-        return decom_result.getDecompiledFunction().getC();
+        DecompiledFunction decom_func = decom_result.getDecompiledFunction();
+        if (decom_func == null) {
+            return null;
+        }
+        return decom_func.getC();
     }
 
     public DecomDiff get_decomdiff(Address addr) {
@@ -74,8 +82,15 @@ public class GhidraUtilImpl implements GhidraUtil {
             return null;
         }
         HighFunction high_func = get_high_func(func);
+        if (high_func == null) {
+            return null;
+        }
+        String src_code = get_decom(addr);
+        if (src_code == null) {
+            return null;
+        }
 
-        DecomDiff decom_diff = new DecomDiff(func.getEntryPoint(), func.getName(), get_decom(addr));
+        DecomDiff decom_diff = new DecomDiff(func.getEntryPoint(), func.getName(), src_code);
         for (int i = 0; i < func.getParameterCount(); i++) {
             Parameter param = func.getParameter(i);
             DiffPair diff = new DiffPair(i, param.getName());
@@ -127,19 +142,23 @@ public class GhidraUtilImpl implements GhidraUtil {
             }
 
             HighFunction high_func = get_high_func(func);
-            for (DiffPair pair : diff.get_vars()) {
-                HighSymbol sym = high_func.getLocalSymbolMap().getSymbol(pair.get_id());
-                if (sym == null) {
-                    Logger.append_message(String.format("Failed to find var name \\\"%s\\\"",
-                            pair.get_old_name()));
-                }
-                try {
-                    HighFunctionDBUtil.updateDBVariable(sym, pair.get_new_name(), null,
-                            SourceType.USER_DEFINED);
-                } catch (InvalidInputException | DuplicateNameException e) {
-                    Logger.append_message(
-                            String.format("Failed to rename var name \\\"%s\\\" to \\\"%s\\\"",
-                                    pair.get_old_name(), pair.get_new_name()));
+            if (high_func == null) {
+                Logger.append_message("Failed to get vars");
+            } else {
+                for (DiffPair pair : diff.get_vars()) {
+                    HighSymbol sym = high_func.getLocalSymbolMap().getSymbol(pair.get_id());
+                    if (sym == null) {
+                        Logger.append_message(String.format("Failed to find var name \\\"%s\\\"",
+                                pair.get_old_name()));
+                    }
+                    try {
+                        HighFunctionDBUtil.updateDBVariable(sym, pair.get_new_name(), null,
+                                SourceType.USER_DEFINED);
+                    } catch (InvalidInputException | DuplicateNameException e) {
+                        Logger.append_message(
+                                String.format("Failed to rename var name \\\"%s\\\" to \\\"%s\\\"",
+                                        pair.get_old_name(), pair.get_new_name()));
+                    }
                 }
             }
 

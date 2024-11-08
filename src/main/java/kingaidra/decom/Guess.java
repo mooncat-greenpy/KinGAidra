@@ -40,29 +40,52 @@ public class Guess {
         model_status.replace(model, status);
     }
 
+    public DecomDiff guess(Model model, DecomDiff diff) {
+        diff.set_model(model);
+        diff = ai.guess(diff);
+        return diff;
+    }
+
     public DecomDiff[] guess_all(Address addr) {
         List<DecomDiff> results = new ArrayList<>();
+        DecomDiff diff = ghidra.get_decomdiff(addr);
+        if (diff == null) {
+            return results.toArray(new DecomDiff[] {});
+        }
         for (Model model : model_status.keySet()) {
-            results.add(guess(model, addr));
+            DecomDiff guessed = guess(model, diff.clone());
+            if (guessed == null) {
+                continue;
+            }
+            results.add(guessed);
         }
         return results.toArray(new DecomDiff[] {});
     }
 
     public DecomDiff[] guess_selected(Address addr) {
         List<DecomDiff> results = new ArrayList<>();
+        DecomDiff diff = ghidra.get_decomdiff(addr);
+        if (diff == null) {
+            return results.toArray(new DecomDiff[] {});
+        }
         for (Model model : model_status.keySet()) {
             if (!model_status.get(model)) {
                 continue;
             }
-            results.add(guess(model, addr));
+            DecomDiff guessed = guess(model, diff.clone());
+            if (guessed == null) {
+                continue;
+            }
+            results.add(guessed);
         }
         return results.toArray(new DecomDiff[] {});
     }
 
     public DecomDiff guess(Model model, Address addr) {
         DecomDiff diff = ghidra.get_decomdiff(addr);
-        diff.set_model(model);
-        diff = ai.guess(diff);
-        return diff;
+        if (diff == null) {
+            return null;
+        }
+        return guess(model, diff);
     }
 }

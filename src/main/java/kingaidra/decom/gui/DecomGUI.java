@@ -18,6 +18,7 @@ import docking.action.builder.ActionBuilder;
 import ghidra.app.context.ProgramLocationActionContext;
 import ghidra.framework.plugintool.Plugin;
 import ghidra.framework.plugintool.PluginTool;
+import ghidra.program.model.address.Address;
 import ghidra.program.model.listing.Program;
 import ghidra.util.Msg;
 import ghidra.util.task.TaskMonitor;
@@ -121,12 +122,14 @@ public class DecomGUI extends JPanel {
                 // TODO: Need to be fixed
                 Thread th = new Thread(() -> {
                     try {
-                        DecomDiff[] diffs = ggui.run_guess(ghidra.get_current_addr());
+                        Address addr = ghidra.get_current_addr();
+                        if (addr != null) {
+                            DecomDiff[] diffs = ggui.run_guess(addr);
 
-                        for (DecomDiff d : diffs) {
-                            rgui.add_tab(d.get_model().get_name(), d);
+                            for (DecomDiff d : diffs) {
+                                rgui.add_tab(d.get_model().get_name(), d);
+                            }
                         }
-
                     } finally {
                         info_label.setText("Finished!");
                         restart_btn.setEnabled(true);

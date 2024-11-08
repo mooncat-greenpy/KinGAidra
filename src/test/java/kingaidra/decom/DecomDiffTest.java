@@ -56,6 +56,10 @@ public class DecomDiffTest {
     @Test
     void test_clone() {
         DecomDiff diff1 = new DecomDiff(null, "old_func", "void func() {}");
+        DiffPair pair1 = new DiffPair(10, "old_param");
+        diff1.add_param(pair1);
+        DiffPair pair2 = new DiffPair(20, "old_var");
+        diff1.add_var(pair2);
         DecomDiff diff2 = diff1.clone();
         diff2.set_name("new_func");
         assertEquals(diff1.get_name().get_new_name(), "old_func");
@@ -65,14 +69,14 @@ public class DecomDiffTest {
         assertEquals(diff1.get_model(), null);
         assertEquals(diff2.get_model().get_name(), "Test");
 
-        DiffPair pair1 = new DiffPair(10, "old_param");
-        diff2.add_param(pair1);
-        assertEquals(diff1.get_params_len(), 0);
-        assertEquals(diff2.get_params_len(), 1);
+        DiffPair pair3 = new DiffPair(30, "old_param_2");
+        diff2.add_param(pair3);
+        assertEquals(diff1.get_params_len(), 1);
+        assertEquals(diff2.get_params_len(), 2);
 
-        DiffPair pair2 = new DiffPair(20, "old_var");
-        diff2.add_var(pair2);
-        assertEquals(diff1.get_vars_len(), 0);
-        assertEquals(diff2.get_vars_len(), 1);
+        DiffPair pair4 = new DiffPair(40, "old_var_2");
+        diff2.add_var(pair4);
+        assertEquals(diff1.get_vars_len(), 1);
+        assertEquals(diff2.get_vars_len(), 2);
     }
 }
