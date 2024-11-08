@@ -10,23 +10,35 @@ import kingaidra.decom.gui.DecomGUI;
 
 public class MainProvider extends ComponentProvider {
 
-    private DecomGUI panel;
+    private JTabbedPane main_panel;
+    private DecomGUI decom_panel;
+    private JPanel yyy_panel;
+    private JPanel zzz_panel;
 
     public MainProvider(Program program, Plugin plugin, String owner,
             KinGAidraDecomTaskService srv) {
         super(plugin.getTool(), owner, owner);
 
-        panel = new DecomGUI(this, this.dockingTool, program, plugin, owner, srv);
+        main_panel = new JTabbedPane();
+        decom_panel = new DecomGUI(this, this.dockingTool, program, plugin, owner, srv);
+        main_panel.add("Decom", decom_panel);
+        yyy_panel = new JPanel();
+        main_panel.add("YYY", yyy_panel);
+        zzz_panel = new JPanel();
+        main_panel.add("ZZZ", zzz_panel);
+
         setVisible(true);
+
+        createActions();
     }
 
     // TODO: Customize actions
     public void createActions() {
-        panel.initActions(this, dockingTool);
+        decom_panel.initActions(this, dockingTool);
     }
 
     @Override
     public JComponent getComponent() {
-        return panel;
+        return main_panel;
     }
 }
