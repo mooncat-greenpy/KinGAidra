@@ -1,39 +1,19 @@
 package kingaidra;
 
-import java.awt.Dimension;
-import java.awt.event.ActionEvent;
-import java.awt.event.ActionListener;
 import java.util.HashMap;
 import java.util.Map;
 
-import javax.swing.*;
-
-import docking.ActionContext;
-import docking.ComponentProvider;
-import docking.action.DockingAction;
-import docking.action.ToolBarData;
-import docking.action.builder.ActionBuilder;
 import ghidra.app.ExamplesPluginPackage;
-import ghidra.app.context.ProgramLocationActionContext;
 import ghidra.app.plugin.PluginCategoryNames;
 import ghidra.app.plugin.ProgramPlugin;
-import ghidra.app.services.ProgramManager;
-import ghidra.framework.plugintool.*;
+import ghidra.framework.plugintool.PluginInfo;
+import ghidra.framework.plugintool.PluginTool;
 import ghidra.framework.plugintool.util.PluginStatus;
 import ghidra.program.model.listing.Program;
 import ghidra.util.HelpLocation;
-import ghidra.util.Msg;
-import ghidra.util.task.TaskMonitor;
 import kingaidra.decom.DecomDiff;
 import kingaidra.decom.KinGAidraDecomTaskService;
-import kingaidra.decom.ai.Ai;
-import kingaidra.decom.ai.Model;
-import kingaidra.decom.ai.ModelByScript;
-import kingaidra.decom.gui.GuessGUI;
-import kingaidra.decom.gui.RefactorGUI;
-import kingaidra.ghidra.GhidraUtil;
-import kingaidra.ghidra.GhidraUtilImpl;
-import resources.Icons;
+import kingaidra.gui.MainProvider;
 
 /**
  * TODO: Provide class-level documentation that describes what this plugin does.
@@ -51,7 +31,7 @@ import resources.Icons;
 //@formatter:on
 public class KinGAidraPlugin extends ProgramPlugin implements KinGAidraDecomTaskService {
 
-    MyProvider provider;
+    MainProvider provider;
 
     /**
      * Plugin constructor.
@@ -75,12 +55,14 @@ public class KinGAidraPlugin extends ProgramPlugin implements KinGAidraDecomTask
     public void programOpened(Program program) {
         // TODO: Customize provider (or remove if a provider is not desired)
         String pluginName = getName();
-        provider = new MyProvider(program, this, pluginName, this);
+        provider = new MainProvider(program, this, pluginName, this);
 
         // TODO: Customize help (or remove if help is not desired)
         String topicName = this.getClass().getPackage().getName();
         String anchorName = "HelpAnchor";
         provider.setHelpLocation(new HelpLocation(topicName, anchorName));
+
+        provider.createActions();
     }
 
 
@@ -115,212 +97,5 @@ public class KinGAidraPlugin extends ProgramPlugin implements KinGAidraDecomTask
         DecomDiff diff = get_task(key);
         diff_map.remove(key);
         return diff;
-    }
-
-    // TODO: If provider is desired, it is recommended to move it to its own file
-    private static class MyProvider extends ComponentProvider {
-
-        private JPanel panel;
-        private JButton restart_btn;
-        private JButton guess_btn;
-        private JButton refact_btn;
-
-        private DockingAction conf_action;
-        private DockingAction refr_action;
-
-        private Program program;
-        private PluginTool plugin;
-        private KinGAidraDecomTaskService srv;
-        private GhidraUtil ghidra;
-        private Ai ai;
-        private GuessGUI ggui;
-        private RefactorGUI rgui;
-
-        private boolean busy;
-
-        public MyProvider(Program program, Plugin plugin, String owner,
-                KinGAidraDecomTaskService srv) {
-            super(plugin.getTool(), owner, owner);
-            this.plugin = plugin.getTool();
-            this.srv = srv;
-            this.program = program;
-            check_and_set_busy(false);
-            panel = new JPanel();
-            panel.setLayout(new BoxLayout(panel, BoxLayout.Y_AXIS));
-
-            buildPanel();
-
-            setVisible(true);
-            createActions();
-        }
-
-        // Customize GUI
-        private void buildPanel() {
-            ghidra = new GhidraUtilImpl(program, TaskMonitor.DUMMY);
-            ai = new Ai(plugin, program, srv);
-            ggui = new GuessGUI(ghidra, ai,
-                    new Model[] {new ModelByScript("Sample", "sample.py"),
-                            new ModelByScript("None", "none.py"),
-                            new ModelByScript("ChatGPTLike", "chatgptlike.py")});
-            rgui = new RefactorGUI(ghidra);
-
-            JPanel btn_panel = new JPanel();
-            JLabel info_label = new JLabel();
-            info_label.setPreferredSize(new Dimension(0, 40));
-            panel.add(info_label);
-            restart_btn = new JButton("Clean");
-            guess_btn = new JButton("Guess");
-            refact_btn = new JButton("Refact");
-            refact_btn.setEnabled(false);
-            Dimension button_size = new Dimension(100, 40);
-
-            restart_btn.addActionListener(new ActionListener() {
-                @Override
-                public void actionPerformed(ActionEvent e) {
-                    if (!check_and_set_busy(true)) {
-                        return;
-                    }
-                    restart_btn.setEnabled(false);
-                    guess_btn.setEnabled(false);
-                    refact_btn.setEnabled(false);
-                    info_label.setText("Working ...");
-
-                    rgui.reset();
-
-                    info_label.setText("Finished!");
-                    restart_btn.setEnabled(true);
-                    guess_btn.setEnabled(true);
-                    refact_btn.setEnabled(false);
-                    check_and_set_busy(false);
-                    panel.validate();
-                }
-            });
-            restart_btn.setPreferredSize(button_size);
-            btn_panel.add(restart_btn);
-
-            guess_btn.addActionListener(new ActionListener() {
-                @Override
-                public void actionPerformed(ActionEvent e) {
-                    if (!check_and_set_busy(true)) {
-                        return;
-                    }
-                    restart_btn.setEnabled(false);
-                    guess_btn.setEnabled(false);
-                    refact_btn.setEnabled(false);
-                    info_label.setText("Working ...");
-                    // TODO: Need to be fixed
-                    Thread th = new Thread(() -> {
-
-                        DecomDiff[] diffs = ggui.run_guess(ghidra.get_current_addr());
-
-                        for (DecomDiff d : diffs) {
-                            rgui.add_tab(d.get_model().get_name(), d);
-                        }
-
-                        info_label.setText("Finished!");
-                        restart_btn.setEnabled(true);
-                        guess_btn.setEnabled(true);
-                        refact_btn.setEnabled(true);
-                        check_and_set_busy(false);
-                        panel.validate();
-                    });
-                    th.start();
-
-                    panel.validate();
-                }
-            });
-            guess_btn.setPreferredSize(button_size);
-            btn_panel.add(guess_btn);
-
-            refact_btn.addActionListener(new ActionListener() {
-                @Override
-                public void actionPerformed(ActionEvent e) {
-                    if (!check_and_set_busy(true)) {
-                        return;
-                    }
-                    restart_btn.setEnabled(false);
-                    guess_btn.setEnabled(false);
-                    refact_btn.setEnabled(false);
-                    info_label.setText("Working ...");
-
-                    rgui.run_refact();
-
-                    info_label.setText("Finished!");
-                    restart_btn.setEnabled(true);
-                    guess_btn.setEnabled(true);
-                    refact_btn.setEnabled(false);
-                    check_and_set_busy(false);
-                    panel.validate();
-                }
-            });
-            refact_btn.setPreferredSize(button_size);
-            btn_panel.add(refact_btn);
-
-            panel.add(btn_panel);
-            panel.add(rgui);
-        }
-
-        // TODO: Customize actions
-        private void createActions() {
-            new ActionBuilder("Refactoring using AI", this.getName())
-                    .withContext(ProgramLocationActionContext.class).enabledWhen(context -> {
-                        var func = context.getProgram().getFunctionManager()
-                                .getFunctionContaining(context.getAddress());
-                        return func != null;
-                    }).onAction(context -> {
-                        var func = context.getProgram().getFunctionManager()
-                                .getFunctionContaining(context.getAddress());
-                        if (func == null) {
-                            Msg.showError(this, null, "Not found", "Not found.");
-                            return;
-                        }
-
-                        this.setVisible(true);
-                        this.toFront();
-
-                        guess_btn.doClick();
-                    }).popupMenuPath(new String[] {"Refactoring using AI"})
-                    .popupMenuGroup("KinGAidra").buildAndInstall(plugin);
-
-            conf_action = new DockingAction("Configure", getName()) {
-                @Override
-                public void actionPerformed(ActionContext context) {
-                    JPanel p = new JPanel();
-                    if (ggui != null) {
-                        p.add(ggui);
-                    }
-
-                    JOptionPane.showMessageDialog(null, p, "Configure", JOptionPane.PLAIN_MESSAGE);
-                }
-            };
-            conf_action.setToolBarData(new ToolBarData(Icons.CONFIGURE_FILTER_ICON, null));
-            conf_action.setEnabled(true);
-            conf_action.markHelpUnnecessary();
-            dockingTool.addLocalAction(this, conf_action);
-
-            refr_action = new DockingAction("Refresh", getName()) {
-                @Override
-                public void actionPerformed(ActionContext context) {
-                    setVisible(true);
-                }
-            };
-            refr_action.setToolBarData(new ToolBarData(Icons.REFRESH_ICON, null));
-            refr_action.setEnabled(true);
-            refr_action.markHelpUnnecessary();
-            dockingTool.addLocalAction(this, refr_action);
-        }
-
-        synchronized private boolean check_and_set_busy(boolean v) {
-            if (v && busy) {
-                return false;
-            }
-            busy = v;
-            return true;
-        }
-
-        @Override
-        public JComponent getComponent() {
-            return panel;
-        }
     }
 }

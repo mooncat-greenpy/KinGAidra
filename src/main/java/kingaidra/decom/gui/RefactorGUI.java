@@ -20,8 +20,8 @@ class DiffTableModel extends DefaultTableModel {
         super(new Object[] {"ON/OFF", "Id", "Type", "Old", "New"}, 0);
     }
 
-    public void add_diff(DecomDiff diff) {
-        this.diff = diff;
+    public void add_diff(DecomDiff d) {
+        this.diff = d;
         addRow(new Object[] {Boolean.TRUE, "-1", "FuncName", diff.get_name().get_old_name(),
                 diff.get_name().get_new_name()});
         for (DiffPair pair : diff.get_params()) {
@@ -166,9 +166,11 @@ public class RefactorGUI extends JPanel {
         DiffTableModel model = (DiffTableModel) t.getModel();
         DecomDiff diff = model.get_diff();
 
-        refactor.refact(diff);
-
-        reset();
+        try {
+            refactor.refact(diff);
+        } finally {
+            reset();
+        }
 
         return diff;
     }
