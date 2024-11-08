@@ -1,26 +1,46 @@
 package kingaidra.log;
 
-import ghidra.app.util.importer.MessageLog;
+import java.io.PrintWriter;
+
+import ghidra.app.services.ConsoleService;
+import ghidra.framework.plugintool.PluginTool;
 
 public class Logger {
-    static MessageLog logger = null;
+    static PluginTool tool = null;
+    static PrintWriter writer = null;
     static boolean mode = false;
 
-    private Logger(MessageLog log, boolean debugmode) {
-        logger = log;
+    private Logger(PluginTool t, boolean debugmode) {
+        tool = t;
         mode = debugmode;
     }
 
-    public static void set_logger(MessageLog log, boolean debugmode) {
-        new Logger(log, debugmode);
+    private static PrintWriter get_writer() {
+        if (tool == null) {
+            return null;
+        }
+        ConsoleService console = tool.getService(ConsoleService.class);
+        if (console == null) {
+            return null;
+        }
+        return console.getStdOut();
+    }
+
+    public static void set_logger(PluginTool tool, boolean debugmode) {
+        new Logger(tool, debugmode);
     }
 
     public static void append_message(String str) {
-        if (logger == null) {
+        if (!mode) {
             return;
         }
-        if (mode) {
-            logger.appendMsg(str);
+
+        if (writer == null) {
+            writer = get_writer();
+            if (writer == null) {
+                return;
+            }
         }
+        writer.append(str + "\n");
     }
 }

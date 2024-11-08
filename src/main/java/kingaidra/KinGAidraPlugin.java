@@ -14,6 +14,7 @@ import ghidra.util.HelpLocation;
 import kingaidra.decom.DecomDiff;
 import kingaidra.decom.KinGAidraDecomTaskService;
 import kingaidra.gui.MainProvider;
+import kingaidra.log.Logger;
 
 /**
  * TODO: Provide class-level documentation that describes what this plugin does.
@@ -41,6 +42,8 @@ public class KinGAidraPlugin extends ProgramPlugin implements KinGAidraDecomTask
     public KinGAidraPlugin(PluginTool tool) {
         super(tool);
 
+        Logger.set_logger(tool, false);
+
         diff_map = new HashMap<>();
     }
 
@@ -61,8 +64,6 @@ public class KinGAidraPlugin extends ProgramPlugin implements KinGAidraDecomTask
         String topicName = this.getClass().getPackage().getName();
         String anchorName = "HelpAnchor";
         provider.setHelpLocation(new HelpLocation(topicName, anchorName));
-
-        provider.createActions();
     }
 
 
