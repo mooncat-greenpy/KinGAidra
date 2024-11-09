@@ -1,6 +1,5 @@
-#TODO write a description for this script
-#@author 
-#@category _NEW_
+#@author mooncat-greenpy
+#@category KinGAidra
 #@keybinding 
 #@menupath 
 #@toolbar 
