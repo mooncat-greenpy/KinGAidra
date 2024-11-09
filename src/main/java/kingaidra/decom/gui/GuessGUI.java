@@ -22,12 +22,13 @@ import kingaidra.decom.Guess;
 import kingaidra.decom.ai.Ai;
 import kingaidra.decom.ai.Model;
 import kingaidra.ghidra.GhidraUtil;
+import kingaidra.ghidra.GhidraPreferences;
 
 public class GuessGUI extends JPanel {
     Guess guess;
 
-    public GuessGUI(GhidraUtil ghidra, Ai ai, Model[] models) {
-        guess = new Guess(ghidra, ai, models);
+    public GuessGUI(GhidraUtil ghidra, Ai ai, GhidraPreferences<Model> pref) {
+        guess = new Guess(ghidra, ai, pref);
 
         setLayout(new BoxLayout(this, BoxLayout.Y_AXIS));
 
@@ -97,6 +98,12 @@ public class GuessGUI extends JPanel {
                 String name = (String) table_model.getValueAt(row, 1);
                 guess.remove_model(name);
                 table_model.removeRow(row);
+
+                table_model.setRowCount(0);
+                for (String n : guess.get_models()) {
+                    table_model.addRow(
+                            new Object[] {guess.get_model_status(n), n, guess.get_model_script(n)});
+                }
             }
         });
         btn_panel.add(add_btn);

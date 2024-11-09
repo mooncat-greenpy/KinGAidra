@@ -6,10 +6,12 @@ import ghidra.program.model.listing.Program;
 import ghidra.util.task.TaskMonitor;
 import kingaidra.decom.ai.Ai;
 import kingaidra.decom.ai.Model;
+import kingaidra.ghidra.GhidraPreferences;
 import kingaidra.ghidra.GhidraUtil;
 import kingaidra.ghidra.GhidraUtilImpl;
 import kingaidra.testutil.GhidraTestUtil;
 import kingaidra.testutil.ModelDummy;
+import kingaidra.testutil.ModelPreferencesDummy;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
@@ -22,7 +24,9 @@ public class GuessTest {
         Program program = util.create_program();
         GhidraUtil gu = new GhidraUtilImpl(program, TaskMonitor.DUMMY);
         Ai ai = new Ai(null, program, null);
-        Guess guess = new Guess(gu, ai, new Model[] {new ModelDummy("Dummy", "dummy.py")});
+        GhidraPreferences<Model> pref = new ModelPreferencesDummy();
+        pref.store("Dummy", new ModelDummy("Dummy", "dummy.py"));
+        Guess guess = new Guess(gu, ai, pref);
         assertTrue(guess.exist_model("Dummy"));
         assertFalse(guess.exist_model("Dummy1"));
         assertEquals(guess.get_model_script("Dummy"), "dummy.py");
@@ -39,7 +43,9 @@ public class GuessTest {
         Program program = util.create_program();
         GhidraUtil gu = new GhidraUtilImpl(program, TaskMonitor.DUMMY);
         Ai ai = new Ai(null, program, null);
-        Guess guess = new Guess(gu, ai, new Model[] {new ModelDummy("Dummy", "dummy.py")});
+        GhidraPreferences<Model> pref = new ModelPreferencesDummy();
+        pref.store("Dummy", new ModelDummy("Dummy", "dummy.py"));
+        Guess guess = new Guess(gu, ai, pref);
         guess.set_model_name("Dummy", "d");
         guess.set_model_script("d", "d.py");
         assertTrue(guess.exist_model("d"));
@@ -53,7 +59,9 @@ public class GuessTest {
         Program program = util.create_program();
         GhidraUtil gu = new GhidraUtilImpl(program, TaskMonitor.DUMMY);
         Ai ai = new Ai(null, program, null);
-        Guess guess = new Guess(gu, ai, new Model[] {new ModelDummy("Dummy", "dummy.py")});
+        GhidraPreferences<Model> pref = new ModelPreferencesDummy();
+        pref.store("Dummy", new ModelDummy("Dummy", "dummy.py"));
+        Guess guess = new Guess(gu, ai, pref);
         guess.set_model_status(guess.get_models()[0], false);
         assertEquals(guess.get_model_status(guess.get_models()[0]), false);
         guess.set_model_status(guess.get_models()[0], true);
@@ -66,7 +74,9 @@ public class GuessTest {
         Program program = util.create_program();
         GhidraUtil gu = new GhidraUtilImpl(program, TaskMonitor.DUMMY);
         Ai ai = new Ai(null, program, null);
-        Guess guess = new Guess(gu, ai, new Model[] {new ModelDummy("Dummy", "dummy.py")});
+        GhidraPreferences<Model> pref = new ModelPreferencesDummy();
+        pref.store("Dummy", new ModelDummy("Dummy", "dummy.py"));
+        Guess guess = new Guess(gu, ai, pref);
         DecomDiff diff = guess.guess(guess.get_models()[0], util.get_addr(program, 0x402000));
         assertEquals(diff.get_name().get_new_name(), "func_402000Dummy");
         for (DiffPair pair : diff.get_params()) {
@@ -84,8 +94,10 @@ public class GuessTest {
         Program program = util.create_program();
         GhidraUtil gu = new GhidraUtilImpl(program, TaskMonitor.DUMMY);
         Ai ai = new Ai(null, program, null);
-        Guess guess = new Guess(gu, ai, new Model[] {new ModelDummy("Dummy1", "dummy.py"),
-                new ModelDummy("Dummy2", "dummy.py")});
+        GhidraPreferences<Model> pref = new ModelPreferencesDummy();
+        pref.store("Dummy1", new ModelDummy("Dummy1", "dummy.py"));
+        pref.store("Dummy2", new ModelDummy("Dummy2", "dummy.py"));
+        Guess guess = new Guess(gu, ai, pref);
         DecomDiff[] diffs = guess.guess_all(util.get_addr(program, 0x402000));
 
         for (DecomDiff diff : diffs) {
@@ -113,8 +125,10 @@ public class GuessTest {
         Program program = util.create_program();
         GhidraUtil gu = new GhidraUtilImpl(program, TaskMonitor.DUMMY);
         Ai ai = new Ai(null, program, null);
-        Guess guess = new Guess(gu, ai, new Model[] {new ModelDummy("Dummy1", "dummy.py"),
-                new ModelDummy("Dummy2", "dummy.py")});
+        GhidraPreferences<Model> pref = new ModelPreferencesDummy();
+        pref.store("Dummy1", new ModelDummy("Dummy1", "dummy.py"));
+        pref.store("Dummy2", new ModelDummy("Dummy2", "dummy.py"));
+        Guess guess = new Guess(gu, ai, pref);
         guess.set_model_status(guess.get_models()[1], false);
         DecomDiff[] diffs = guess.guess_selected(util.get_addr(program, 0x402000));
         assertEquals(diffs.length, 1);

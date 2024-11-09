@@ -27,8 +27,10 @@ import kingaidra.decom.KinGAidraDecomTaskService;
 import kingaidra.decom.ai.Ai;
 import kingaidra.decom.ai.Model;
 import kingaidra.decom.ai.ModelByScript;
+import kingaidra.ghidra.GhidraPreferences;
 import kingaidra.ghidra.GhidraUtil;
 import kingaidra.ghidra.GhidraUtilImpl;
+import kingaidra.ghidra.ModelPreferences;
 import resources.Icons;
 
 public class DecomGUI extends JPanel {
@@ -66,12 +68,13 @@ public class DecomGUI extends JPanel {
 
     // Customize GUI
     private void buildPanel() {
+        GhidraPreferences<Model> pref = new ModelPreferences();
+        pref.store("Sample", new ModelByScript("Sample", "sample.py"));
+        pref.store("None", new ModelByScript("None", "none.py"));
+        pref.store("ChatGPTLike", new ModelByScript("ChatGPTLike", "chatgptlike.py"));
         ghidra = new GhidraUtilImpl(program, TaskMonitor.DUMMY);
         ai = new Ai(plugin, program, srv);
-        ggui = new GuessGUI(ghidra, ai,
-                new Model[] {new ModelByScript("Sample", "sample.py"),
-                        new ModelByScript("None", "none.py"),
-                        new ModelByScript("ChatGPTLike", "chatgptlike.py")});
+        ggui = new GuessGUI(ghidra, ai, pref);
         rgui = new RefactorGUI(ghidra);
 
         JPanel btn_panel = new JPanel();

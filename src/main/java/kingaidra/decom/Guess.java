@@ -9,18 +9,21 @@ import ghidra.program.model.address.Address;
 import kingaidra.decom.ai.Ai;
 import kingaidra.decom.ai.Model;
 import kingaidra.decom.ai.ModelByScript;
+import kingaidra.ghidra.GhidraPreferences;
 import kingaidra.ghidra.GhidraUtil;
 
 public class Guess {
-    private Ai ai;
     private GhidraUtil ghidra;
+    private Ai ai;
+    private GhidraPreferences<Model> pref;
     private Map<Model, Boolean> model_status;
 
-    public Guess(GhidraUtil ghidra, Ai ai, Model[] models) {
+    public Guess(GhidraUtil ghidra, Ai ai, GhidraPreferences<Model> pref) {
         this.ghidra = ghidra;
         this.ai = ai;
+        this.pref = pref;
         model_status = new HashMap<>();
-        for (Model model : models) {
+        for (Model model : pref.get_list()) {
             model_status.put(model, true);
         }
     }
@@ -88,6 +91,7 @@ public class Guess {
 
     public void add_model(String name, String script_file) {
         Model m = new ModelByScript(name, script_file);
+        pref.store(name, m);
         model_status.put(m, true);
     }
 
@@ -96,6 +100,7 @@ public class Guess {
         if (m == null) {
             return;
         }
+        pref.remove(name);
         model_status.remove(m);
     }
 
