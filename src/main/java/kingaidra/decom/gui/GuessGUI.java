@@ -8,6 +8,7 @@ import javax.swing.BoxLayout;
 import javax.swing.DefaultCellEditor;
 import javax.swing.JButton;
 import javax.swing.JCheckBox;
+import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 import javax.swing.JScrollPane;
 import javax.swing.JTable;
@@ -33,6 +34,11 @@ public class GuessGUI extends JPanel {
         DefaultTableModel table_model =
                 new DefaultTableModel(new Object[] {"ON/OFF", "Name", "Script"}, 0) {
                     @Override
+                    public boolean isCellEditable(int row, int column) {
+                        return column != 1;
+                    }
+
+                    @Override
                     public Class<?> getColumnClass(int columnIndex) {
                         return columnIndex == 0 ? Boolean.class : super.getColumnClass(columnIndex);
                     }
@@ -44,25 +50,18 @@ public class GuessGUI extends JPanel {
                     return;
                 }
                 int row = e.getFirstRow();
-                int column = e.getColumn();
-                if (column != 0) {
-                    return;
-                }
 
                 boolean status = (boolean) table_model.getValueAt(row, 0);
                 String name = (String) table_model.getValueAt(row, 1);
-                for (Model ml : models) {
-                    if (!ml.get_name().equals(name)) {
-                        continue;
-                    }
-                    guess.set_model_status(ml, status);
-                    break;
-                }
+                String script_file = (String) table_model.getValueAt(row, 2);
+
+                guess.set_model_status(name, status);
+                guess.set_model_script(name, script_file);
             }
         });
-        for (Model m : models) {
+        for (String n : guess.get_models()) {
             table_model
-                    .addRow(new Object[] {guess.get_model_status(m), m.get_name(), m.get_script()});
+                    .addRow(new Object[] {guess.get_model_status(n), n, guess.get_model_script(n)});
         }
 
         JTable table = new JTable(table_model);
@@ -77,7 +76,13 @@ public class GuessGUI extends JPanel {
         add_btn.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
-                table_model.addRow(new Object[] {Boolean.FALSE, "", ""});
+                String name = JOptionPane.showInputDialog(null, "What is the Model name?");
+                if (guess.exist_model(name)) {
+                    return;
+                }
+                guess.add_model(name, "none.py");
+                table_model.addRow(new Object[] {guess.get_model_status(name), name,
+                        guess.get_model_script(name)});
             }
         });
         JButton del_btn = new JButton("Delete Column");
@@ -85,11 +90,13 @@ public class GuessGUI extends JPanel {
         del_btn.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
-                int row_idx = table.getSelectedRow();
-                if (row_idx == -1) {
+                int row = table.getSelectedRow();
+                if (row == -1) {
                     return;
                 }
-                table_model.removeRow(row_idx);
+                String name = (String) table_model.getValueAt(row, 1);
+                guess.remove_model(name);
+                table_model.removeRow(row);
             }
         });
         btn_panel.add(add_btn);

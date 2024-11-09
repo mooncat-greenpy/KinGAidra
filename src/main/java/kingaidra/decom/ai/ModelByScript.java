@@ -26,8 +26,16 @@ public class ModelByScript implements Model {
         return name;
     }
 
+    public void set_name(String name) {
+        this.name = name;
+    }
+
     public String get_script() {
         return script_file;
+    }
+
+    public void set_script(String script_file) {
+        this.script_file = script_file;
     }
 
     public DecomDiff guess(DecomDiff diff, KinGAidraDecomTaskService service, PluginTool tool,

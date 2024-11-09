@@ -10,7 +10,10 @@ import kingaidra.ghidra.GhidraUtil;
 import kingaidra.ghidra.GhidraUtilImpl;
 import kingaidra.testutil.GhidraTestUtil;
 import kingaidra.testutil.ModelDummy;
+
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 public class GuessTest {
     @Test
@@ -20,11 +23,28 @@ public class GuessTest {
         GhidraUtil gu = new GhidraUtilImpl(program, TaskMonitor.DUMMY);
         Ai ai = new Ai(null, program, null);
         Guess guess = new Guess(gu, ai, new Model[] {new ModelDummy("Dummy", "dummy.py")});
+        assertTrue(guess.exist_model("Dummy"));
+        assertFalse(guess.exist_model("Dummy1"));
+        assertEquals(guess.get_model_script("Dummy"), "dummy.py");
         assertEquals(guess.get_models_len(), 1);
-        assertEquals(guess.get_models()[0].get_name(), "Dummy");
+        assertEquals(guess.get_models()[0], "Dummy");
         assertEquals(guess.get_model_status(guess.get_models()[0]), true);
         // Not suppoort
         // assertEquals(guess.get_model_status(new ModelDummy("Dummy", "dummy.py")), false);
+    }
+
+    @Test
+    void test_set_model_name_script() throws Exception {
+        GhidraTestUtil util = new GhidraTestUtil();
+        Program program = util.create_program();
+        GhidraUtil gu = new GhidraUtilImpl(program, TaskMonitor.DUMMY);
+        Ai ai = new Ai(null, program, null);
+        Guess guess = new Guess(gu, ai, new Model[] {new ModelDummy("Dummy", "dummy.py")});
+        guess.set_model_name("Dummy", "d");
+        guess.set_model_script("d", "d.py");
+        assertTrue(guess.exist_model("d"));
+        assertFalse(guess.exist_model("Dummy"));
+        assertEquals(guess.get_model_script("d"), "d.py");
     }
 
     @Test
