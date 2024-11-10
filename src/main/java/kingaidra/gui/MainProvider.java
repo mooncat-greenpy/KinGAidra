@@ -32,7 +32,6 @@ public class MainProvider extends ComponentProvider {
         createActions();
     }
 
-    // TODO: Customize actions
     public void createActions() {
         decom_panel.initActions(this, dockingTool);
     }

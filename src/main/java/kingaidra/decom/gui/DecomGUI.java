@@ -68,15 +68,12 @@ public class DecomGUI extends JPanel {
         setVisible(true);
     }
 
-    // Customize GUI
     private void buildPanel() {
         GhidraPreferences<Model> pref = new ModelPreferences();
         ghidra = new GhidraUtilImpl(program, TaskMonitor.DUMMY);
         ai = new Ai(plugin, program, srv);
         Guess guess = new Guess(ghidra, ai, pref);
-        ggui = new GuessGUI(guess);
         Refactor refactor = new Refactor(ghidra);
-        rgui = new RefactorGUI(refactor);
 
         Model sample_model = new ModelByScript("Sample", "kingaidra_sample.py", true);
         Model none_model = new ModelByScript("None", "kingaidra_none.py", true);
@@ -93,6 +90,9 @@ public class DecomGUI extends JPanel {
             guess.add_model(chatgptlike_model.get_name(), chatgptlike_model.get_script());
             guess.set_model_status(chatgptlike_model.get_name(), chatgptlike_model.get_active());
         }
+
+        ggui = new GuessGUI(guess);
+        rgui = new RefactorGUI(refactor);
 
         JPanel btn_panel = new JPanel();
         JLabel info_label = new JLabel();
@@ -199,7 +199,6 @@ public class DecomGUI extends JPanel {
         add(rgui);
     }
 
-    // TODO: Customize actions
     public void initActions(ComponentProvider provider, Tool dockingTool) {
         new ActionBuilder("Refactoring using AI", provider.getName())
                 .withContext(ProgramLocationActionContext.class).enabledWhen(context -> {

@@ -16,9 +16,6 @@ import kingaidra.decom.KinGAidraDecomTaskService;
 import kingaidra.gui.MainProvider;
 import kingaidra.log.Logger;
 
-/**
- * TODO: Provide class-level documentation that describes what this plugin does.
- */
 //@formatter:off
 @PluginInfo(
     status = PluginStatus.UNSTABLE,
@@ -36,11 +33,6 @@ public class KinGAidraPlugin extends ProgramPlugin implements KinGAidraDecomTask
     private final String NAME = "KinGAidra";
     MainProvider provider;
 
-    /**
-     * Plugin constructor.
-     * 
-     * @param tool The plugin tool that this plugin is added to.
-     */
     public KinGAidraPlugin(PluginTool tool) {
         super(tool);
 
@@ -52,19 +44,14 @@ public class KinGAidraPlugin extends ProgramPlugin implements KinGAidraDecomTask
     @Override
     public void init() {
         super.init();
-
-        // TODO: Acquire services if necessary
     }
 
     @Override
     public void programOpened(Program program) {
-        // TODO: Customize provider (or remove if a provider is not desired)
         provider = new MainProvider(program, this, NAME, this);
 
-        // TODO: Customize help (or remove if help is not desired)
         String topicName = "kingaidra";
         String anchorName = "HelpAnchor";
-        Logger.append_message(topicName);
         provider.setHelpLocation(new HelpLocation(topicName, anchorName));
     }
 
