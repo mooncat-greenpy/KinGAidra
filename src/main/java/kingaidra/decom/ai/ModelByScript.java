@@ -17,11 +17,13 @@ public class ModelByScript implements Model {
     private String name;
     private String script_file;
     private boolean active;
+    private ModelType type;
 
     public ModelByScript(String name, String script, boolean active) {
         this.name = name;
         this.script_file = script;
         this.active = active;
+        this.type = ModelType.DECOM_REFACTOR;
     }
 
     public String get_name() {
@@ -46,6 +48,14 @@ public class ModelByScript implements Model {
 
     public void set_active(boolean b) {
         this.active = b;
+    }
+
+    public ModelType get_type() {
+        return type;
+    }
+
+    public void set_type(ModelType type) {
+        this.type = type;
     }
 
     public DecomDiff guess(DecomDiff diff, KinGAidraDecomTaskService service, PluginTool tool,

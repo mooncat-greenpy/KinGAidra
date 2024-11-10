@@ -18,6 +18,10 @@ public interface Model {
 
     public void set_active(boolean b);
 
+    public ModelType get_type();
+
+    public void set_type(ModelType type);
+
     public DecomDiff guess(DecomDiff diff, KinGAidraDecomTaskService service, PluginTool tool,
             Program program);
 }

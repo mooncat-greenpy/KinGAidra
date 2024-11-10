@@ -6,17 +6,20 @@ import kingaidra.decom.DecomDiff;
 import kingaidra.decom.DiffPair;
 import kingaidra.decom.KinGAidraDecomTaskService;
 import kingaidra.decom.ai.Model;
+import kingaidra.decom.ai.ModelType;
 
 public class ModelDummy implements Model {
     String name;
     String script_file;
     boolean active;
+    ModelType type;
     DecomDiff data;
 
     public ModelDummy(String name, String script, boolean active) {
         this.name = name;
         this.script_file = script;
         this.active = active;
+        this.type = ModelType.DECOM_REFACTOR;
     }
 
     public String get_name() {
@@ -41,6 +44,14 @@ public class ModelDummy implements Model {
 
     public void set_active(boolean b) {
         this.active = b;
+    }
+
+    public ModelType get_type() {
+        return type;
+    }
+
+    public void set_type(ModelType type) {
+        this.type = type;
     }
 
     public DecomDiff guess(DecomDiff diff, KinGAidraDecomTaskService service, PluginTool tool,

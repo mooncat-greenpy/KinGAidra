@@ -33,4 +33,8 @@ public class ModelPreferencesDummy implements GhidraPreferences<Model> {
     public void remove(String key) {
         model_map.remove(key);
     }
+
+    public void remove_all() {
+        model_map.clear();
+    }
 }

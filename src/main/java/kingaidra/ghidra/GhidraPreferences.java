@@ -10,4 +10,6 @@ public interface GhidraPreferences<T> {
     public void store(String key, T data);
 
     public void remove(String data);
+
+    public void remove_all();
 }
