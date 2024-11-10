@@ -78,9 +78,9 @@ public class DecomGUI extends JPanel {
         Refactor refactor = new Refactor(ghidra);
         rgui = new RefactorGUI(refactor);
 
-        Model sample_model = new ModelByScript("Sample", "sample.py", true);
-        Model none_model = new ModelByScript("None", "none.py", true);
-        Model chatgptlike_model = new ModelByScript("ChatGPTLike", "chatgptlike.py", true);
+        Model sample_model = new ModelByScript("Sample", "kingaidra_sample.py", true);
+        Model none_model = new ModelByScript("None", "kingaidra_none.py", true);
+        Model chatgptlike_model = new ModelByScript("ChatGPTLike", "kingaidra_chatgptlike.py", true);
         if (!guess.exist_model(sample_model.get_name())) {
             guess.add_model(sample_model.get_name(), sample_model.get_script());
             guess.set_model_status(sample_model.get_name(), sample_model.get_active());
