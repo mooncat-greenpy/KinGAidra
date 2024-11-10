@@ -1,9 +1,8 @@
 package kingaidra.decom;
 
 import java.util.ArrayList;
-import java.util.HashMap;
+import java.util.Arrays;
 import java.util.List;
-import java.util.Map;
 
 import ghidra.program.model.address.Address;
 import kingaidra.decom.ai.Ai;
@@ -16,20 +15,15 @@ public class Guess {
     private GhidraUtil ghidra;
     private Ai ai;
     private GhidraPreferences<Model> pref;
-    private Map<Model, Boolean> model_status;
 
     public Guess(GhidraUtil ghidra, Ai ai, GhidraPreferences<Model> pref) {
         this.ghidra = ghidra;
         this.ai = ai;
         this.pref = pref;
-        model_status = new HashMap<>();
-        for (Model model : pref.get_list()) {
-            model_status.put(model, model.get_active());
-        }
     }
 
     private Model get_model(String name) {
-        for (Model model : model_status.keySet()) {
+        for (Model model : pref.get_list()) {
             if (model.get_name().equals(name)) {
                 return model;
             }
@@ -38,15 +32,15 @@ public class Guess {
     }
 
     public String[] get_models() {
-        return model_status.keySet().stream().map(Model::get_name).toArray(String[]::new);
+        return Arrays.stream(pref.get_list()).map(Model::get_name).toArray(String[]::new);
     }
 
     public int get_models_len() {
-        return model_status.size();
+        return pref.get_list().length;
     }
 
     public boolean exist_model(String name) {
-        return model_status.keySet().stream().anyMatch(p -> p.get_name().equals(name));
+        return Arrays.stream(pref.get_list()).anyMatch(p -> p.get_name().equals(name));
     }
 
     public String get_model_script(String name) {
@@ -94,7 +88,6 @@ public class Guess {
     public void add_model(String name, String script_file) {
         Model m = new ModelByScript(name, script_file, true);
         pref.store(name, m);
-        model_status.put(m, m.get_active());
     }
 
     public void remove_model(String name) {
@@ -103,7 +96,6 @@ public class Guess {
             return;
         }
         pref.remove(name);
-        model_status.remove(m);
     }
 
     public DecomDiff guess(String name, DecomDiff diff) {
@@ -122,7 +114,7 @@ public class Guess {
         if (diff == null) {
             return results.toArray(new DecomDiff[] {});
         }
-        for (Model model : model_status.keySet()) {
+        for (Model model : pref.get_list()) {
             DecomDiff guessed = guess(model.get_name(), diff.clone());
             if (guessed == null) {
                 continue;
@@ -138,8 +130,8 @@ public class Guess {
         if (diff == null) {
             return results.toArray(new DecomDiff[] {});
         }
-        for (Model model : model_status.keySet()) {
-            if (!model_status.get(model)) {
+        for (Model model : pref.get_list()) {
+            if (!model.get_active()) {
                 continue;
             }
             DecomDiff guessed = guess(model.get_name(), diff.clone());
