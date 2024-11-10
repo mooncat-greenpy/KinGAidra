@@ -36,7 +36,7 @@ public class KinGAidraPlugin extends ProgramPlugin implements KinGAidraDecomTask
     public KinGAidraPlugin(PluginTool tool) {
         super(tool);
 
-        Logger.set_logger(tool, true);
+        Logger.set_logger(tool, false);
 
         diff_map = new HashMap<>();
     }

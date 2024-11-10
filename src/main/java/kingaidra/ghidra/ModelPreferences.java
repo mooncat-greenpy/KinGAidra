@@ -1,7 +1,9 @@
 package kingaidra.ghidra;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 import ghidra.framework.preferences.Preferences;
 import kingaidra.decom.ai.Model;
@@ -10,7 +12,11 @@ import kingaidra.decom.ai.ModelByScript;
 public class ModelPreferences implements GhidraPreferences<Model> {
     private static final String PATH = BASE + "model.";
 
-    public ModelPreferences() {}
+    private Map<String, Model> model_map;
+
+    public ModelPreferences() {
+        model_map = new HashMap<>();
+    }
 
     private Model get_model(String path) {
         if (Preferences.getProperty(path, "").equals("ModelByScript")) {
@@ -27,6 +33,8 @@ public class ModelPreferences implements GhidraPreferences<Model> {
     }
 
     public Model[] get_list() {
+        return model_map.values().toArray(new Model[] {});
+        /*
         List<Model> model_list = new ArrayList<>();
         for (String path : Preferences.getPropertyNames()) {
             if (!path.startsWith(PATH) || path.length() <= PATH.length()) {
@@ -44,13 +52,22 @@ public class ModelPreferences implements GhidraPreferences<Model> {
             model_list.add(m);
         }
         return model_list.toArray(new Model[] {});
+        */
     }
 
     public Model get(String key) {
-        return get_model(PATH + key);
+        for (Model model : model_map.values()) {
+            if (model.get_name().equals(key)) {
+                return model;
+            }
+        }
+        return null;
+        // return get_model(PATH + key);
     }
 
     public void store(String key, Model data) {
+        model_map.put(key, data);
+        /*
         String class_name = data.getClass().getSimpleName();
         if (class_name.equals("ModelByScript")) {
             ModelByScript model = (ModelByScript) data;
@@ -60,13 +77,17 @@ public class ModelPreferences implements GhidraPreferences<Model> {
             Preferences.setProperty(PATH + key + ".active", Boolean.toString(model.get_active()));
             Preferences.store();
         }
+        */
     }
 
     public void remove(String key) {
+        model_map.remove(key);
+        /*
         Preferences.removeProperty(PATH + key);
         Preferences.removeProperty(PATH + key + ".name");
         Preferences.removeProperty(PATH + key + ".script_file");
         Preferences.removeProperty(PATH + key + ".active");
         Preferences.store();
+        */
     }
 }
