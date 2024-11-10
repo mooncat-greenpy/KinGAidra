@@ -11,6 +11,7 @@ import kingaidra.decom.ai.Model;
 import kingaidra.decom.ai.ModelByScript;
 import kingaidra.ghidra.GhidraPreferences;
 import kingaidra.ghidra.GhidraUtil;
+import kingaidra.log.Logger;
 
 public class Guess {
     private GhidraUtil ghidra;

@@ -154,11 +154,13 @@ public class RefactorGUI extends JPanel {
     public DecomDiff run_refact() {
         JScrollPane sp = (JScrollPane) tabbed_panel.getSelectedComponent();
         if (sp == null) {
+            Logger.append_message("Not selected");
             reset();
             return null;
         }
         JTable t = (JTable) sp.getViewport().getView();
         if (t == null) {
+            Logger.append_message("Failed to get table");
             reset();
             return null;
         }

@@ -31,6 +31,7 @@ import kingaidra.ghidra.GhidraPreferences;
 import kingaidra.ghidra.GhidraUtil;
 import kingaidra.ghidra.GhidraUtilImpl;
 import kingaidra.ghidra.ModelPreferences;
+import kingaidra.log.Logger;
 import resources.Icons;
 
 public class DecomGUI extends JPanel {
@@ -91,6 +92,7 @@ public class DecomGUI extends JPanel {
             @Override
             public void actionPerformed(ActionEvent e) {
                 if (!check_and_set_busy(true)) {
+                    Logger.append_message("Another process running");
                     return;
                 }
                 restart_btn.setEnabled(false);
@@ -116,6 +118,7 @@ public class DecomGUI extends JPanel {
             @Override
             public void actionPerformed(ActionEvent e) {
                 if (!check_and_set_busy(true)) {
+                    Logger.append_message("Another process running");
                     return;
                 }
                 restart_btn.setEnabled(false);
@@ -154,6 +157,7 @@ public class DecomGUI extends JPanel {
             @Override
             public void actionPerformed(ActionEvent e) {
                 if (!check_and_set_busy(true)) {
+                    Logger.append_message("Another process running");
                     return;
                 }
                 restart_btn.setEnabled(false);
@@ -190,7 +194,7 @@ public class DecomGUI extends JPanel {
                     var func = context.getProgram().getFunctionManager()
                             .getFunctionContaining(context.getAddress());
                     if (func == null) {
-                        Msg.showError(provider, null, "Not found", "Not found.");
+                        Logger.append_message("Function not found");
                         return;
                     }
 

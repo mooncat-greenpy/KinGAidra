@@ -22,6 +22,7 @@ import kingaidra.decom.Guess;
 import kingaidra.decom.ai.Ai;
 import kingaidra.decom.ai.Model;
 import kingaidra.ghidra.GhidraUtil;
+import kingaidra.log.Logger;
 import kingaidra.ghidra.GhidraPreferences;
 
 public class GuessGUI extends JPanel {
@@ -79,6 +80,7 @@ public class GuessGUI extends JPanel {
             public void actionPerformed(ActionEvent e) {
                 String name = JOptionPane.showInputDialog(null, "What is the Model name?");
                 if (guess.exist_model(name)) {
+                    Logger.append_message("Already exists");
                     return;
                 }
                 guess.add_model(name, "none.py");
@@ -93,6 +95,7 @@ public class GuessGUI extends JPanel {
             public void actionPerformed(ActionEvent e) {
                 int row = table.getSelectedRow();
                 if (row == -1) {
+                    Logger.append_message("Not selected");
                     return;
                 }
                 String name = (String) table_model.getValueAt(row, 1);

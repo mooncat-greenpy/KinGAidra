@@ -48,10 +48,12 @@ public class ModelByScript implements Model {
 
         ResourceFile file = GhidraScriptUtil.findScriptByName(script_file);
         if (file == null) {
+            Logger.append_message(String.format("Failed to get script \"%s\"", script_file));
             return diff;
         }
         GhidraScriptProvider provider = GhidraScriptUtil.getProvider(file);
         if (provider == null) {
+            Logger.append_message(String.format("Failed to get script \"%s\"", script_file));
             return diff;
         }
         PrintWriter writer;

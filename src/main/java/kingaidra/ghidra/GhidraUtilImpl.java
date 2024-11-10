@@ -45,11 +45,16 @@ public class GhidraUtilImpl implements GhidraUtil {
             }
             return service.getCurrentLocation().getAddress();
         }
+        Logger.append_message("Failed to get selected address");
         return null;
     }
 
     public Function get_func(Address addr) {
-        return program_listing.getFunctionContaining(addr);
+        Function func = program_listing.getFunctionContaining(addr);
+        if (func == null) {
+            Logger.append_message("Failed to get function");
+        }
+        return func;
     }
 
     private DecompileResults get_decom_results(Function func) {
@@ -60,7 +65,11 @@ public class GhidraUtilImpl implements GhidraUtil {
 
     private HighFunction get_high_func(Function func) {
         DecompileResults decom_result = get_decom_results(func);
-        return decom_result.getHighFunction();
+        HighFunction hfunc = decom_result.getHighFunction();
+        if (hfunc == null) {
+            Logger.append_message("Failed to get decompiled function");
+        }
+        return hfunc;
     }
 
     public String get_decom(Address addr) {
@@ -71,6 +80,7 @@ public class GhidraUtilImpl implements GhidraUtil {
         DecompileResults decom_result = get_decom_results(func);
         DecompiledFunction decom_func = decom_result.getDecompiledFunction();
         if (decom_func == null) {
+            Logger.append_message("Failed to get decompiled function");
             return null;
         }
         return decom_func.getC();
