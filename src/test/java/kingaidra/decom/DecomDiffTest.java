@@ -29,7 +29,7 @@ public class DecomDiffTest {
         assertEquals(diff.get_name().get_old_name(), "old_func");
         assertEquals(diff.get_name().get_new_name(), "new_func");
 
-        diff.set_model(new ModelDummy("Test", "test.py"));
+        diff.set_model(new ModelDummy("Test", "test.py", true));
         assertEquals(diff.get_model().get_name(), "Test");
 
         DiffPair pair1 = new DiffPair(10, "old_param");
@@ -65,7 +65,7 @@ public class DecomDiffTest {
         assertEquals(diff1.get_name().get_new_name(), "old_func");
         assertEquals(diff2.get_name().get_new_name(), "new_func");
 
-        diff2.set_model(new ModelDummy("Test", "test.py"));
+        diff2.set_model(new ModelDummy("Test", "test.py", true));
         assertEquals(diff1.get_model(), null);
         assertEquals(diff2.get_model().get_name(), "Test");
 

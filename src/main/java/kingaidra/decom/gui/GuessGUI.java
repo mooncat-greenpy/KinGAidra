@@ -19,18 +19,13 @@ import javax.swing.table.DefaultTableModel;
 import ghidra.program.model.address.Address;
 import kingaidra.decom.DecomDiff;
 import kingaidra.decom.Guess;
-import kingaidra.decom.ai.Ai;
-import kingaidra.decom.ai.Model;
-import kingaidra.ghidra.GhidraUtil;
 import kingaidra.log.Logger;
-import kingaidra.ghidra.GhidraPreferences;
 
 public class GuessGUI extends JPanel {
     Guess guess;
 
-    public GuessGUI(GhidraUtil ghidra, Ai ai, GhidraPreferences<Model> pref) {
-        guess = new Guess(ghidra, ai, pref);
-
+    public GuessGUI(Guess guess) {
+        this.guess = guess;
         setLayout(new BoxLayout(this, BoxLayout.Y_AXIS));
 
         DefaultTableModel table_model =
@@ -81,6 +76,10 @@ public class GuessGUI extends JPanel {
                 String name = JOptionPane.showInputDialog(null, "What is the Model name?");
                 if (guess.exist_model(name)) {
                     Logger.append_message("Already exists");
+                    return;
+                }
+                if (!name.matches("[a-zA-Z0-9]+")) {
+                    Logger.append_message("Only alphanumeric characters");
                     return;
                 }
                 guess.add_model(name, "none.py");

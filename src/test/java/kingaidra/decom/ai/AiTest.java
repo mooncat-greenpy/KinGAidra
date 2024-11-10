@@ -23,7 +23,7 @@ public class AiTest {
 
         GhidraUtil gu = new GhidraUtilImpl(program, TaskMonitor.DUMMY);
         DecomDiff diff = gu.get_decomdiff(util.get_addr(program, 0x401000));
-        diff.set_model(new ModelDummy("Dummy", "dummy.py"));
+        diff.set_model(new ModelDummy("Dummy", "dummy.py", true));
 
         diff = ai.guess(diff);
         assertEquals(diff.get_name().get_new_name(), "func_401000" + "Dummy");

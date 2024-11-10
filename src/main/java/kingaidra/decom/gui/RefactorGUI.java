@@ -10,7 +10,6 @@ import ghidra.program.model.address.Address;
 import kingaidra.decom.DecomDiff;
 import kingaidra.decom.DiffPair;
 import kingaidra.decom.Refactor;
-import kingaidra.ghidra.GhidraUtil;
 import kingaidra.log.Logger;
 
 class DiffTableModel extends DefaultTableModel {
@@ -87,8 +86,8 @@ public class RefactorGUI extends JPanel {
     private Refactor refactor;
     private JTabbedPane tabbed_panel;
 
-    public RefactorGUI(GhidraUtil ghidra) {
-        refactor = new Refactor(ghidra);
+    public RefactorGUI(Refactor refactor) {
+        this.refactor = refactor;
 
         setLayout(new BorderLayout());
 

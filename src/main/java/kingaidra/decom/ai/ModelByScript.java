@@ -16,10 +16,12 @@ import kingaidra.log.Logger;
 public class ModelByScript implements Model {
     private String name;
     private String script_file;
+    private boolean active;
 
-    public ModelByScript(String name, String script) {
+    public ModelByScript(String name, String script, boolean active) {
         this.name = name;
         this.script_file = script;
+        this.active = active;
     }
 
     public String get_name() {
@@ -38,8 +40,20 @@ public class ModelByScript implements Model {
         this.script_file = script_file;
     }
 
+    public boolean get_active() {
+        return active;
+    }
+
+    public void set_active(boolean b) {
+        this.active = b;
+    }
+
     public DecomDiff guess(DecomDiff diff, KinGAidraDecomTaskService service, PluginTool tool,
             Program program) {
+        if (!active) {
+            return diff;
+        }
+
         Random rand = new Random();
         String key = String.format("%x", rand.nextLong());
 

@@ -11,7 +11,6 @@ import kingaidra.decom.ai.Model;
 import kingaidra.decom.ai.ModelByScript;
 import kingaidra.ghidra.GhidraPreferences;
 import kingaidra.ghidra.GhidraUtil;
-import kingaidra.log.Logger;
 
 public class Guess {
     private GhidraUtil ghidra;
@@ -25,7 +24,7 @@ public class Guess {
         this.pref = pref;
         model_status = new HashMap<>();
         for (Model model : pref.get_list()) {
-            model_status.put(model, true);
+            model_status.put(model, model.get_active());
         }
     }
 
@@ -63,7 +62,7 @@ public class Guess {
         if (m == null) {
             return false;
         }
-        return model_status.get(m);
+        return m.get_active();
     }
 
     public void set_model_name(String name, String new_name) {
@@ -80,6 +79,7 @@ public class Guess {
             return;
         }
         m.set_script(script_file);
+        pref.store(name, m);
     }
 
     public void set_model_status(String name, boolean status) {
@@ -87,13 +87,14 @@ public class Guess {
         if (m == null) {
             return;
         }
-        model_status.replace(m, status);
+        m.set_active(status);
+        pref.store(name, m);
     }
 
     public void add_model(String name, String script_file) {
-        Model m = new ModelByScript(name, script_file);
+        Model m = new ModelByScript(name, script_file, true);
         pref.store(name, m);
-        model_status.put(m, true);
+        model_status.put(m, m.get_active());
     }
 
     public void remove_model(String name) {

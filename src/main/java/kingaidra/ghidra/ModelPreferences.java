@@ -1,10 +1,7 @@
 package kingaidra.ghidra;
 
 import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 
 import ghidra.framework.preferences.Preferences;
 import kingaidra.decom.ai.Model;
@@ -13,17 +10,18 @@ import kingaidra.decom.ai.ModelByScript;
 public class ModelPreferences implements GhidraPreferences<Model> {
     private static final String PATH = BASE + "model.";
 
-    public ModelPreferences() {
-    }
+    public ModelPreferences() {}
 
     private Model get_model(String path) {
         if (Preferences.getProperty(path, "").equals("ModelByScript")) {
             String model_name = Preferences.getProperty(path + ".name", "");
             String model_script_file = Preferences.getProperty(path + ".script_file", "");
+            boolean model_active =
+                    Boolean.parseBoolean(Preferences.getProperty(path + ".active", "false"));
             if (model_name.isEmpty() || model_script_file.isEmpty()) {
                 return null;
             }
-            return new ModelByScript(model_name, model_script_file);
+            return new ModelByScript(model_name, model_script_file, model_active);
         }
         return null;
     }
@@ -59,6 +57,7 @@ public class ModelPreferences implements GhidraPreferences<Model> {
             Preferences.setProperty(PATH + key, class_name);
             Preferences.setProperty(PATH + key + ".name", model.get_name());
             Preferences.setProperty(PATH + key + ".script_file", model.get_script());
+            Preferences.setProperty(PATH + key + ".active", Boolean.toString(model.get_active()));
             Preferences.store();
         }
     }
@@ -67,5 +66,7 @@ public class ModelPreferences implements GhidraPreferences<Model> {
         Preferences.removeProperty(PATH + key);
         Preferences.removeProperty(PATH + key + ".name");
         Preferences.removeProperty(PATH + key + ".script_file");
+        Preferences.removeProperty(PATH + key + ".active");
+        Preferences.store();
     }
 }

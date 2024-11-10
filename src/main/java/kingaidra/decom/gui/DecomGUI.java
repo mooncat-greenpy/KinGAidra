@@ -20,10 +20,11 @@ import ghidra.framework.plugintool.Plugin;
 import ghidra.framework.plugintool.PluginTool;
 import ghidra.program.model.address.Address;
 import ghidra.program.model.listing.Program;
-import ghidra.util.Msg;
 import ghidra.util.task.TaskMonitor;
 import kingaidra.decom.DecomDiff;
+import kingaidra.decom.Guess;
 import kingaidra.decom.KinGAidraDecomTaskService;
+import kingaidra.decom.Refactor;
 import kingaidra.decom.ai.Ai;
 import kingaidra.decom.ai.Model;
 import kingaidra.decom.ai.ModelByScript;
@@ -70,13 +71,28 @@ public class DecomGUI extends JPanel {
     // Customize GUI
     private void buildPanel() {
         GhidraPreferences<Model> pref = new ModelPreferences();
-        pref.store("Sample", new ModelByScript("Sample", "sample.py"));
-        pref.store("None", new ModelByScript("None", "none.py"));
-        pref.store("ChatGPTLike", new ModelByScript("ChatGPTLike", "chatgptlike.py"));
         ghidra = new GhidraUtilImpl(program, TaskMonitor.DUMMY);
         ai = new Ai(plugin, program, srv);
-        ggui = new GuessGUI(ghidra, ai, pref);
-        rgui = new RefactorGUI(ghidra);
+        Guess guess = new Guess(ghidra, ai, pref);
+        ggui = new GuessGUI(guess);
+        Refactor refactor = new Refactor(ghidra);
+        rgui = new RefactorGUI(refactor);
+
+        Model sample_model = new ModelByScript("Sample", "sample.py", true);
+        Model none_model = new ModelByScript("None", "none.py", true);
+        Model chatgptlike_model = new ModelByScript("ChatGPTLike", "chatgptlike.py", true);
+        if (!guess.exist_model(sample_model.get_name())) {
+            guess.add_model(sample_model.get_name(), sample_model.get_script());
+            guess.set_model_status(sample_model.get_name(), sample_model.get_active());
+        }
+        if (!guess.exist_model(none_model.get_name())) {
+            guess.add_model(none_model.get_name(), none_model.get_script());
+            guess.set_model_status(none_model.get_name(), none_model.get_active());
+        }
+        if (!guess.exist_model(chatgptlike_model.get_name())) {
+            guess.add_model(chatgptlike_model.get_name(), chatgptlike_model.get_script());
+            guess.set_model_status(chatgptlike_model.get_name(), chatgptlike_model.get_active());
+        }
 
         JPanel btn_panel = new JPanel();
         JLabel info_label = new JLabel();
