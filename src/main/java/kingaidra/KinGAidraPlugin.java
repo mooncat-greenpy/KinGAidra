@@ -21,17 +21,19 @@ import kingaidra.log.Logger;
  */
 //@formatter:off
 @PluginInfo(
-    status = PluginStatus.STABLE,
+    status = PluginStatus.UNSTABLE,
     packageName = ExamplesPluginPackage.NAME,
     category = PluginCategoryNames.EXAMPLES,
-    shortDescription = "Plugin short description goes here.",
-    description = "Plugin long description goes here.",
+    shortDescription = "AI-powered Ghidra extension for enhanced analysis.",
+    description = "KinGAidra is a Ghidra extension that uses AI to enhance reverse engineering by refining decompilation results. " +
+                  "It provides tools for refactoring the decompiled code, making it easier to analyze and understand.",
     servicesProvided = { KinGAidraDecomTaskService.class },
     servicesRequired = {}
 )
 //@formatter:on
 public class KinGAidraPlugin extends ProgramPlugin implements KinGAidraDecomTaskService {
 
+    private final String NAME = "KinGAidra";
     MainProvider provider;
 
     /**
@@ -57,12 +59,12 @@ public class KinGAidraPlugin extends ProgramPlugin implements KinGAidraDecomTask
     @Override
     public void programOpened(Program program) {
         // TODO: Customize provider (or remove if a provider is not desired)
-        String pluginName = getName();
-        provider = new MainProvider(program, this, pluginName, this);
+        provider = new MainProvider(program, this, NAME, this);
 
         // TODO: Customize help (or remove if help is not desired)
-        String topicName = this.getClass().getPackage().getName();
+        String topicName = "kingaidra";
         String anchorName = "HelpAnchor";
+        Logger.append_message(topicName);
         provider.setHelpLocation(new HelpLocation(topicName, anchorName));
     }
 
