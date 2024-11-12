@@ -3,7 +3,7 @@ package kingaidra.chat;
 import java.util.LinkedList;
 import java.util.List;
 
-import kingaidra.decom.ai.Model;
+import kingaidra.chat.ai.Model;
 
 
 class Message {
