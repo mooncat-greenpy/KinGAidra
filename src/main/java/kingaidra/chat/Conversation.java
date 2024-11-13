@@ -48,6 +48,13 @@ public class Conversation {
         this.model = model;
     }
 
+    public String get_role(int idx) {
+        if (idx >= msgs.size()) {
+            return null;
+        }
+        return msgs.get(idx).get_role();
+    }
+
     public String get_msg(int idx) {
         if (idx >= msgs.size()) {
             return null;

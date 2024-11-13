@@ -18,6 +18,20 @@ public class Chat {
         this.ghidra = ghidra;
         this.ai = ai;
         this.pref = pref;
+
+        boolean exist_true = false;
+        for (String n : get_models()) {
+            boolean status = get_model_status(n);
+            if (status) {
+                exist_true = true;
+            }
+            set_model_status(n, status);
+            pref.store(n, get_model(n));
+        }
+
+        if (get_models_len() > 0 && !exist_true) {
+            set_model_status(get_models()[0], true);
+        }
     }
 
     private Model get_model(String name) {
@@ -75,9 +89,18 @@ public class Chat {
     }
 
     public void set_model_status(String name, boolean status) {
+        if (!status) {
+            return;
+        }
         Model m = get_model(name);
         if (m == null) {
             return;
+        }
+
+        for (String i_n : get_models()) {
+            Model i_m = get_model(i_n);
+            i_m.set_active(false);
+            pref.store(i_m.get_name(), i_m);
         }
         m.set_active(status);
         pref.store(name, m);
@@ -106,8 +129,15 @@ public class Chat {
         return convo;
     }
 
-    public Conversation guess(String msg, String name, Address addr) {
-        Model m = get_model(name);
+    public Conversation guess(String msg, Address addr) {
+        Model m = null;
+        for (String name : get_models()) {
+            Model tmp = get_model(name);
+            if (tmp.get_active()) {
+                m = tmp;
+                break;
+            }
+        }
         if (m == null) {
             return null;
         }

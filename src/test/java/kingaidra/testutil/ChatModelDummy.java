@@ -55,7 +55,7 @@ public class ChatModelDummy implements Model {
 
     public Conversation guess(Conversation convo, KinGAidraDecomTaskService service,
             PluginTool tool, Program program) {
-        convo.add_assistant_msg(convo.get_msg(convo.get_msgs_len() - 1) + "_response");
+        convo.add_assistant_msg(convo.get_msg(convo.get_msgs_len() - 1) + convo.get_model().get_name());
         return convo;
     }
 }
