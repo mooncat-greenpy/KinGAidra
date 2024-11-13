@@ -3,14 +3,14 @@ package kingaidra.chat.ai;
 import ghidra.framework.plugintool.PluginTool;
 import ghidra.program.model.listing.Program;
 import kingaidra.chat.Conversation;
-import kingaidra.decom.KinGAidraDecomTaskService;
+import kingaidra.chat.KinGAidraChatTaskService;
 
 public class Ai {
     private PluginTool tool;
     private Program program;
-    private KinGAidraDecomTaskService service;
+    private KinGAidraChatTaskService service;
 
-    public Ai(PluginTool tool, Program program, KinGAidraDecomTaskService service) {
+    public Ai(PluginTool tool, Program program, KinGAidraChatTaskService service) {
         this.tool = tool;
         this.program = program;
         this.service = service;

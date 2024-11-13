@@ -11,7 +11,7 @@ import ghidra.program.model.listing.Program;
 import ghidra.util.task.TaskMonitor;
 import kingaidra.chat.Conversation;
 import kingaidra.decom.ai.ModelType;
-import kingaidra.decom.KinGAidraDecomTaskService;
+import kingaidra.chat.KinGAidraChatTaskService;
 import kingaidra.log.Logger;
 
 public class ModelByScript implements Model {
@@ -59,8 +59,58 @@ public class ModelByScript implements Model {
         this.type = type;
     }
 
-    public Conversation guess(Conversation convo, KinGAidraDecomTaskService service, PluginTool tool,
+    public Conversation guess(Conversation convo, KinGAidraChatTaskService service, PluginTool tool,
             Program program) {
-        return convo;
+        if (!active) {
+            return convo;
+        }
+
+        Random rand = new Random();
+        String key = String.format("%x", rand.nextLong());
+
+        convo.set_model(this);
+        service.add_task(key, convo);
+
+        ResourceFile file = GhidraScriptUtil.findScriptByName(script_file);
+        if (file == null) {
+            Logger.append_message(String.format("Failed to get script \"%s\"", script_file));
+            return convo;
+        }
+        GhidraScriptProvider provider = GhidraScriptUtil.getProvider(file);
+        if (provider == null) {
+            Logger.append_message(String.format("Failed to get script \"%s\"", script_file));
+            return convo;
+        }
+        PrintWriter writer;
+        if (tool != null) {
+            ConsoleService console = tool.getService(ConsoleService.class);
+            if (console != null) {
+                writer = console.getStdOut();
+            } else {
+                writer = new PrintWriter(System.out);
+            }
+        } else {
+            writer = new PrintWriter(System.out);
+        }
+
+        GhidraScript script = null;
+        try {
+            script = provider.getScriptInstance(file, writer);
+        } catch (Exception e) {
+            Logger.append_message(String.format("Failed to get script \"%s\"", script_file));
+            return convo;
+        }
+        try {
+            GhidraState state = new GhidraState(tool, tool.getProject(), program, null, null, null);
+            state.addEnvironmentVar("KEY", key);
+            script.set(state, TaskMonitor.DUMMY, writer);
+            String[] args = {key};
+            script.runScript(script_file, args);
+        } catch (Exception e) {
+            Logger.append_message(String.format("Failed to run script \"%s\"", script_file));
+            return convo;
+        }
+
+        return service.pop_task(key);
     }
 }

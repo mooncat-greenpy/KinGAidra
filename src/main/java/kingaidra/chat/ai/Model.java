@@ -4,7 +4,7 @@ import ghidra.framework.plugintool.PluginTool;
 import ghidra.program.model.listing.Program;
 import kingaidra.chat.Conversation;
 import kingaidra.decom.ai.ModelType;
-import kingaidra.decom.KinGAidraDecomTaskService;
+import kingaidra.chat.KinGAidraChatTaskService;
 
 public interface Model {
     public String get_name();
@@ -23,6 +23,6 @@ public interface Model {
 
     public void set_type(ModelType type);
 
-    public Conversation guess(Conversation convo, KinGAidraDecomTaskService service,
-            PluginTool tool, Program program);
+    public Conversation guess(Conversation convo, KinGAidraChatTaskService service, PluginTool tool,
+            Program program);
 }
