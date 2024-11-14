@@ -13,6 +13,7 @@ import ghidra.program.model.listing.Program;
 import ghidra.util.HelpLocation;
 import kingaidra.decom.DecomDiff;
 import kingaidra.decom.KinGAidraDecomTaskService;
+import kingaidra.chat.KinGAidraChatTaskService;
 import kingaidra.gui.MainProvider;
 import kingaidra.log.Logger;
 
@@ -48,7 +49,16 @@ public class KinGAidraPlugin extends ProgramPlugin implements KinGAidraDecomTask
 
     @Override
     public void programOpened(Program program) {
-        provider = new MainProvider(program, this, NAME, this);
+        KinGAidraChatTaskService service=null;
+        for(Object obj : program.getConsumerList()) {
+            if(!(obj instanceof PluginTool)) {
+                continue;
+            }
+            PluginTool plugin_tool=(PluginTool)obj;
+            service=plugin_tool.getService(KinGAidraChatTaskService.class);
+            break;
+        }
+        provider = new MainProvider(program, this, NAME, this, service);
 
         String topicName = "kingaidra";
         String anchorName = "HelpAnchor";
