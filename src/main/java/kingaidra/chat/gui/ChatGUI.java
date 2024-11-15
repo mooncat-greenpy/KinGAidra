@@ -27,7 +27,7 @@ import ghidra.program.model.address.Address;
 import ghidra.program.model.listing.Program;
 import ghidra.util.task.TaskMonitor;
 import kingaidra.chat.Conversation;
-import kingaidra.chat.Chat;
+import kingaidra.chat.Guess;
 import kingaidra.chat.KinGAidraChatTaskService;
 import kingaidra.chat.ai.Ai;
 import kingaidra.chat.ai.Model;
@@ -122,26 +122,26 @@ public class ChatGUI extends JPanel {
         GhidraPreferences<Model> pref = new ChatModelPreferences();
         ghidra = new GhidraUtilImpl(program, TaskMonitor.DUMMY);
         ai = new Ai(plugin, program, srv);
-        Chat chat = new Chat(ghidra, ai, pref);
+        Guess guess = new Guess(ghidra, ai, pref);
 
         Model sample_model = new ModelByScript("ChatSample", "kingaidra_chat_sample.py", true);
         Model none_model = new ModelByScript("ChatNone", "kingaidra_chat_none.py", true);
         Model chatgptlike_model =
                 new ModelByScript("ChatChatGPTLike", "kingaidra_chat_chatgptlike.py", true);
-        if (!chat.exist_model(sample_model.get_name())) {
-            chat.add_model(sample_model.get_name(), sample_model.get_script());
-            chat.set_model_status(sample_model.get_name(), sample_model.get_active());
+        if (!guess.exist_model(sample_model.get_name())) {
+            guess.add_model(sample_model.get_name(), sample_model.get_script());
+            guess.set_model_status(sample_model.get_name(), sample_model.get_active());
         }
-        if (!chat.exist_model(none_model.get_name())) {
-            chat.add_model(none_model.get_name(), none_model.get_script());
-            chat.set_model_status(none_model.get_name(), none_model.get_active());
+        if (!guess.exist_model(none_model.get_name())) {
+            guess.add_model(none_model.get_name(), none_model.get_script());
+            guess.set_model_status(none_model.get_name(), none_model.get_active());
         }
-        if (!chat.exist_model(chatgptlike_model.get_name())) {
-            chat.add_model(chatgptlike_model.get_name(), chatgptlike_model.get_script());
-            chat.set_model_status(chatgptlike_model.get_name(), chatgptlike_model.get_active());
+        if (!guess.exist_model(chatgptlike_model.get_name())) {
+            guess.add_model(chatgptlike_model.get_name(), chatgptlike_model.get_script());
+            guess.set_model_status(chatgptlike_model.get_name(), chatgptlike_model.get_active());
         }
 
-        ggui = new GuessGUI(chat);
+        ggui = new GuessGUI(guess);
 
         btn_panel = new JPanel();
         info_label = new JLabel();

@@ -17,15 +17,15 @@ import javax.swing.event.TableModelListener;
 import javax.swing.table.DefaultTableModel;
 
 import ghidra.program.model.address.Address;
-import kingaidra.chat.Chat;
+import kingaidra.chat.Guess;
 import kingaidra.chat.Conversation;
 import kingaidra.log.Logger;
 
 public class GuessGUI extends JPanel {
-    Chat chat;
+    Guess guess;
 
-    public GuessGUI(Chat chat) {
-        this.chat = chat;
+    public GuessGUI(Guess chat) {
+        this.guess = chat;
         setLayout(new BoxLayout(this, BoxLayout.Y_AXIS));
 
         DefaultTableModel table_model =
@@ -120,10 +120,10 @@ public class GuessGUI extends JPanel {
     }
 
     public Conversation run_guess(String msg, Address addr) {
-        return chat.guess(msg, addr);
+        return guess.guess(msg, addr);
     }
 
     public Conversation run_guess(Conversation convo, String msg, Address addr) {
-        return chat.guess(convo, msg, addr);
+        return guess.guess(convo, msg, addr);
     }
 }

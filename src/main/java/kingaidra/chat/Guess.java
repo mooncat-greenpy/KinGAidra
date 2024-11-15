@@ -9,12 +9,12 @@ import kingaidra.chat.ai.ModelByScript;
 import kingaidra.ghidra.GhidraPreferences;
 import kingaidra.ghidra.GhidraUtil;
 
-public class Chat {
+public class Guess {
     private GhidraUtil ghidra;
     private Ai ai;
     private GhidraPreferences<Model> pref;
 
-    public Chat(GhidraUtil ghidra, Ai ai, GhidraPreferences<Model> pref) {
+    public Guess(GhidraUtil ghidra, Ai ai, GhidraPreferences<Model> pref) {
         this.ghidra = ghidra;
         this.ai = ai;
         this.pref = pref;
