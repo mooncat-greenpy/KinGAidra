@@ -32,6 +32,7 @@ import kingaidra.ghidra.GhidraPreferences;
 import kingaidra.ghidra.GhidraUtil;
 import kingaidra.ghidra.GhidraUtilImpl;
 import kingaidra.ghidra.ModelPreferences;
+import kingaidra.gui.MainProvider;
 import kingaidra.log.Logger;
 import resources.Icons;
 
@@ -54,7 +55,7 @@ public class DecomGUI extends JPanel {
 
     private boolean busy;
 
-    public DecomGUI(ComponentProvider provider, Tool dockingTool, Program program, Plugin plugin,
+    public DecomGUI(MainProvider provider, Tool dockingTool, Program program, Plugin plugin,
             String owner, KinGAidraDecomTaskService srv) {
         super();
         this.program = program;
@@ -199,7 +200,7 @@ public class DecomGUI extends JPanel {
         add(rgui);
     }
 
-    public void initActions(ComponentProvider provider, Tool dockingTool) {
+    public void initActions(MainProvider provider, Tool dockingTool) {
         new ActionBuilder("Refactoring using AI", provider.getName())
                 .withContext(ProgramLocationActionContext.class).enabledWhen(context -> {
                     var func = context.getProgram().getFunctionManager()
@@ -215,6 +216,7 @@ public class DecomGUI extends JPanel {
 
                     provider.setVisible(true);
                     provider.toFront();
+                    provider.change_tab("Decom");
 
                     guess_btn.doClick();
                 }).popupMenuPath(new String[] {"Refactoring using AI"}).popupMenuGroup("KinGAidra")

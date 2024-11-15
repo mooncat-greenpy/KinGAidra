@@ -35,6 +35,7 @@ import kingaidra.chat.ai.ModelByScript;
 import kingaidra.ghidra.GhidraPreferences;
 import kingaidra.ghidra.GhidraUtil;
 import kingaidra.ghidra.GhidraUtilImpl;
+import kingaidra.gui.MainProvider;
 import kingaidra.ghidra.ChatModelPreferences;
 import kingaidra.log.Logger;
 import resources.Icons;
@@ -60,7 +61,7 @@ public class ChatGUI extends JPanel {
 
     private boolean busy;
 
-    public ChatGUI(ComponentProvider provider, Tool dockingTool, Program program, Plugin plugin,
+    public ChatGUI(MainProvider provider, Tool dockingTool, Program program, Plugin plugin,
             String owner, KinGAidraChatTaskService srv) {
         super();
         this.program = program;
@@ -219,7 +220,7 @@ public class ChatGUI extends JPanel {
         build_panel();
     }
 
-    public void initActions(ComponentProvider provider, Tool dockingTool) {
+    public void initActions(MainProvider provider, Tool dockingTool) {
         new ActionBuilder("Chat with AI", provider.getName())
                 .withContext(ProgramLocationActionContext.class).enabledWhen(context -> {
                     var func = context.getProgram().getFunctionManager()
@@ -235,6 +236,7 @@ public class ChatGUI extends JPanel {
 
                     provider.setVisible(true);
                     provider.toFront();
+                    provider.change_tab("Chat");
 
                     input_area.setText("<code>");
                     submit_btn.doClick();

@@ -38,6 +38,14 @@ public class MainProvider extends ComponentProvider {
         createActions();
     }
 
+    public void change_tab(String name) {
+        int idx = main_panel.indexOfTab(name);
+        if (idx < 0) {
+            return;
+        }
+        main_panel.setSelectedIndex(idx);
+    }
+
     public void createActions() {
         if (decom_panel != null) {
             decom_panel.initActions(this, dockingTool);
