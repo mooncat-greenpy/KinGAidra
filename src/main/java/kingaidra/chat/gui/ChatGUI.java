@@ -3,6 +3,7 @@ package kingaidra.chat.gui;
 import java.awt.Dimension;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+
 import javax.swing.BoxLayout;
 import javax.swing.JButton;
 import javax.swing.JLabel;
@@ -10,6 +11,8 @@ import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 import javax.swing.JScrollPane;
 import javax.swing.JTextArea;
+import javax.swing.border.Border;
+import javax.swing.border.LineBorder;
 
 import docking.ActionContext;
 import docking.ComponentProvider;
@@ -41,6 +44,8 @@ public class ChatGUI extends JPanel {
     private JTextArea input_area;
     private JButton restart_btn;
     private JButton submit_btn;
+    private JLabel info_label;
+    private JPanel btn_panel;
 
     private DockingAction conf_action;
     private DockingAction refr_action;
@@ -51,6 +56,7 @@ public class ChatGUI extends JPanel {
     private GhidraUtil ghidra;
     private Ai ai;
     private GuessGUI ggui;
+    private Conversation cur_convo;
 
     private boolean busy;
 
@@ -63,12 +69,56 @@ public class ChatGUI extends JPanel {
         check_and_set_busy(false);
         setLayout(new BoxLayout(this, BoxLayout.Y_AXIS));
 
-        buildPanel();
+        init_panel();
 
         setVisible(true);
     }
 
-    private void buildPanel() {
+    private void build_panel() {
+        removeAll();
+
+        JPanel p = new JPanel();
+        p.setLayout(new BoxLayout(p, BoxLayout.Y_AXIS));
+        Border line_border = new LineBorder(getBackground(), 10, true);
+        if (cur_convo != null) {
+            for (int i = 0; i < cur_convo.get_msgs_len(); i++) {
+                JPanel msg_panel = new JPanel();
+                msg_panel.setLayout(new BoxLayout(msg_panel, BoxLayout.X_AXIS));
+                msg_panel.setBorder(line_border);
+
+                JTextArea text_area = new JTextArea(cur_convo.get_msg(i));
+                text_area.setEditable(false);
+                text_area.setLineWrap(true);
+                text_area.setWrapStyleWord(true);
+
+                JLabel role_label = new JLabel(cur_convo.get_role(i));
+                role_label.setPreferredSize(new Dimension(50, 0));
+
+                if (cur_convo.get_role(i).equals(Conversation.USER_ROLE)) {
+                    msg_panel.add(role_label);
+                    msg_panel.add(text_area);
+                } else {
+                    msg_panel.add(text_area);
+                    msg_panel.add(role_label);
+                }
+
+                p.add(msg_panel);
+            }
+        }
+        input_area.setBorder(line_border);
+        p.add(input_area);
+        p.add(btn_panel);
+        JScrollPane s = new JScrollPane(p);
+        s.getVerticalScrollBar().setUnitIncrement(10);
+
+        input_area.setText("");
+        input_area.setRows(10);
+
+        add(info_label);
+        add(s);
+    }
+
+    private void init_panel() {
         GhidraPreferences<Model> pref = new ChatModelPreferences();
         ghidra = new GhidraUtilImpl(program, TaskMonitor.DUMMY);
         ai = new Ai(plugin, program, srv);
@@ -93,10 +143,9 @@ public class ChatGUI extends JPanel {
 
         ggui = new GuessGUI(chat);
 
-        JPanel btn_panel = new JPanel();
-        JLabel info_label = new JLabel();
+        btn_panel = new JPanel();
+        info_label = new JLabel();
         info_label.setPreferredSize(new Dimension(0, 40));
-        add(info_label);
         restart_btn = new JButton("Clean");
         submit_btn = new JButton("Submit");
         Dimension button_size = new Dimension(100, 40);
@@ -112,7 +161,8 @@ public class ChatGUI extends JPanel {
                 submit_btn.setEnabled(false);
                 info_label.setText("Working ...");
                 try {
-                    input_area.setText("");
+                    cur_convo = null;
+                    build_panel();
                 } finally {
                     info_label.setText("Finished!");
                     restart_btn.setEnabled(true);
@@ -140,8 +190,13 @@ public class ChatGUI extends JPanel {
                     try {
                         Address addr = ghidra.get_current_addr();
                         if (addr != null) {
-                            Conversation convo = ggui.run_guess(input_area.getText(), addr);
-                            input_area.setText(convo.get_msg(1));
+                            if (cur_convo == null) {
+                                cur_convo = ggui.run_guess(input_area.getText(), addr);
+                            } else {
+                                cur_convo = ggui.run_guess(cur_convo, input_area.getText(), addr);
+                            }
+
+                            build_panel();
                         }
                     } finally {
                         info_label.setText("Finished!");
@@ -160,8 +215,8 @@ public class ChatGUI extends JPanel {
         btn_panel.add(submit_btn);
 
         input_area = new JTextArea("");
-        add(new JScrollPane(input_area));
-        add(btn_panel);
+
+        build_panel();
     }
 
     public void initActions(ComponentProvider provider, Tool dockingTool) {

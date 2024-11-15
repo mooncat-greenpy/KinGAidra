@@ -122,4 +122,8 @@ public class GuessGUI extends JPanel {
     public Conversation run_guess(String msg, Address addr) {
         return chat.guess(msg, addr);
     }
+
+    public Conversation run_guess(Conversation convo, String msg, Address addr) {
+        return chat.guess(convo, msg, addr);
+    }
 }
