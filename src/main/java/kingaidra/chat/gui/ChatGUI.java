@@ -221,7 +221,7 @@ public class ChatGUI extends JPanel {
     }
 
     public void initActions(MainProvider provider, Tool dockingTool) {
-        new ActionBuilder("Chat with AI", provider.getName())
+        new ActionBuilder("Explain with AI", provider.getName())
                 .withContext(ProgramLocationActionContext.class).enabledWhen(context -> {
                     var func = context.getProgram().getFunctionManager()
                             .getFunctionContaining(context.getAddress());
@@ -238,9 +238,14 @@ public class ChatGUI extends JPanel {
                     provider.toFront();
                     provider.change_tab("Chat");
 
-                    input_area.setText("<code>");
+                    input_area.setText("Please explain what the following decompiled C function does. "
+                            + "Break down its logic, and describe the purpose of each part of the function, including any key operations, conditionals, loops, and data structures involved. "
+                            + "Providea step-by-step explanation of how the function works and what its expected behavior would be when executed.\n"
+                            + "```json\n"
+                            + "<code>\n"
+                            + "```");
                     submit_btn.doClick();
-                }).popupMenuPath(new String[] {"Chat using AI"}).popupMenuGroup("KinGAidra")
+                }).popupMenuPath(new String[] {"Explain using AI"}).popupMenuGroup("KinGAidra")
                 .buildAndInstall(plugin);
 
         conf_action = new DockingAction("ChatConfigure", provider.getName()) {
