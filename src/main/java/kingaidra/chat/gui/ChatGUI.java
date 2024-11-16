@@ -6,6 +6,7 @@ import java.awt.event.ActionListener;
 
 import javax.swing.BoxLayout;
 import javax.swing.JButton;
+import javax.swing.JEditorPane;
 import javax.swing.JLabel;
 import javax.swing.JOptionPane;
 import javax.swing.JPanel;
@@ -41,6 +42,10 @@ import kingaidra.gui.MainProvider;
 import kingaidra.ghidra.ChatModelPreferences;
 import kingaidra.log.Logger;
 import resources.Icons;
+
+import com.vladsch.flexmark.parser.Parser;
+import com.vladsch.flexmark.util.data.MutableDataSet;
+import com.vladsch.flexmark.html.HtmlRenderer;
 
 public class ChatGUI extends JPanel {
 
@@ -80,6 +85,14 @@ public class ChatGUI extends JPanel {
         setVisible(true);
     }
 
+    private String convert_md_to_html(String markdown) {
+        MutableDataSet options = new MutableDataSet();
+        Parser parser = Parser.builder(options).build();
+        HtmlRenderer renderer = HtmlRenderer.builder(options).build();
+
+        return renderer.render(parser.parse(markdown));
+    }
+
     private void build_panel() {
         removeAll();
 
@@ -92,19 +105,20 @@ public class ChatGUI extends JPanel {
                 msg_panel.setLayout(new BoxLayout(msg_panel, BoxLayout.X_AXIS));
                 msg_panel.setBorder(line_border);
 
-                JTextArea text_area = new JTextArea(cur_convo.get_msg(i));
-                text_area.setEditable(false);
-                text_area.setLineWrap(true);
-                text_area.setWrapStyleWord(true);
+                String html = convert_md_to_html(cur_convo.get_msg(i));
+                JEditorPane edit_panel = new JEditorPane();
+                edit_panel.setContentType("text/html");
+                edit_panel.setText(html);
+                edit_panel.setEditable(false);
 
                 JLabel role_label = new JLabel(cur_convo.get_role(i));
                 role_label.setPreferredSize(new Dimension(50, 0));
 
                 if (cur_convo.get_role(i).equals(Conversation.USER_ROLE)) {
                     msg_panel.add(role_label);
-                    msg_panel.add(text_area);
+                    msg_panel.add(edit_panel);
                 } else {
-                    msg_panel.add(text_area);
+                    msg_panel.add(edit_panel);
                     msg_panel.add(role_label);
                 }
 

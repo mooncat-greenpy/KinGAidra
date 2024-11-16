@@ -44,6 +44,7 @@ dependencies {
 	// Any external dependencies added here will automatically be copied to the lib/ directory when
 	// this extension is built.	
 	testImplementation 'org.junit.jupiter:junit-jupiter:5.10.2'
+	implementation 'com.vladsch.flexmark:flexmark-all:0.64.6'
 }
 
 test {
