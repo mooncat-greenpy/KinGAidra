@@ -191,6 +191,8 @@ public class ChatGUI extends JPanel {
         btn_panel.add(submit_btn);
 
         input_area = new JTextArea("");
+        input_area.setLineWrap(true);
+        input_area.setWrapStyleWord(true);
 
         build_panel();
     }
