@@ -27,6 +27,8 @@ import ghidra.program.model.address.Address;
 import ghidra.program.model.listing.Program;
 import ghidra.util.task.TaskMonitor;
 import kingaidra.chat.Conversation;
+import kingaidra.chat.ConversationContainer;
+import kingaidra.chat.ConversationContainerDummy;
 import kingaidra.chat.Guess;
 import kingaidra.chat.KinGAidraChatTaskService;
 import kingaidra.chat.ai.Ai;
@@ -49,6 +51,7 @@ public class ChatGUI extends JPanel {
     private JPanel btn_panel;
 
     private DockingAction conf_action;
+    private DockingAction log_action;
     private DockingAction refr_action;
 
     private Program program;
@@ -56,7 +59,9 @@ public class ChatGUI extends JPanel {
     private KinGAidraChatTaskService srv;
     private GhidraUtil ghidra;
     private Ai ai;
+    private ConversationContainer container;
     private GuessGUI ggui;
+    private LogGUI lgui;
     private Conversation cur_convo;
 
     private boolean busy;
@@ -143,6 +148,8 @@ public class ChatGUI extends JPanel {
         }
 
         ggui = new GuessGUI(guess);
+        container = new ConversationContainerDummy();
+        lgui = new LogGUI(container, this, plugin, program);
 
         btn_panel = new JPanel();
         info_label = new JLabel();
@@ -154,23 +161,7 @@ public class ChatGUI extends JPanel {
         restart_btn.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
-                if (!check_and_set_busy(true)) {
-                    Logger.append_message("Another process running");
-                    return;
-                }
-                restart_btn.setEnabled(false);
-                submit_btn.setEnabled(false);
-                info_label.setText("Working ...");
-                try {
-                    cur_convo = null;
-                    build_panel();
-                } finally {
-                    info_label.setText("Finished!");
-                    restart_btn.setEnabled(true);
-                    submit_btn.setEnabled(true);
-                    check_and_set_busy(false);
-                    validate();
-                }
+                reset(null);
             }
         });
         restart_btn.setPreferredSize(button_size);
@@ -179,37 +170,7 @@ public class ChatGUI extends JPanel {
         submit_btn.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
-                if (!check_and_set_busy(true)) {
-                    Logger.append_message("Another process running");
-                    return;
-                }
-                restart_btn.setEnabled(false);
-                submit_btn.setEnabled(false);
-                info_label.setText("Working ...");
-                // TODO: Need to be fixed
-                Thread th = new Thread(() -> {
-                    try {
-                        Address addr = ghidra.get_current_addr();
-                        if (addr != null) {
-                            if (cur_convo == null) {
-                                cur_convo = ggui.run_guess(input_area.getText(), addr);
-                            } else {
-                                cur_convo = ggui.run_guess(cur_convo, input_area.getText(), addr);
-                            }
-
-                            build_panel();
-                        }
-                    } finally {
-                        info_label.setText("Finished!");
-                        restart_btn.setEnabled(true);
-                        submit_btn.setEnabled(true);
-                        check_and_set_busy(false);
-                        validate();
-                    }
-                });
-                th.start();
-
-                validate();
+                guess(ghidra.get_current_addr());
             }
         });
         submit_btn.setPreferredSize(button_size);
@@ -238,12 +199,12 @@ public class ChatGUI extends JPanel {
                     provider.toFront();
                     provider.change_tab("Chat");
 
-                    input_area.setText("Please explain what the following decompiled C function does. "
-                            + "Break down its logic, and describe the purpose of each part of the function, including any key operations, conditionals, loops, and data structures involved. "
-                            + "Providea step-by-step explanation of how the function works and what its expected behavior would be when executed.\n"
-                            + "```json\n"
-                            + "<code>\n"
-                            + "```");
+                    reset(null);
+                    input_area.setText(
+                            "Please explain what the following decompiled C function does. "
+                                    + "Break down its logic, and describe the purpose of each part of the function, including any key operations, conditionals, loops, and data structures involved. "
+                                    + "Providea step-by-step explanation of how the function works and what its expected behavior would be when executed.\n"
+                                    + "```json\n" + "<code>\n" + "```");
                     submit_btn.doClick();
                 }).popupMenuPath(new String[] {"Explain using AI"}).popupMenuGroup("KinGAidra")
                 .buildAndInstall(plugin);
@@ -264,6 +225,22 @@ public class ChatGUI extends JPanel {
         conf_action.markHelpUnnecessary();
         dockingTool.addLocalAction(provider, conf_action);
 
+        log_action = new DockingAction("ChatLog", provider.getName()) {
+            @Override
+            public void actionPerformed(ActionContext context) {
+                JPanel p = new JPanel();
+                if (lgui != null) {
+                    p.add(lgui);
+                }
+
+                JOptionPane.showMessageDialog(null, p, "ChatLog", JOptionPane.PLAIN_MESSAGE);
+            }
+        };
+        log_action.setToolBarData(new ToolBarData(Icons.CONFIGURE_FILTER_ICON, null));
+        log_action.setEnabled(true);
+        log_action.markHelpUnnecessary();
+        dockingTool.addLocalAction(provider, log_action);
+
         refr_action = new DockingAction("ChatRefresh", provider.getName()) {
             @Override
             public void actionPerformed(ActionContext context) {
@@ -282,5 +259,62 @@ public class ChatGUI extends JPanel {
         }
         busy = v;
         return true;
+    }
+
+    public void reset(Conversation convo) {
+        if (!check_and_set_busy(true)) {
+            Logger.append_message("Another process running");
+            return;
+        }
+        restart_btn.setEnabled(false);
+        submit_btn.setEnabled(false);
+        info_label.setText("Working ...");
+        try {
+            cur_convo = convo;
+            build_panel();
+        } finally {
+            info_label.setText("Finished!");
+            restart_btn.setEnabled(true);
+            submit_btn.setEnabled(true);
+            check_and_set_busy(false);
+            validate();
+        }
+    }
+
+    public void guess(Address addr) {
+        if (!check_and_set_busy(true)) {
+            Logger.append_message("Another process running");
+            return;
+        }
+        restart_btn.setEnabled(false);
+        submit_btn.setEnabled(false);
+        info_label.setText("Working ...");
+        // TODO: Need to be fixed
+        Thread th = new Thread(() -> {
+            try {
+                if (addr != null) {
+                    if (cur_convo == null) {
+                        cur_convo = ggui.run_guess(input_area.getText(), addr);
+                    } else {
+                        cur_convo = ggui.run_guess(cur_convo, input_area.getText(), addr);
+                    }
+                    if (cur_convo != null) {
+                        container.add_convo(cur_convo);
+                        lgui.update(program);
+                    }
+
+                    build_panel();
+                }
+            } finally {
+                info_label.setText("Finished!");
+                restart_btn.setEnabled(true);
+                submit_btn.setEnabled(true);
+                check_and_set_busy(false);
+                validate();
+            }
+        });
+        th.start();
+
+        validate();
     }
 }

@@ -1,8 +1,11 @@
 package kingaidra.chat;
 
+import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Set;
 
+import ghidra.program.model.address.Address;
 import kingaidra.chat.ai.Model;
 
 
@@ -34,9 +37,11 @@ public class Conversation {
 
     private Model model;
     private List<Message> msgs;
+    private Set<Address> addrs;
 
     public Conversation(Model model) {
         msgs = new LinkedList<>();
+        addrs = new HashSet<>();
         this.model = model;
     }
 
@@ -88,5 +93,22 @@ public class Conversation {
         }
         msgs.add(new Message(ASSISTANT_ROLE, content));
         return true;
+    }
+
+    public Address[] get_addrs() {
+        return addrs.toArray(new Address[] {});
+    }
+
+    public void add_addr(Address addr) {
+        addrs.add(addr);
+    }
+
+    @Override
+    public String toString() {
+        String s = "";
+        for (int i = 0; i < get_msgs_len(); i++) {
+            s += get_role(i) + ": " + get_msg(i) + "\n";
+        }
+        return s;
     }
 }

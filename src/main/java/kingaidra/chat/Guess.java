@@ -124,7 +124,11 @@ public class Guess {
         if (src_code == null) {
             return null;
         }
-        convo.add_user_msg(msg.replace("<code>", src_code));
+        if (msg.contains("<code>")) {
+            msg = msg.replace("<code>", src_code);
+            convo.add_addr(addr);
+        }
+        convo.add_user_msg(msg);
         convo = ai.guess(convo);
         return convo;
     }
