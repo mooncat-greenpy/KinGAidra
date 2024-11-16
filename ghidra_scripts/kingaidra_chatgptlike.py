@@ -59,7 +59,7 @@ def main():
         "messages": [
             {
                 "role": "user",
-                "content":"""Please modify the function and parameter, variable names to make the following code more readable.
+                "content":"""Please improve the readability of the following code by renaming the functions, parameters, and variables with more descriptive and meaningful names. The new names should better reflect the purpose of the functions and the role of each variable in the code.
 ```
 %s
 ```
