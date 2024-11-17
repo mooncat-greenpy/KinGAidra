@@ -47,7 +47,7 @@ public class GhidraTestUtil {
         VariableStorage v1 = new VariableStorage(program, new Varnode[] {vn1});
         Parameter p1 = new ParameterImpl("param_1", str_dt, v1, builder.getProgram(),
                 SourceType.USER_DEFINED);
-        builder.createEmptyFunction("func_402000", "0x402000", 0x73, new Undefined4DataType(), p1);
+        builder.createEmptyFunction("func_402000", "0x402000", 0x72, new Undefined4DataType(), p1);
         builder.analyze();
         return builder.getProgram();
     }

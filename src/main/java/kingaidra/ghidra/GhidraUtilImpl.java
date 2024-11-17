@@ -8,13 +8,19 @@ import ghidra.app.services.CodeViewerService;
 import ghidra.framework.plugintool.PluginTool;
 import ghidra.program.model.address.Address;
 import ghidra.program.model.listing.Function;
+import ghidra.program.model.listing.Instruction;
 import ghidra.program.model.listing.Listing;
 import ghidra.program.model.listing.Parameter;
 import ghidra.program.model.listing.Program;
 import ghidra.program.model.pcode.HighFunction;
 import ghidra.program.model.pcode.HighFunctionDBUtil;
 import ghidra.program.model.pcode.HighSymbol;
+import ghidra.program.model.symbol.ExternalReference;
+import ghidra.program.model.symbol.Reference;
+import ghidra.program.model.symbol.ReferenceManager;
 import ghidra.program.model.symbol.SourceType;
+import ghidra.program.model.symbol.Symbol;
+import ghidra.program.model.symbol.SymbolTable;
 import ghidra.util.exception.DuplicateNameException;
 import ghidra.util.exception.InvalidInputException;
 import ghidra.util.task.TaskMonitor;
@@ -59,6 +65,50 @@ public class GhidraUtilImpl implements GhidraUtil {
             Logger.append_message("Failed to get function");
         }
         return func;
+    }
+
+    public String get_asm(Address addr) {
+        String result = "";
+        Function func = get_func(addr);
+        if (func == null) {
+            return null;
+        }
+        Address end_addr = func.getBody().getMaxAddress();
+
+        Instruction inst = program_listing.getInstructionAt(func.getEntryPoint());
+        while (inst.getAddress().getOffset() <= end_addr.getOffset()) {
+            String asm = inst.toString();
+
+            ReferenceManager ref_manager = program.getReferenceManager();
+            for (Reference ref : ref_manager.getExternalReferences()) {
+                ExternalReference ext_ref = (ExternalReference) ref;
+                if (ext_ref.getExternalLocation() != null) {
+                    if (ext_ref.getLabel() != null) {
+                        asm = asm.replace("0x" + ext_ref.getFromAddress().toString(),
+                                ext_ref.getExternalLocation().toString());
+                    }
+                }
+            }
+
+            for (int i = 0; i < inst.getNumOperands(); i++) {
+                Object[] op_objs = inst.getOpObjects(i);
+                for (Object obj : op_objs) {
+                    if (obj instanceof Address) {
+                        Address op_addr = (Address) obj;
+                        SymbolTable sym_table = program.getSymbolTable();
+                        Symbol sym = sym_table.getPrimarySymbol(op_addr);
+                        if (sym != null) {
+                            asm = asm.replace("0x" + op_addr.toString(), sym.getName());
+                        }
+                    }
+                }
+            }
+
+            result += asm + "\n";
+
+            inst = program_listing.getInstructionAfter(inst.getAddress());
+        }
+        return result;
     }
 
     private DecompileResults get_decom_results(Function func) {

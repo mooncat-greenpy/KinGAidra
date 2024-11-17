@@ -141,19 +141,30 @@ public class GuessTest {
         pref.store("Dummy2", new ChatModelDummy("Dummy2", "dummy.py", true));
         pref.store("Dummy3", new ChatModelDummy("Dummy3", "dummy.py", false));
         Guess guess = new Guess(gu, ai, pref);
-        Conversation convo =
+        Conversation convo1 =
                 guess.guess("msg", util.get_addr(program, 0x402000));
-        assertEquals(convo.get_msgs_len(), 2);
-        assertEquals(convo.get_msg(0), "msg");
-        assertEquals(convo.get_msg(1), "msgDummy2");
-        assertEquals(convo.get_addrs().length, 0);
-        guess.guess(convo, "Explain\n<code>", util.get_addr(program, 0x402000));
-        assertEquals(convo.get_msgs_len(), 4);
-        assertEquals(convo.get_msg(0), "msg");
-        assertEquals(convo.get_msg(1), "msgDummy2");
-        assertTrue(convo.get_msg(2).contains("int __fastcall func_402000(undefined *param_1)"));
-        assertTrue(convo.get_msg(3).endsWith("Dummy2"));
-        assertEquals(convo.get_addrs().length, 1);
-        assertEquals(convo.get_addrs()[0].getOffset(), 0x402000);
+        assertEquals(convo1.get_msgs_len(), 2);
+        assertEquals(convo1.get_msg(0), "msg");
+        assertEquals(convo1.get_msg(1), "msgDummy2");
+        assertEquals(convo1.get_addrs().length, 0);
+        guess.guess(convo1, "Explain\n<code>", util.get_addr(program, 0x402000));
+        assertEquals(convo1.get_msgs_len(), 4);
+        assertEquals(convo1.get_msg(0), "msg");
+        assertEquals(convo1.get_msg(1), "msgDummy2");
+        assertTrue(convo1.get_msg(2).contains("int __fastcall func_402000(undefined *param_1)"));
+        assertTrue(convo1.get_msg(3).endsWith("Dummy2"));
+        assertEquals(convo1.get_addrs().length, 1);
+        assertEquals(convo1.get_addrs()[0].getOffset(), 0x402000);
+
+        Conversation convo2 =
+                guess.guess("msg", util.get_addr(program, 0x401000));
+        guess.guess(convo2, "Explain\n<asm>", util.get_addr(program, 0x401000));
+        assertEquals(convo2.get_msgs_len(), 4);
+        assertEquals(convo2.get_msg(0), "msg");
+        assertEquals(convo2.get_msg(1), "msgDummy2");
+        assertTrue(convo2.get_msg(2).contains("PUSH EBP\nMOV EBP,ESP\nPOP EBP\nRET\n"));
+        assertTrue(convo2.get_msg(3).endsWith("Dummy2"));
+        assertEquals(convo2.get_addrs().length, 1);
+        assertEquals(convo2.get_addrs()[0].getOffset(), 0x401000);
     }
 }

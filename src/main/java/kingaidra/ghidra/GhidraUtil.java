@@ -11,6 +11,8 @@ public interface GhidraUtil {
 
     public Function get_func(Address addr);
 
+    public String get_asm(Address addr);
+
     public String get_decom(Address addr);
 
     public DecomDiff get_decomdiff(Address addr);

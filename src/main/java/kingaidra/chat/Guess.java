@@ -122,6 +122,20 @@ public class Guess {
         pref.remove(name);
     }
 
+    public String resolve_asm_code(Conversation convo, String msg, Address addr) {
+        Function func = ghidra.get_func(addr);
+        String asm_code = ghidra.get_asm(addr);
+        if (func == null || asm_code == null) {
+            return msg;
+        }
+        if (msg.contains("<asm>")) {
+            msg = msg.replace("<asm>", asm_code);
+            convo.add_addr(func.getEntryPoint());
+        }
+
+        return msg;
+    }
+
     public String resolve_src_code(Conversation convo, String msg, Address addr) {
         Function func = ghidra.get_func(addr);
         String src_code = ghidra.get_decom(addr);
@@ -154,6 +168,7 @@ public class Guess {
 
     public Conversation guess(Conversation convo, String msg, Address addr) {
         msg = resolve_src_code(convo, msg, addr);
+        msg = resolve_asm_code(convo, msg, addr);
         convo.add_user_msg(msg);
         convo = ai.guess(convo);
         return convo;
