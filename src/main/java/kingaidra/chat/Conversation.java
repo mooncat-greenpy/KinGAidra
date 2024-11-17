@@ -4,6 +4,7 @@ import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Set;
+import java.util.UUID;
 
 import ghidra.program.model.address.Address;
 import kingaidra.chat.ai.Model;
@@ -35,14 +36,20 @@ public class Conversation {
     public static final String USER_ROLE = "user";
     public static final String ASSISTANT_ROLE = "assistant";
 
+    private final UUID uuid;
     private Model model;
     private List<Message> msgs;
     private Set<Address> addrs;
 
     public Conversation(Model model) {
+        uuid = UUID.randomUUID();
         msgs = new LinkedList<>();
         addrs = new HashSet<>();
         this.model = model;
+    }
+
+    public UUID get_uuid() {
+        return uuid;
     }
 
     public Model get_model() {

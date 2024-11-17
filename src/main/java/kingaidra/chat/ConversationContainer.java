@@ -1,13 +1,13 @@
 package kingaidra.chat;
 
-import ghidra.program.model.address.Address;
+import java.util.UUID;
 
 public interface ConversationContainer {
 
     // TODO: Address -> ID
-    public Address[] get_addrs();
+    public UUID[] get_ids();
 
-    public Conversation[] get_convo(Address addr);
+    public Conversation get_convo(UUID uuid);
 
     public void add_convo(Conversation convo);
 }

@@ -1,6 +1,8 @@
 package kingaidra.chat.gui;
 
 import java.awt.BorderLayout;
+import java.util.UUID;
+
 import javax.swing.JPanel;
 import javax.swing.event.ListSelectionEvent;
 import javax.swing.event.ListSelectionListener;
@@ -77,14 +79,16 @@ public class LogGUI extends JPanel {
         @Override
         protected void doLoad(Accumulator<Conversation> accumulator, TaskMonitor monitor)
                 throws CancelledException {
-            Address[] addrs = container.get_addrs();
-            if (addrs == null) {
+            UUID[] ids = container.get_ids();
+            if (ids == null) {
                 return;
             }
-            for (Address addr : addrs) {
-                for (Conversation convo : container.get_convo(addr)) {
-                    accumulator.add(convo);
+            for (UUID id : ids) {
+                Conversation convo = container.get_convo(id);
+                if (convo == null) {
+                    continue;
                 }
+                accumulator.add(convo);
             }
         }
 
