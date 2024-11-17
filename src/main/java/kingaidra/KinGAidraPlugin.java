@@ -39,6 +39,7 @@ public class KinGAidraPlugin extends ProgramPlugin implements KinGAidraDecomTask
 
         Logger.set_logger(tool, false);
 
+        status_map = new HashMap<>();
         diff_map = new HashMap<>();
     }
 
@@ -66,10 +67,12 @@ public class KinGAidraPlugin extends ProgramPlugin implements KinGAidraDecomTask
     }
 
 
+    private Map<String, TaskStatus> status_map;
     private Map<String, DecomDiff> diff_map;
 
     @Override
     public void add_task(String key, DecomDiff diff) {
+        status_map.put(key, TaskStatus.RUNNING);
         diff_map.put(key, diff);
     }
 
@@ -84,7 +87,13 @@ public class KinGAidraPlugin extends ProgramPlugin implements KinGAidraDecomTask
         for (String v_key : vars.keySet()) {
             diff.set_var_new_name(v_key, vars.get(v_key));
         }
+        status_map.put(key, TaskStatus.SUCCESS);
         diff_map.put(key, diff);
+    }
+
+    @Override
+    public void commit_task_error(String key, String err_msg) {
+        status_map.put(key, TaskStatus.FAILED);
     }
 
     @Override
@@ -93,8 +102,14 @@ public class KinGAidraPlugin extends ProgramPlugin implements KinGAidraDecomTask
     }
 
     @Override
+    public TaskStatus get_task_status(String key) {
+        return status_map.get(key);
+    }
+
+    @Override
     public DecomDiff pop_task(String key) {
         DecomDiff diff = get_task(key);
+        status_map.remove(key);
         diff_map.remove(key);
         return diff;
     }

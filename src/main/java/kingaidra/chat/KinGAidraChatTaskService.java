@@ -2,6 +2,7 @@ package kingaidra.chat;
 
 import ghidra.framework.plugintool.ServiceInfo;
 import kingaidra.KinGAidraChatPlugin;
+import kingaidra.TaskStatus;
 
 //@formatter:off
 @ServiceInfo (
@@ -14,7 +15,11 @@ public interface KinGAidraChatTaskService {
 
     public void commit_task(String key, String msg);
 
+    public void commit_task_error(String key, String err_msg);
+
     public Conversation get_task(String key);
+
+    public TaskStatus get_task_status(String key);
 
     public Conversation pop_task(String key);
 }

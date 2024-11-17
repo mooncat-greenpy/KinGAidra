@@ -44,6 +44,7 @@ def main():
     response = json.loads(urllib2.urlopen(req).read())
 
     if "error" in response:
+        service.commit_task_error(json.dumps(response))
         return
     data = response["choices"][0]["message"]["content"]
 

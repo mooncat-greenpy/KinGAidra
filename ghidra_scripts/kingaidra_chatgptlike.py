@@ -100,6 +100,7 @@ The format is as follows.
     response = json.loads(urllib2.urlopen(req).read())
 
     if "error" in response:
+        service.commit_task_error(json.dumps(response))
         return
     data = response["choices"][0]["message"]["content"]
 
@@ -107,6 +108,7 @@ The format is as follows.
     if not json_data:
         json_data = extract_json_bf(data)
         if not json_data:
+            service.commit_task_error(data)
             return
 
     params = {}

@@ -9,6 +9,7 @@ import ghidra.app.services.*;
 import ghidra.framework.plugintool.PluginTool;
 import ghidra.program.model.listing.Program;
 import ghidra.util.task.TaskMonitor;
+import kingaidra.TaskStatus;
 import kingaidra.chat.Conversation;
 import kingaidra.decom.ai.ModelType;
 import kingaidra.chat.KinGAidraChatTaskService;
@@ -62,7 +63,7 @@ public class ModelByScript implements Model {
     public Conversation guess(Conversation convo, KinGAidraChatTaskService service, PluginTool tool,
             Program program) {
         if (!active) {
-            return convo;
+            return null;
         }
 
         Random rand = new Random();
@@ -74,12 +75,12 @@ public class ModelByScript implements Model {
         ResourceFile file = GhidraScriptUtil.findScriptByName(script_file);
         if (file == null) {
             Logger.append_message(String.format("Failed to get script \"%s\"", script_file));
-            return convo;
+            return null;
         }
         GhidraScriptProvider provider = GhidraScriptUtil.getProvider(file);
         if (provider == null) {
             Logger.append_message(String.format("Failed to get script \"%s\"", script_file));
-            return convo;
+            return null;
         }
         PrintWriter writer;
         if (tool != null) {
@@ -98,7 +99,7 @@ public class ModelByScript implements Model {
             script = provider.getScriptInstance(file, writer);
         } catch (Exception e) {
             Logger.append_message(String.format("Failed to get script \"%s\"", script_file));
-            return convo;
+            return null;
         }
         try {
             GhidraState state = new GhidraState(tool, tool.getProject(), program, null, null, null);
@@ -108,7 +109,11 @@ public class ModelByScript implements Model {
             script.runScript(script_file, args);
         } catch (Exception e) {
             Logger.append_message(String.format("Failed to run script \"%s\"", script_file));
-            return convo;
+            return null;
+        }
+
+        if (service.get_task_status(key) != TaskStatus.SUCCESS) {
+            return null;
         }
 
         return service.pop_task(key);
