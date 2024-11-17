@@ -25,7 +25,7 @@ class GhidraUtilImplTest {
         assertTrue(
                 gu.get_decom(util.get_addr(program, 0x401002)).contains("void func_401000(void)"));
         assertEquals(gu.get_asm(util.get_addr(program, 0x401002)),
-                "PUSH EBP\nMOV EBP,ESP\nPOP EBP\nRET\n");
+                "func_401000:\n    PUSH EBP\n    MOV EBP,ESP\n    POP EBP\n    RET\n");
     }
 
     @Test

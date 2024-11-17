@@ -162,7 +162,7 @@ public class GuessTest {
         assertEquals(convo2.get_msgs_len(), 4);
         assertEquals(convo2.get_msg(0), "msg");
         assertEquals(convo2.get_msg(1), "msgDummy2");
-        assertTrue(convo2.get_msg(2).contains("PUSH EBP\nMOV EBP,ESP\nPOP EBP\nRET\n"));
+        assertTrue(convo2.get_msg(2).contains("func_401000:\n    PUSH EBP\n    MOV EBP,ESP\n    POP EBP\n    RET\n"));
         assertTrue(convo2.get_msg(3).endsWith("Dummy2"));
         assertEquals(convo2.get_addrs().length, 1);
         assertEquals(convo2.get_addrs()[0].getOffset(), 0x401000);

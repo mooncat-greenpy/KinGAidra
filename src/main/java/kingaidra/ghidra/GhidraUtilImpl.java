@@ -104,7 +104,12 @@ public class GhidraUtilImpl implements GhidraUtil {
                 }
             }
 
-            result += asm + "\n";
+            SymbolTable label_sym_table = program.getSymbolTable();
+            Symbol label_sym = label_sym_table.getPrimarySymbol(inst.getAddress());
+            if (label_sym != null) {
+                result += label_sym.getName() + ":\n";
+            }
+            result += "    " + asm + "\n";
 
             inst = program_listing.getInstructionAfter(inst.getAddress());
         }
