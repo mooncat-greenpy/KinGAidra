@@ -133,7 +133,23 @@ public class Guess {
             convo.add_addr(func.getEntryPoint());
         }
 
-        return msg;
+        Pattern code_pattern = Pattern.compile("<asm:([0-9A-Fa-f]+)>");
+        Matcher code_matcher = code_pattern.matcher(msg);
+        StringBuffer result = new StringBuffer();
+        while (code_matcher.find()) {
+            String addr_str = code_matcher.group(1);
+            long addr_value = Long.parseLong(addr_str, 16);
+            Address match_addr = ghidra.get_addr(addr_value);
+            Function match_func = ghidra.get_func(match_addr);
+            String match_asm_code = ghidra.get_asm(match_addr);
+            if (match_func == null || match_asm_code == null) {
+                continue;
+            }
+            code_matcher.appendReplacement(result, match_asm_code);
+            convo.add_addr(match_func.getEntryPoint());
+        }
+        code_matcher.appendTail(result);
+        return result.toString();
     }
 
     public String resolve_src_code(Conversation convo, String msg, Address addr) {
