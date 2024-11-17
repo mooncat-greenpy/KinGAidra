@@ -34,7 +34,8 @@ public class GuessTest {
         assertEquals(guess.get_models()[0], "Dummy");
         assertEquals(guess.get_model_status(guess.get_models()[0]), true);
         // Not suppoort
-        // assertEquals(guess.get_model_status(new ChatModelDummy("Dummy", "dummy.py", true)), false);
+        // assertEquals(guess.get_model_status(new ChatModelDummy("Dummy", "dummy.py", true)),
+        // false);
     }
 
     @Test
@@ -95,9 +96,9 @@ public class GuessTest {
         GhidraPreferences<Model> pref = new ChatModelPreferencesDummy();
         pref.store("Dummy", new ChatModelDummy("Dummy", "dummy.py", false));
         Guess guess = new Guess(gu, ai, pref);
-        Conversation convo1 =
-                guess.guess("msg", util.get_addr(program, 0x402000));
-        String ret1 = guess.resolve_src_code(convo1, "Explain\n<code:401000>\nend", util.get_addr(program, 0x402000));
+        Conversation convo1 = guess.guess("msg", util.get_addr(program, 0x402000));
+        String ret1 = guess.resolve_src_code(convo1, "Explain\n<code:401000>\nend",
+                util.get_addr(program, 0x402000));
         assertFalse(ret1.contains("int __fastcall func_402000(undefined *param_1)"));
         assertTrue(ret1.startsWith("Explain\n"));
         assertTrue(ret1.contains("void func_401000(void)"));
@@ -105,9 +106,10 @@ public class GuessTest {
         assertEquals(convo1.get_addrs().length, 1);
         assertEquals(convo1.get_addrs()[0].getOffset(), 0x401000);
 
-        Conversation convo2 =
-        guess.guess("msg", util.get_addr(program, 0x402000));
-        String ret2 = guess.resolve_src_code(convo2, "Explain\n<code:401000>\nand\n<code:402000>\nend", util.get_addr(program, 0x402000));
+        Conversation convo2 = guess.guess("msg", util.get_addr(program, 0x402000));
+        String ret2 =
+                guess.resolve_src_code(convo2, "Explain\n<code:401000>\nand\n<code:402000>\nend",
+                        util.get_addr(program, 0x402000));
         assertTrue(ret2.startsWith("Explain\n"));
         assertTrue(ret2.contains("int __fastcall func_402000(undefined *param_1)"));
         assertTrue(ret2.contains("\nand\n"));
@@ -117,9 +119,9 @@ public class GuessTest {
         assertEquals(convo2.get_addrs()[0].getOffset(), 0x401000);
         assertEquals(convo2.get_addrs()[1].getOffset(), 0x402000);
 
-        Conversation convo3 =
-        guess.guess("msg", util.get_addr(program, 0x402000));
-        String ret3 = guess.resolve_src_code(convo3, "Explain\n<code:401000>\nand\n<code>\nend", util.get_addr(program, 0x402000));
+        Conversation convo3 = guess.guess("msg", util.get_addr(program, 0x402000));
+        String ret3 = guess.resolve_src_code(convo3, "Explain\n<code:401000>\nand\n<code>\nend",
+                util.get_addr(program, 0x402000));
         assertTrue(ret3.startsWith("Explain\n"));
         assertTrue(ret3.contains("int __fastcall func_402000(undefined *param_1)"));
         assertTrue(ret3.contains("\nand\n"));
@@ -141,8 +143,7 @@ public class GuessTest {
         pref.store("Dummy2", new ChatModelDummy("Dummy2", "dummy.py", true));
         pref.store("Dummy3", new ChatModelDummy("Dummy3", "dummy.py", false));
         Guess guess = new Guess(gu, ai, pref);
-        Conversation convo1 =
-                guess.guess("msg", util.get_addr(program, 0x402000));
+        Conversation convo1 = guess.guess("msg", util.get_addr(program, 0x402000));
         assertEquals(convo1.get_msgs_len(), 2);
         assertEquals(convo1.get_msg(0), "msg");
         assertEquals(convo1.get_msg(1), "msgDummy2");
@@ -156,13 +157,13 @@ public class GuessTest {
         assertEquals(convo1.get_addrs().length, 1);
         assertEquals(convo1.get_addrs()[0].getOffset(), 0x402000);
 
-        Conversation convo2 =
-                guess.guess("msg", util.get_addr(program, 0x401000));
+        Conversation convo2 = guess.guess("msg", util.get_addr(program, 0x401000));
         guess.guess(convo2, "Explain\n<asm>", util.get_addr(program, 0x401000));
         assertEquals(convo2.get_msgs_len(), 4);
         assertEquals(convo2.get_msg(0), "msg");
         assertEquals(convo2.get_msg(1), "msgDummy2");
-        assertTrue(convo2.get_msg(2).contains("func_401000:\n    PUSH EBP\n    MOV EBP,ESP\n    POP EBP\n    RET\n"));
+        assertTrue(convo2.get_msg(2)
+                .contains("func_401000:\n    PUSH EBP\n    MOV EBP,ESP\n    POP EBP\n    RET\n"));
         assertTrue(convo2.get_msg(3).endsWith("Dummy2"));
         assertEquals(convo2.get_addrs().length, 1);
         assertEquals(convo2.get_addrs()[0].getOffset(), 0x401000);
