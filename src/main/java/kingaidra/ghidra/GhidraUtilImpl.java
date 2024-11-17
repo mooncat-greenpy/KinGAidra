@@ -49,6 +49,10 @@ public class GhidraUtilImpl implements GhidraUtil {
         return null;
     }
 
+    public Address get_addr(long addr_value) {
+        return program.getAddressFactory().getDefaultAddressSpace().getAddress(addr_value);
+    }
+
     public Function get_func(Address addr) {
         Function func = program_listing.getFunctionContaining(addr);
         if (func == null) {

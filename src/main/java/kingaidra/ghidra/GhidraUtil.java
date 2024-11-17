@@ -7,6 +7,8 @@ import kingaidra.decom.DecomDiff;
 public interface GhidraUtil {
     public Address get_current_addr();
 
+    public Address get_addr(long addr_value);
+
     public Function get_func(Address addr);
 
     public String get_decom(Address addr);

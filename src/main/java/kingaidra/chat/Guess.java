@@ -1,8 +1,11 @@
 package kingaidra.chat;
 
 import java.util.Arrays;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 import ghidra.program.model.address.Address;
+import ghidra.program.model.listing.Function;
 import kingaidra.chat.ai.Ai;
 import kingaidra.chat.ai.Model;
 import kingaidra.chat.ai.ModelByScript;
@@ -119,15 +122,38 @@ public class Guess {
         pref.remove(name);
     }
 
-    public Conversation guess(Conversation convo, String msg, Address addr) {
+    public String resolve_src_code(Conversation convo, String msg, Address addr) {
+        Function func = ghidra.get_func(addr);
         String src_code = ghidra.get_decom(addr);
-        if (src_code == null) {
-            return null;
+        if (func == null || src_code == null) {
+            return msg;
         }
         if (msg.contains("<code>")) {
             msg = msg.replace("<code>", src_code);
-            convo.add_addr(addr);
+            convo.add_addr(func.getEntryPoint());
         }
+
+        Pattern code_pattern = Pattern.compile("<code:([0-9A-Fa-f]+)>");
+        Matcher code_matcher = code_pattern.matcher(msg);
+        StringBuffer result = new StringBuffer();
+        while (code_matcher.find()) {
+            String addr_str = code_matcher.group(1);
+            long addr_value = Long.parseLong(addr_str, 16);
+            Address match_addr = ghidra.get_addr(addr_value);
+            Function match_func = ghidra.get_func(match_addr);
+            String match_src_code = ghidra.get_decom(match_addr);
+            if (match_func == null || match_src_code == null) {
+                continue;
+            }
+            code_matcher.appendReplacement(result, match_src_code);
+            convo.add_addr(match_func.getEntryPoint());
+        }
+        code_matcher.appendTail(result);
+        return result.toString();
+    }
+
+    public Conversation guess(Conversation convo, String msg, Address addr) {
+        msg = resolve_src_code(convo, msg, addr);
         convo.add_user_msg(msg);
         convo = ai.guess(convo);
         return convo;
