@@ -43,7 +43,6 @@ public class DecomGUI extends JPanel {
     private JButton refact_btn;
 
     private DockingAction conf_action;
-    private DockingAction refr_action;
 
     private Program program;
     private PluginTool plugin;
@@ -237,17 +236,6 @@ public class DecomGUI extends JPanel {
         conf_action.setEnabled(true);
         conf_action.markHelpUnnecessary();
         dockingTool.addLocalAction(provider, conf_action);
-
-        refr_action = new DockingAction("Refresh", provider.getName()) {
-            @Override
-            public void actionPerformed(ActionContext context) {
-                setVisible(true);
-            }
-        };
-        refr_action.setToolBarData(new ToolBarData(Icons.REFRESH_ICON, null));
-        refr_action.setEnabled(true);
-        refr_action.markHelpUnnecessary();
-        dockingTool.addLocalAction(provider, refr_action);
     }
 
     synchronized private boolean check_and_set_busy(boolean v) {

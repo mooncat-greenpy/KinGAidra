@@ -57,7 +57,6 @@ public class ChatGUI extends JPanel {
 
     private DockingAction conf_action;
     private DockingAction log_action;
-    private DockingAction refr_action;
 
     private Program program;
     private PluginTool plugin;
@@ -252,21 +251,10 @@ public class ChatGUI extends JPanel {
                 JOptionPane.showMessageDialog(null, p, "ChatLog", JOptionPane.PLAIN_MESSAGE);
             }
         };
-        log_action.setToolBarData(new ToolBarData(Icons.CONFIGURE_FILTER_ICON, null));
+        log_action.setToolBarData(new ToolBarData(Icons.MAKE_SELECTION_ICON, null));
         log_action.setEnabled(true);
         log_action.markHelpUnnecessary();
         dockingTool.addLocalAction(provider, log_action);
-
-        refr_action = new DockingAction("ChatRefresh", provider.getName()) {
-            @Override
-            public void actionPerformed(ActionContext context) {
-                setVisible(true);
-            }
-        };
-        refr_action.setToolBarData(new ToolBarData(Icons.REFRESH_ICON, null));
-        refr_action.setEnabled(true);
-        refr_action.markHelpUnnecessary();
-        dockingTool.addLocalAction(provider, refr_action);
     }
 
     synchronized private boolean check_and_set_busy(boolean v) {
