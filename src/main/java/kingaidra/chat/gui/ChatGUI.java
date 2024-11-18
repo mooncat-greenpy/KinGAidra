@@ -224,6 +224,29 @@ public class ChatGUI extends JPanel {
                 }).popupMenuPath(new String[] {"Explain using AI"}).popupMenuGroup("KinGAidra")
                 .buildAndInstall(plugin);
 
+        new ActionBuilder("Decompile with AI", provider.getName())
+                .withContext(ProgramLocationActionContext.class).enabledWhen(context -> {
+                    var func = context.getProgram().getFunctionManager()
+                            .getFunctionContaining(context.getAddress());
+                    return func != null;
+                }).onAction(context -> {
+                    var func = context.getProgram().getFunctionManager()
+                            .getFunctionContaining(context.getAddress());
+                    if (func == null) {
+                        Logger.append_message("Function not found");
+                        return;
+                    }
+
+                    provider.setVisible(true);
+                    provider.toFront();
+                    provider.change_tab("Chat");
+
+                    reset(null);
+                    input_area.setText("Decompile below assembly.\n```json\n<code>\n```");
+                    submit_btn.doClick();
+                }).popupMenuPath(new String[] {"Decompile using AI"}).popupMenuGroup("KinGAidra")
+                .buildAndInstall(plugin);
+
         conf_action = new DockingAction("ChatConfigure", provider.getName()) {
             @Override
             public void actionPerformed(ActionContext context) {
