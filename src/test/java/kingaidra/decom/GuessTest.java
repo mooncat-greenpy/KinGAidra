@@ -85,6 +85,9 @@ public class GuessTest {
         for (DiffPair pair : diff.get_vars()) {
             assertEquals(pair.get_new_name().substring(pair.get_new_name().length() - 5), "Dummy");
         }
+        for (DiffPair pair : diff.get_datatypes()) {
+            assertEquals(pair.get_new_name().substring(pair.get_new_name().length() - 5), "Dummy");
+        }
     }
 
 
@@ -117,6 +120,13 @@ public class GuessTest {
                                         - diff.get_model().get_name().length()),
                         diff.get_model().get_name());
             }
+            for (DiffPair pair : diff.get_datatypes()) {
+                assertEquals(
+                        pair.get_new_name()
+                                .substring(pair.get_new_name().length()
+                                        - diff.get_model().get_name().length()),
+                        diff.get_model().get_name());
+            }
         }
     }
 
@@ -142,6 +152,12 @@ public class GuessTest {
                     "Dummy1");
         }
         for (DiffPair pair : diff.get_vars()) {
+            assertEquals(
+                    pair.get_new_name().substring(
+                            pair.get_new_name().length() - diff.get_model().get_name().length()),
+                    "Dummy1");
+        }
+        for (DiffPair pair : diff.get_datatypes()) {
             assertEquals(
                     pair.get_new_name().substring(
                             pair.get_new_name().length() - diff.get_model().get_name().length()),

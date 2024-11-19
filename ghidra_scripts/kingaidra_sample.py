@@ -16,11 +16,11 @@ def main():
     diff = service.get_task(state.getEnvironmentVar("KEY"))
     params = {}
     for i in diff.get_params():
-        params[i.get_old_name()] = i.get_old_name() + "_new"
+        params[i.get_var_name()] = i.get_var_name() + "_new"
     vars = {}
     for i in diff.get_vars():
-        vars[i.get_old_name()] = i.get_old_name() + "_new"
-    service.commit_task(state.getEnvironmentVar("KEY"), diff.get_name().get_old_name() + "_new", params, vars)
+        vars[i.get_var_name()] = i.get_var_name() + "_new"
+    service.commit_task(state.getEnvironmentVar("KEY"), diff.get_name().get_var_name() + "_new", params, vars, {})
 
 
 if __name__ == "__main__":

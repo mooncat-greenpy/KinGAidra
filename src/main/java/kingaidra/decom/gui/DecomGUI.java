@@ -10,7 +10,6 @@ import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 
 import docking.ActionContext;
-import docking.ComponentProvider;
 import docking.Tool;
 import docking.action.DockingAction;
 import docking.action.ToolBarData;
@@ -77,7 +76,8 @@ public class DecomGUI extends JPanel {
 
         Model sample_model = new ModelByScript("Sample", "kingaidra_sample.py", true);
         Model none_model = new ModelByScript("None", "kingaidra_none.py", true);
-        Model chatgptlike_model = new ModelByScript("ChatGPTLike", "kingaidra_chatgptlike.py", true);
+        Model chatgptlike_model =
+                new ModelByScript("ChatGPTLike", "kingaidra_chatgptlike.py", true);
         if (!guess.exist_model(sample_model.get_name())) {
             guess.add_model(sample_model.get_name(), sample_model.get_script());
             guess.set_model_status(sample_model.get_name(), sample_model.get_active());

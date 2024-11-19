@@ -39,5 +39,11 @@ public class AiTest {
                             pair.get_new_name().length() - diff.get_model().get_name().length()),
                     "Dummy");
         }
+        for (DiffPair pair : diff.get_datatypes()) {
+            assertEquals(
+                    pair.get_new_name().substring(
+                            pair.get_new_name().length() - diff.get_model().get_name().length()),
+                    "Dummy");
+        }
     }
 }

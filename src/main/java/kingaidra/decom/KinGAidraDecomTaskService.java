@@ -16,7 +16,7 @@ public interface KinGAidraDecomTaskService {
     public void add_task(String key, DecomDiff diff);
 
     public void commit_task(String key, String func_name, Map<String, String> params,
-            Map<String, String> vars);
+            Map<String, String> vars, Map<String, String> datatypes);
 
     public void commit_task_error(String key, String err_msg);
 

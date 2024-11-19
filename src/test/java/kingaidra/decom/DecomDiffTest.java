@@ -14,10 +14,11 @@ public class DecomDiffTest {
         assertEquals(diff.get_src_code(), "void func() {}");
         assertEquals(diff.get_model(), null);
         assertEquals(diff.get_name().get_id(), 0);
-        assertEquals(diff.get_name().get_old_name(), "old_func");
+        assertEquals(diff.get_name().get_var_name(), "old_func");
         assertEquals(diff.get_name().get_new_name(), "old_func");
         assertEquals(diff.get_params_len(), 0);
         assertEquals(diff.get_vars_len(), 0);
+        assertEquals(diff.get_datatypes_len(), 0);
     }
 
     @Test
@@ -26,7 +27,7 @@ public class DecomDiffTest {
 
         diff.set_name("new_func");
         assertEquals(diff.get_name().get_id(), 0);
-        assertEquals(diff.get_name().get_old_name(), "old_func");
+        assertEquals(diff.get_name().get_var_name(), "old_func");
         assertEquals(diff.get_name().get_new_name(), "new_func");
 
         diff.set_model(new ModelDummy("Test", "test.py", true));
@@ -34,8 +35,8 @@ public class DecomDiffTest {
 
         DiffPair pair1 = new DiffPair(10, "old_param");
         diff.add_param(pair1);
-        assertEquals(diff.get_param(10).get_old_name(), "old_param");
-        assertEquals(diff.get_params().toArray(new DiffPair[] {})[0].get_old_name(), "old_param");
+        assertEquals(diff.get_param(10).get_var_name(), "old_param");
+        assertEquals(diff.get_params().toArray(new DiffPair[] {})[0].get_var_name(), "old_param");
         assertEquals(diff.get_params_len(), 1);
         diff.set_param_new_name("old_param", "new_param");
         assertEquals(diff.get_param(10).get_new_name(), "new_param");
@@ -44,13 +45,23 @@ public class DecomDiffTest {
 
         DiffPair pair2 = new DiffPair(20, "old_var");
         diff.add_var(pair2);
-        assertEquals(diff.get_var(20).get_old_name(), "old_var");
-        assertEquals(diff.get_vars().toArray(new DiffPair[] {})[0].get_old_name(), "old_var");
+        assertEquals(diff.get_var(20).get_var_name(), "old_var");
+        assertEquals(diff.get_vars().toArray(new DiffPair[] {})[0].get_var_name(), "old_var");
         assertEquals(diff.get_vars_len(), 1);
         diff.set_var_new_name("old_var", "new_var");
         assertEquals(diff.get_var(20).get_new_name(), "new_var");
         diff.delete_var(20);
         assertEquals(diff.get_vars_len(), 0);
+
+        DiffPair pair3 = new DiffPair(30, "old_var");
+        diff.add_datatype(pair3);
+        assertEquals(diff.get_datatype(30).get_var_name(), "old_var");
+        assertEquals(diff.get_datatypes().toArray(new DiffPair[] {})[0].get_var_name(), "old_var");
+        assertEquals(diff.get_datatypes_len(), 1);
+        diff.set_datatype_new_name("old_var", "new_var");
+        assertEquals(diff.get_datatype(30).get_new_name(), "new_var");
+        diff.delete_datatype(30);
+        assertEquals(diff.get_datatypes_len(), 0);
     }
 
     @Test
@@ -60,6 +71,8 @@ public class DecomDiffTest {
         diff1.add_param(pair1);
         DiffPair pair2 = new DiffPair(20, "old_var");
         diff1.add_var(pair2);
+        DiffPair pair5 = new DiffPair(20, "old_datatype");
+        diff1.add_datatype(pair5);
         DecomDiff diff2 = diff1.clone();
         diff2.set_name("new_func");
         assertEquals(diff1.get_name().get_new_name(), "old_func");
@@ -78,5 +91,10 @@ public class DecomDiffTest {
         diff2.add_var(pair4);
         assertEquals(diff1.get_vars_len(), 1);
         assertEquals(diff2.get_vars_len(), 2);
+
+        DiffPair pair6 = new DiffPair(50, "old_datatype_2");
+        diff2.add_datatype(pair6);
+        assertEquals(diff1.get_datatypes_len(), 1);
+        assertEquals(diff2.get_datatypes_len(), 2);
     }
 }

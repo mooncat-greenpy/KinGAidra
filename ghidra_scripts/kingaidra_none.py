@@ -13,7 +13,7 @@ def main():
     service = consumer_list[0].getService(kingaidra.decom.KinGAidraDecomTaskService)
 
     diff = service.get_task(state.getEnvironmentVar("KEY"))
-    service.commit_task(state.getEnvironmentVar("KEY"), diff.get_name().get_old_name(), {}, {})
+    service.commit_task(state.getEnvironmentVar("KEY"), diff.get_name().get_var_name(), {}, {}, {})
 
 
 if __name__ == "__main__":

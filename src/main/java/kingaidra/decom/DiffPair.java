@@ -2,24 +2,24 @@ package kingaidra.decom;
 
 public class DiffPair implements Cloneable {
     private long id;
-    private String old_name;
+    private String var_name;
     private String new_name;
 
     public DiffPair(long id, String name) {
         this.id = id;
-        old_name = name;
+        this.var_name = name;
         new_name = name;
     }
 
-    public DiffPair(long id, String old_name, String new_name) {
+    public DiffPair(long id, String name, String new_name) {
         this.id = id;
-        this.old_name = old_name;
+        this.var_name = name;
         this.new_name = new_name;
     }
 
     @Override
     public DiffPair clone() {
-        DiffPair pair = new DiffPair(id, old_name, new_name);
+        DiffPair pair = new DiffPair(id, var_name, new_name);
         return pair;
     }
 
@@ -27,8 +27,8 @@ public class DiffPair implements Cloneable {
         return id;
     }
 
-    public String get_old_name() {
-        return old_name;
+    public String get_var_name() {
+        return var_name;
     }
 
     public String get_new_name() {

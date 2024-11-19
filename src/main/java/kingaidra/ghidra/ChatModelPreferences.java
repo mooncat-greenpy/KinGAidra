@@ -1,9 +1,7 @@
 package kingaidra.ghidra;
 
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 
 import ghidra.framework.preferences.Preferences;
 import kingaidra.chat.ai.Model;

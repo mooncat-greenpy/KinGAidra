@@ -50,13 +50,13 @@ public class KinGAidraPlugin extends ProgramPlugin implements KinGAidraDecomTask
 
     @Override
     public void programOpened(Program program) {
-        KinGAidraChatTaskService service=null;
-        for(Object obj : program.getConsumerList()) {
-            if(!(obj instanceof PluginTool)) {
+        KinGAidraChatTaskService service = null;
+        for (Object obj : program.getConsumerList()) {
+            if (!(obj instanceof PluginTool)) {
                 continue;
             }
-            PluginTool plugin_tool=(PluginTool)obj;
-            service=plugin_tool.getService(KinGAidraChatTaskService.class);
+            PluginTool plugin_tool = (PluginTool) obj;
+            service = plugin_tool.getService(KinGAidraChatTaskService.class);
             break;
         }
         provider = new MainProvider(program, this, NAME, this, service);
@@ -78,7 +78,7 @@ public class KinGAidraPlugin extends ProgramPlugin implements KinGAidraDecomTask
 
     @Override
     public void commit_task(String key, String func_name, Map<String, String> params,
-            Map<String, String> vars) {
+            Map<String, String> vars, Map<String, String> datatypes) {
         DecomDiff diff = diff_map.get(key);
         diff.set_name(func_name);
         for (String p_key : params.keySet()) {
@@ -86,6 +86,9 @@ public class KinGAidraPlugin extends ProgramPlugin implements KinGAidraDecomTask
         }
         for (String v_key : vars.keySet()) {
             diff.set_var_new_name(v_key, vars.get(v_key));
+        }
+        for (String v_key : datatypes.keySet()) {
+            diff.set_datatype_new_name(v_key, datatypes.get(v_key));
         }
         status_map.put(key, TaskStatus.SUCCESS);
         diff_map.put(key, diff);

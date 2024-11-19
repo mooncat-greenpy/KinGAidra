@@ -101,7 +101,7 @@ public class GuessTest {
                 util.get_addr(program, 0x402000));
         assertFalse(ret1.contains("int __fastcall func_402000(undefined *param_1)"));
         assertTrue(ret1.startsWith("Explain\n"));
-        assertTrue(ret1.contains("void func_401000(void)"));
+        assertTrue(ret1.contains("int func_401000(void)"));
         assertTrue(ret1.endsWith("\nend"));
         assertEquals(convo1.get_addrs().length, 1);
         assertEquals(convo1.get_addrs()[0].getOffset(), 0x401000);
@@ -113,7 +113,7 @@ public class GuessTest {
         assertTrue(ret2.startsWith("Explain\n"));
         assertTrue(ret2.contains("int __fastcall func_402000(undefined *param_1)"));
         assertTrue(ret2.contains("\nand\n"));
-        assertTrue(ret2.contains("void func_401000(void)"));
+        assertTrue(ret2.contains("int func_401000(void)"));
         assertTrue(ret2.endsWith("\nend"));
         assertEquals(convo2.get_addrs().length, 2);
         assertEquals(convo2.get_addrs()[0].getOffset(), 0x401000);
@@ -125,7 +125,7 @@ public class GuessTest {
         assertTrue(ret3.startsWith("Explain\n"));
         assertTrue(ret3.contains("int __fastcall func_402000(undefined *param_1)"));
         assertTrue(ret3.contains("\nand\n"));
-        assertTrue(ret3.contains("void func_401000(void)"));
+        assertTrue(ret3.contains("int func_401000(void)"));
         assertTrue(ret3.endsWith("\nend"));
         assertEquals(convo3.get_addrs().length, 2);
         assertEquals(convo3.get_addrs()[0].getOffset(), 0x402000);

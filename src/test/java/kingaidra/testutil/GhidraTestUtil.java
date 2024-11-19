@@ -6,6 +6,7 @@ import ghidra.framework.HeadlessGhidraApplicationConfiguration;
 import ghidra.program.database.ProgramBuilder;
 import ghidra.program.model.address.Address;
 import ghidra.program.model.data.DataType;
+import ghidra.program.model.data.IntegerDataType;
 import ghidra.program.model.data.PointerDataType;
 import ghidra.program.model.data.Undefined4DataType;
 import ghidra.program.model.listing.Parameter;
@@ -37,7 +38,7 @@ public class GhidraTestUtil {
         ProgramBuilder builder = new ProgramBuilder("test", ProgramBuilder._X86, null);
         builder.createMemory(".text", "0x0401000", 0x9000);
         builder.setBytes("0x401000", "55 89 e5 5d c3");
-        builder.createEmptyFunction("func_401000", "0x401000", 0x5, null);
+        builder.createEmptyFunction("func_401000", "0x401000", 0x5, new IntegerDataType());
 
         Program program = builder.getProgram();
         builder.setBytes("0x402000",

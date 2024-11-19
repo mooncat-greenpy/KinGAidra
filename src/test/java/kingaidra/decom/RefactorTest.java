@@ -27,7 +27,7 @@ public class RefactorTest {
         diff.set_name("new_func");
         diff.set_param_new_name("param_1", "new_param_1");
         for (DiffPair pair : diff.get_vars()) {
-            pair.set_new_name(pair.get_old_name() + "_new");
+            pair.set_new_name(pair.get_var_name() + "_new");
         }
 
         refactor.refact(diff);

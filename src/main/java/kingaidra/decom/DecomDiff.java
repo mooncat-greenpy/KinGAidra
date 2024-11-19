@@ -15,6 +15,7 @@ public class DecomDiff implements Cloneable {
     private DiffPair name;
     private Map<Long, DiffPair> params;
     private Map<Long, DiffPair> vars;
+    private Map<Long, DiffPair> datatypes;
 
     public DecomDiff(Address addr, String old_name, String src_code) {
         this.addr = addr;
@@ -24,6 +25,7 @@ public class DecomDiff implements Cloneable {
         this.name = new DiffPair(0, old_name);
         params = new HashMap<>();
         vars = new HashMap<>();
+        datatypes = new HashMap<>();
     }
 
     public DecomDiff(Address addr, DiffPair name, String src_code) {
@@ -34,6 +36,7 @@ public class DecomDiff implements Cloneable {
         this.name = name;
         params = new HashMap<>();
         vars = new HashMap<>();
+        datatypes = new HashMap<>();
     }
 
     @Override
@@ -45,6 +48,9 @@ public class DecomDiff implements Cloneable {
         }
         for (DiffPair pair : get_vars()) {
             diff.add_var(pair.clone());
+        }
+        for (DiffPair pair : get_datatypes()) {
+            diff.add_datatype(pair.clone());
         }
         return diff;
     }
@@ -93,9 +99,9 @@ public class DecomDiff implements Cloneable {
         params.remove(id);
     }
 
-    public void set_param_new_name(String old_name, String new_name) {
+    public void set_param_new_name(String var_name, String new_name) {
         for (DiffPair pair : params.values()) {
-            if (!pair.get_old_name().equals(old_name)) {
+            if (!pair.get_var_name().equals(var_name)) {
                 continue;
             }
             pair.set_new_name(new_name);
@@ -122,9 +128,38 @@ public class DecomDiff implements Cloneable {
         vars.remove(id);
     }
 
-    public void set_var_new_name(String old_name, String new_name) {
+    public void set_var_new_name(String var_name, String new_name) {
         for (DiffPair pair : vars.values()) {
-            if (!pair.get_old_name().equals(old_name)) {
+            if (!pair.get_var_name().equals(var_name)) {
+                continue;
+            }
+            pair.set_new_name(new_name);
+        }
+    }
+
+    public DiffPair get_datatype(long id) {
+        return datatypes.get(id);
+    }
+
+    public Collection<DiffPair> get_datatypes() {
+        return datatypes.values();
+    }
+
+    public int get_datatypes_len() {
+        return datatypes.size();
+    }
+
+    public void add_datatype(DiffPair pair) {
+        datatypes.put(pair.get_id(), pair);
+    }
+
+    public void delete_datatype(long id) {
+        datatypes.remove(id);
+    }
+
+    public void set_datatype_new_name(String var_name, String new_name) {
+        for (DiffPair pair : datatypes.values()) {
+            if (!pair.get_var_name().equals(var_name)) {
                 continue;
             }
             pair.set_new_name(new_name);

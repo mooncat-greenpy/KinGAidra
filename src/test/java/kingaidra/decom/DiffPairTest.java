@@ -9,19 +9,19 @@ public class DiffPairTest {
     void test_constructor() {
         DiffPair pair1 = new DiffPair(10, "old_func");
         assertEquals(pair1.get_id(), 10);
-        assertEquals(pair1.get_old_name(), "old_func");
-        assertEquals(pair1.get_new_name(), pair1.get_old_name());
+        assertEquals(pair1.get_var_name(), "old_func");
+        assertEquals(pair1.get_new_name(), pair1.get_var_name());
     }
 
     @Test
     void test_set_name() {
         DiffPair pair1 = new DiffPair(10, "old_func");
         assertEquals(pair1.get_id(), 10);
-        assertEquals(pair1.get_old_name(), "old_func");
-        assertEquals(pair1.get_new_name(), pair1.get_old_name());
+        assertEquals(pair1.get_var_name(), "old_func");
+        assertEquals(pair1.get_new_name(), pair1.get_var_name());
         pair1.set_new_name("new_func");
         assertEquals(pair1.get_id(), 10);
-        assertEquals(pair1.get_old_name(), "old_func");
+        assertEquals(pair1.get_var_name(), "old_func");
         assertEquals(pair1.get_new_name(), "new_func");
     }
 
@@ -30,17 +30,17 @@ public class DiffPairTest {
         DiffPair pair1 = new DiffPair(10, "old_func");
         DiffPair pair2 = pair1.clone();
         assertEquals(pair1.get_id(), 10);
-        assertEquals(pair1.get_old_name(), "old_func");
+        assertEquals(pair1.get_var_name(), "old_func");
         assertEquals(pair1.get_new_name(), "old_func");
         assertEquals(pair2.get_id(), 10);
-        assertEquals(pair2.get_old_name(), "old_func");
+        assertEquals(pair2.get_var_name(), "old_func");
         assertEquals(pair2.get_new_name(), "old_func");
         pair2.set_new_name("new_func");
         assertEquals(pair1.get_id(), 10);
-        assertEquals(pair1.get_old_name(), "old_func");
+        assertEquals(pair1.get_var_name(), "old_func");
         assertEquals(pair1.get_new_name(), "old_func");
         assertEquals(pair2.get_id(), 10);
-        assertEquals(pair2.get_old_name(), "old_func");
+        assertEquals(pair2.get_var_name(), "old_func");
         assertEquals(pair2.get_new_name(), "new_func");
     }
 }

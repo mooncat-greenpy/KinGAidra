@@ -119,7 +119,7 @@ The format is as follows.
     for i in json_data.get("variables", []):
         if "orig_var_name" in i and "new_var_name" in i:
             vars[i["orig_var_name"]] = i["new_var_name"]
-    service.commit_task(state.getEnvironmentVar("KEY"), json_data["new_func_name"], params, vars)
+    service.commit_task(state.getEnvironmentVar("KEY"), json_data["new_func_name"], params, vars, {})
 
 if __name__ == "__main__":
     main()

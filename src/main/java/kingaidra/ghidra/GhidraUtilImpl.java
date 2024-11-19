@@ -1,12 +1,17 @@
 package kingaidra.ghidra;
 
 import java.util.Iterator;
+import java.util.LinkedList;
+import java.util.List;
+
 import ghidra.app.decompiler.DecompInterface;
 import ghidra.app.decompiler.DecompileResults;
 import ghidra.app.decompiler.DecompiledFunction;
 import ghidra.app.services.CodeViewerService;
 import ghidra.framework.plugintool.PluginTool;
 import ghidra.program.model.address.Address;
+import ghidra.program.model.data.DataType;
+import ghidra.program.model.data.DataTypeManager;
 import ghidra.program.model.listing.Function;
 import ghidra.program.model.listing.Instruction;
 import ghidra.program.model.listing.Listing;
@@ -164,16 +169,21 @@ public class GhidraUtilImpl implements GhidraUtil {
             Parameter param = func.getParameter(i);
             DiffPair diff = new DiffPair(i, param.getName());
             decom_diff.add_param(diff);
+            DiffPair dt_diff = new DiffPair(i, param.getName(), param.getDataType().getName());
+            decom_diff.add_datatype(dt_diff);
         }
         for (Iterator<HighSymbol> itr = high_func.getLocalSymbolMap().getSymbols(); itr
                 .hasNext();) {
             HighSymbol sym = itr.next();
             if (decom_diff.get_params().stream()
-                    .anyMatch(p -> p.get_old_name().equals(sym.getName()))) {
+                    .anyMatch(p -> p.get_var_name().equals(sym.getName()))) {
                 continue;
             }
             DiffPair diff = new DiffPair(sym.getId(), sym.getName());
             decom_diff.add_var(diff);
+            DiffPair dt_diff =
+                    new DiffPair(sym.getId(), sym.getName(), sym.getDataType().getName());
+            decom_diff.add_datatype(dt_diff);
         }
         return decom_diff;
     }
@@ -186,27 +196,35 @@ public class GhidraUtilImpl implements GhidraUtil {
             return false;
         }
 
+        DataTypeManager datatype_manager = program.getDataTypeManager();
         int tid = program.startTransaction("KinGAidra decompiler");
         try {
             try {
                 func.setName(diff.get_name().get_new_name(), SourceType.USER_DEFINED);
             } catch (DuplicateNameException | InvalidInputException e) {
                 Logger.append_message(String.format("Failed to rename func name \"%s\" to \"%s\"",
-                        diff.get_name().get_old_name(), diff.get_name().get_new_name()));
+                        diff.get_name().get_var_name(), diff.get_name().get_new_name()));
             }
 
             for (DiffPair pair : diff.get_params()) {
                 Parameter param = func.getParameter((int) pair.get_id());
                 if (param == null) {
                     Logger.append_message(
-                            String.format("Failed to find param \\\"%s\\\"", pair.get_old_name()));
+                            String.format("Failed to find param \\\"%s\\\"", pair.get_var_name()));
+                    continue;
                 }
                 try {
                     param.setName(pair.get_new_name(), SourceType.USER_DEFINED);
+                    List<DataType> dt_l = new LinkedList<>();
+                    datatype_manager.findDataTypes(diff.get_datatype(pair.get_id()).get_new_name(),
+                            dt_l);
+                    if (dt_l.size() > 0) {
+                        param.setDataType(dt_l.get(0), SourceType.USER_DEFINED);
+                    }
                 } catch (DuplicateNameException | InvalidInputException e) {
                     Logger.append_message(
                             String.format("Failed to rename param name \\\"%s\\\" to \\\"%s\\\"",
-                                    pair.get_old_name(), pair.get_new_name()));
+                                    pair.get_var_name(), pair.get_new_name()));
                 }
             }
 
@@ -218,15 +236,23 @@ public class GhidraUtilImpl implements GhidraUtil {
                     HighSymbol sym = high_func.getLocalSymbolMap().getSymbol(pair.get_id());
                     if (sym == null) {
                         Logger.append_message(String.format("Failed to find var name \\\"%s\\\"",
-                                pair.get_old_name()));
+                                pair.get_var_name()));
+                        continue;
                     }
                     try {
-                        HighFunctionDBUtil.updateDBVariable(sym, pair.get_new_name(), null,
+                        List<DataType> dt_l = new LinkedList<>();
+                        datatype_manager.findDataTypes(
+                                diff.get_datatype(pair.get_id()).get_new_name(), dt_l);
+                        DataType dt = null;
+                        if (dt_l.size() > 0) {
+                            dt = dt_l.get(0);
+                        }
+                        HighFunctionDBUtil.updateDBVariable(sym, pair.get_new_name(), dt,
                                 SourceType.USER_DEFINED);
                     } catch (InvalidInputException | DuplicateNameException e) {
                         Logger.append_message(
                                 String.format("Failed to rename var name \\\"%s\\\" to \\\"%s\\\"",
-                                        pair.get_old_name(), pair.get_new_name()));
+                                        pair.get_var_name(), pair.get_new_name()));
                     }
                 }
             }

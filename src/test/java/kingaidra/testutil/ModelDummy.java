@@ -63,6 +63,9 @@ public class ModelDummy implements Model {
         for (DiffPair pair : diff.get_vars()) {
             pair.set_new_name(pair.get_new_name() + name);
         }
+        for (DiffPair pair : diff.get_datatypes()) {
+            pair.set_new_name(pair.get_new_name() + name);
+        }
         return diff;
     }
 }

@@ -16,20 +16,22 @@ class DiffTableModel extends DefaultTableModel {
     private DecomDiff diff;
 
     public DiffTableModel() {
-        super(new Object[] {"ON/OFF", "Id", "Type", "Old", "New"}, 0);
+        super(new Object[] {"ON/OFF", "Id", "Type", "Old", "New", "DataType"}, 0);
     }
 
     public void add_diff(DecomDiff d) {
         this.diff = d;
-        addRow(new Object[] {Boolean.TRUE, "-1", "FuncName", diff.get_name().get_old_name(),
-                diff.get_name().get_new_name()});
+        addRow(new Object[] {Boolean.TRUE, "-1", "FuncName", diff.get_name().get_var_name(),
+                diff.get_name().get_new_name(), ""});
         for (DiffPair pair : diff.get_params()) {
             addRow(new Object[] {Boolean.TRUE, String.format("%d", pair.get_id()), "Param",
-                    pair.get_old_name(), pair.get_new_name()});
+                    pair.get_var_name(), pair.get_new_name(),
+                    diff.get_datatype(pair.get_id()).get_new_name()});
         }
         for (DiffPair pair : diff.get_vars()) {
             addRow(new Object[] {Boolean.TRUE, String.format("%d", pair.get_id()), "Var",
-                    pair.get_old_name(), pair.get_new_name()});
+                    pair.get_var_name(), pair.get_new_name(),
+                    diff.get_datatype(pair.get_id()).get_new_name()});
         }
     }
 
@@ -38,28 +40,33 @@ class DiffTableModel extends DefaultTableModel {
             boolean flag = (boolean) getValueAt(i, 0);
             long id = Long.parseLong((String) getValueAt(i, 1));
             String type = (String) getValueAt(i, 2);
-            String old_name = (String) getValueAt(i, 3);
+            String var_name = (String) getValueAt(i, 3);
             String new_name = (String) getValueAt(i, 4);
+            String dt_name = (String) getValueAt(i, 5);
 
             if (type.equals("FuncName")) {
                 if (flag) {
                     diff.set_name(new_name);
                 } else {
-                    diff.set_name(diff.get_name().get_old_name());
+                    diff.set_name(diff.get_name().get_var_name());
                 }
             }
             if (type.equals("Param")) {
                 if (flag) {
-                    diff.set_param_new_name(old_name, new_name);
+                    diff.set_param_new_name(var_name, new_name);
+                    diff.set_datatype_new_name(var_name, dt_name);
                 } else {
                     diff.delete_param(id);
+                    diff.delete_datatype(id);
                 }
             }
             if (type.equals("Var")) {
                 if (flag) {
-                    diff.set_var_new_name(old_name, new_name);
+                    diff.set_var_new_name(var_name, new_name);
+                    diff.set_datatype_new_name(var_name, dt_name);
                 } else {
                     diff.delete_var(id);
+                    diff.delete_datatype(id);
                 }
             }
         }
@@ -109,12 +116,12 @@ public class RefactorGUI extends JPanel {
             Logger.append_message("Invalid address function added");
             return;
         }
-        if (name != null && name != diff.get_name().get_old_name()) {
+        if (name != null && name != diff.get_name().get_var_name()) {
             Logger.append_message("Invalid name function added");
             return;
         }
         addr = diff.get_addr();
-        name = diff.get_name().get_old_name();
+        name = diff.get_name().get_var_name();
         set_info_label();
 
         DiffTableModel tableModel = new DiffTableModel();
