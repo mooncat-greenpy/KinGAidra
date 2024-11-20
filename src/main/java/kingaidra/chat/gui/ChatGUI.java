@@ -242,7 +242,7 @@ public class ChatGUI extends JPanel {
                     provider.change_tab("Chat");
 
                     reset(null);
-                    input_area.setText("Decompile below assembly.\n```json\n<code>\n```");
+                    input_area.setText("Decompile below assembly.\n```json\n<asm>\n```");
                     submit_btn.doClick();
                 }).popupMenuPath(new String[] {"Decompile using AI"}).popupMenuGroup("KinGAidra")
                 .buildAndInstall(plugin);
