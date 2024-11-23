@@ -206,25 +206,34 @@ public class GhidraUtilImpl implements GhidraUtil {
                         diff.get_name().get_var_name(), diff.get_name().get_new_name()));
             }
 
-            for (DiffPair pair : diff.get_params()) {
-                Parameter param = func.getParameter((int) pair.get_id());
-                if (param == null) {
-                    Logger.append_message(
-                            String.format("Failed to find param \\\"%s\\\"", pair.get_var_name()));
-                    continue;
-                }
-                try {
-                    param.setName(pair.get_new_name(), SourceType.USER_DEFINED);
-                    List<DataType> dt_l = new LinkedList<>();
-                    datatype_manager.findDataTypes(diff.get_datatype(pair.get_id()).get_new_name(),
-                            dt_l);
-                    if (dt_l.size() > 0) {
-                        param.setDataType(dt_l.get(0), SourceType.USER_DEFINED);
+            for (int i = 0; i < func.getParameterCount(); i++) {
+                Parameter param = func.getParameter(i);
+
+                DiffPair param_pair = diff.get_param(i);
+                if (param_pair != null) {
+                    try {
+                        param.setName(param_pair.get_new_name(), SourceType.USER_DEFINED);
+                    } catch (DuplicateNameException | InvalidInputException e) {
+                        Logger.append_message(
+                                String.format("Failed to rename param name \\\"%s\\\" to \\\"%s\\\"",
+                                        param_pair.get_var_name(), param_pair.get_new_name()));
                     }
-                } catch (DuplicateNameException | InvalidInputException e) {
-                    Logger.append_message(
-                            String.format("Failed to rename param name \\\"%s\\\" to \\\"%s\\\"",
-                                    pair.get_var_name(), pair.get_new_name()));
+                }
+
+                DiffPair datatype_pair = diff.get_datatype(i);
+                if (datatype_pair != null) {
+                    try {
+                        List<DataType> dt_l = new LinkedList<>();
+                        datatype_manager.findDataTypes(datatype_pair.get_new_name(),
+                                dt_l);
+                        if (dt_l.size() > 0) {
+                            param.setDataType(dt_l.get(0), SourceType.USER_DEFINED);
+                        }
+                    } catch (InvalidInputException e) {
+                        Logger.append_message(
+                                String.format("Failed to retype param name \\\"%s\\\" to \\\"%s\\\"",
+                                        datatype_pair.get_var_name(), datatype_pair.get_new_name()));
+                    }
                 }
             }
 
@@ -232,31 +241,37 @@ public class GhidraUtilImpl implements GhidraUtil {
             if (high_func == null) {
                 Logger.append_message("Failed to get vars");
             } else {
-                for (DiffPair pair : diff.get_vars()) {
-                    HighSymbol sym = high_func.getLocalSymbolMap().getSymbol(pair.get_id());
-                    if (sym == null) {
-                        Logger.append_message(String.format("Failed to find var name \\\"%s\\\"",
-                                pair.get_var_name()));
-                        continue;
+                Iterator<HighSymbol> sym_itr = high_func.getLocalSymbolMap().getSymbols();
+                while (sym_itr.hasNext()) {
+                    HighSymbol sym = sym_itr.next();
+
+                    DiffPair var_pair = diff.get_var(sym.getId());
+                    String new_name = null;
+                    if (var_pair != null) {
+                        new_name = var_pair.get_new_name();
                     }
-                    try {
+
+                    DiffPair datatype_pair = diff.get_datatype(sym.getId());
+                    DataType new_dt = null;
+                    if (datatype_pair != null) {
                         List<DataType> dt_l = new LinkedList<>();
                         datatype_manager.findDataTypes(
-                                diff.get_datatype(pair.get_id()).get_new_name(), dt_l);
-                        DataType dt = null;
+                                diff.get_datatype(datatype_pair.get_id()).get_new_name(), dt_l);
                         if (dt_l.size() > 0) {
-                            dt = dt_l.get(0);
+                            new_dt = dt_l.get(0);
                         }
-                        HighFunctionDBUtil.updateDBVariable(sym, pair.get_new_name(), dt,
-                                SourceType.USER_DEFINED);
+                    }
+
+                    try {
+                        HighFunctionDBUtil.updateDBVariable(sym, new_name, new_dt,
+                            SourceType.USER_DEFINED);
                     } catch (InvalidInputException | DuplicateNameException e) {
                         Logger.append_message(
                                 String.format("Failed to rename var name \\\"%s\\\" to \\\"%s\\\"",
-                                        pair.get_var_name(), pair.get_new_name()));
+                                        var_pair.get_var_name(), var_pair.get_new_name()));
                     }
                 }
             }
-
         } finally {
             program.endTransaction(tid, true);
         }

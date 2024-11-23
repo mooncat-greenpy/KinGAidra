@@ -35,7 +35,7 @@ class DiffTableModel extends DefaultTableModel {
         }
     }
 
-    public DecomDiff get_diff() {
+    public DecomDiff get_diff(boolean rename, boolean retype) {
         for (int i = 0; i < getRowCount(); i++) {
             boolean flag = (boolean) getValueAt(i, 0);
             long id = Long.parseLong((String) getValueAt(i, 1));
@@ -52,20 +52,26 @@ class DiffTableModel extends DefaultTableModel {
                 }
             }
             if (type.equals("Param")) {
-                if (flag) {
+                if (flag && rename) {
                     diff.set_param_new_name(var_name, new_name);
-                    diff.set_datatype_new_name(var_name, dt_name);
                 } else {
                     diff.delete_param(id);
+                }
+                if (flag && retype) {
+                    diff.set_datatype_new_name(var_name, dt_name);
+                } else {
                     diff.delete_datatype(id);
                 }
             }
             if (type.equals("Var")) {
-                if (flag) {
+                if (flag && rename) {
                     diff.set_var_new_name(var_name, new_name);
-                    diff.set_datatype_new_name(var_name, dt_name);
                 } else {
                     diff.delete_var(id);
+                }
+                if (flag && retype) {
+                    diff.set_datatype_new_name(var_name, dt_name);
+                } else {
                     diff.delete_datatype(id);
                 }
             }
@@ -90,6 +96,8 @@ public class RefactorGUI extends JPanel {
     private String name;
 
     private JLabel info_label;
+    private JCheckBox rename_chkbox;
+    private JCheckBox retype_chkbox;
     private Refactor refactor;
     private JTabbedPane tabbed_panel;
 
@@ -104,9 +112,18 @@ public class RefactorGUI extends JPanel {
         info_label = new JLabel();
         info_label.setPreferredSize(new Dimension(0, 40));
         set_info_label();
-        add(info_label, BorderLayout.NORTH);
+        rename_chkbox = new JCheckBox("Rename");
+        rename_chkbox.setSelected(true);
+        retype_chkbox = new JCheckBox("Retype");
+        retype_chkbox.setSelected(true);
+        JPanel panel = new JPanel();
+        panel.setLayout(new BoxLayout(panel, BoxLayout.X_AXIS));
+        panel.add(info_label);
+        panel.add(rename_chkbox);
+        panel.add(retype_chkbox);
 
         tabbed_panel = new JTabbedPane();
+        add(panel, BorderLayout.NORTH);
         add(tabbed_panel, BorderLayout.CENTER);
     }
 
@@ -122,6 +139,8 @@ public class RefactorGUI extends JPanel {
         }
         addr = diff.get_addr();
         name = diff.get_name().get_var_name();
+        rename_chkbox.setSelected(true);
+        retype_chkbox.setSelected(true);
         set_info_label();
 
         DiffTableModel tableModel = new DiffTableModel();
@@ -172,7 +191,7 @@ public class RefactorGUI extends JPanel {
         }
 
         DiffTableModel model = (DiffTableModel) t.getModel();
-        DecomDiff diff = model.get_diff();
+        DecomDiff diff = model.get_diff(rename_chkbox.isSelected(), retype_chkbox.isSelected());
 
         try {
             refactor.refact(diff);
