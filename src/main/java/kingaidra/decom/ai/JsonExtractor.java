@@ -3,10 +3,17 @@ package kingaidra.decom.ai;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.core.JsonProcessingException;
 
-public class JsonExtractor {
+interface JsonDataInterface {
+    public boolean validate();
+}
 
-    private FuncParamVarJson data;
-    JsonExtractor(String s) {
+public class JsonExtractor<T extends JsonDataInterface> {
+
+    private T data;
+    private final Class<T> type;
+
+    public JsonExtractor(String s, Class<T> type) {
+        this.type = type;
         data = extract_json(s);
         if (data != null) {
             return;
@@ -21,11 +28,11 @@ public class JsonExtractor {
         }
     }
 
-    public FuncParamVarJson get_data() {
+    public T get_data() {
         return data;
     }
 
-    FuncParamVarJson extract_json_md(String s) {
+    private T extract_json_md(String s) {
         String pre = "```json";
         String post = "```";
         int start = s.indexOf(pre);
@@ -42,7 +49,7 @@ public class JsonExtractor {
         return extract_json(target);
     }
 
-    FuncParamVarJson extract_json_bf(String s) {
+    private T extract_json_bf(String s) {
         if (!s.contains("{") || !s.contains("}")) {
             return null;
         }
@@ -57,7 +64,7 @@ public class JsonExtractor {
                 if (!target.contains("{") || !target.contains("}")) {
                     break;
                 }
-                FuncParamVarJson j = extract_json(target);
+                T j = extract_json(target);
                 if (j != null) {
                     return j;
                 }
@@ -66,11 +73,11 @@ public class JsonExtractor {
         return null;
     }
 
-    FuncParamVarJson extract_json(String s) {
+    private T extract_json(String s) {
         try {
             ObjectMapper objectMapper = new ObjectMapper();
-            FuncParamVarJson data = objectMapper.readValue(s, FuncParamVarJson.class);
-            if (data.new_func_name == null || data.orig_func_name == null || data.parameters == null || data.variables == null) {
+            T data = objectMapper.readValue(s, type);
+            if (!data.validate()) {
                 return null;
             }
             return data;

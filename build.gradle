@@ -45,6 +45,7 @@ dependencies {
 	// this extension is built.	
 	testImplementation 'org.junit.jupiter:junit-jupiter:5.10.2'
 	implementation 'com.vladsch.flexmark:flexmark-all:0.64.6'
+	implementation 'com.fasterxml.jackson.core:jackson-databind:2.15.2'
 }
 
 test {

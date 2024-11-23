@@ -27,7 +27,7 @@ public class JsonExtractorTest {
                    "        }\n" +
                    "    ]\n" +
                    "}";
-        JsonExtractor extractor = new JsonExtractor(s1);
+        JsonExtractor<FuncParamVarJson> extractor = new JsonExtractor(s1, FuncParamVarJson.class);
         FuncParamVarJson data1 = extractor.get_data();
         assertEquals(data1.new_func_name, "new function name");
         assertEquals(data1.orig_func_name, "original function name");
@@ -62,7 +62,7 @@ public class JsonExtractorTest {
                    "        }\n" +
                    "    ]\n" +
                    "}";
-        JsonExtractor extractor2 = new JsonExtractor(s2);
+        JsonExtractor<FuncParamVarJson> extractor2 = new JsonExtractor(s2, FuncParamVarJson.class);
         FuncParamVarJson data2 = extractor2.get_data();
         assertEquals(data2.new_func_name, "new function name");
         assertEquals(data2.orig_func_name, "original function name");
@@ -76,6 +76,42 @@ public class JsonExtractorTest {
         assertEquals(data2.variables.get(0).orig_var_name, "original variable name");
         assertEquals(data2.variables.get(1).new_var_name, "new variable name2");
         assertEquals(data2.variables.get(1).orig_var_name, "original variable name2");
+
+        String s3 = "[\n" +
+                   "    {\n" +
+                   "        \"new_datatype\": \"new datatype name\",\n" +
+                   "        \"orig_datatype\": \"original datatype name\",\n" +
+                   "        \"var_name\": \"variable name\"\n" +
+                   "    }\n" +
+                   "]";
+        JsonExtractor<DataTypeListJson> extractor3 = new JsonExtractor(s3, DataTypeListJson.class);
+        DataTypeListJson data3 = extractor3.get_data();
+        assertEquals(data3.size(), 1);
+        assertEquals(data3.get(0).new_datatype, "new datatype name");
+        assertEquals(data3.get(0).orig_datatype, "original datatype name");
+        assertEquals(data3.get(0).var_name, "variable name");
+
+        String s4 = "[\n" +
+                   "    {\n" +
+                   "        \"new_datatype\": \"new datatype name\",\n" +
+                   "        \"orig_datatype\": \"original datatype name\",\n" +
+                   "        \"var_name\": \"variable name\"\n" +
+                   "    },\n" +
+                   "    {\n" +
+                   "        \"new_datatype\": \"new datatype name2\",\n" +
+                   "        \"orig_datatype\": \"original datatype name2\",\n" +
+                   "        \"var_name\": \"variable name2\"\n" +
+                   "    }\n" +
+                   "]";
+        JsonExtractor<DataTypeListJson> extractor4 = new JsonExtractor(s4, DataTypeListJson.class);
+        DataTypeListJson data4 = extractor4.get_data();
+        assertEquals(data4.size(), 2);
+        assertEquals(data4.get(0).new_datatype, "new datatype name");
+        assertEquals(data4.get(0).orig_datatype, "original datatype name");
+        assertEquals(data4.get(0).var_name, "variable name");
+        assertEquals(data4.get(1).new_datatype, "new datatype name2");
+        assertEquals(data4.get(1).orig_datatype, "original datatype name2");
+        assertEquals(data4.get(1).var_name, "variable name2");
     }
 
     @Test
@@ -98,7 +134,7 @@ public class JsonExtractorTest {
                    "    ]\n" +
                    "}\n" +
                    "```";
-        JsonExtractor extractor = new JsonExtractor(s1);
+        JsonExtractor<FuncParamVarJson> extractor = new JsonExtractor(s1, FuncParamVarJson.class);
         FuncParamVarJson data1 = extractor.get_data();
         assertEquals(data1.new_func_name, "new function name");
         assertEquals(data1.orig_func_name, "original function name");
@@ -137,7 +173,7 @@ public class JsonExtractorTest {
                    "}\n" +
                    "```\n" +
                    "This is markdown. ```cpp\nint main() {}\n```\n";
-        JsonExtractor extractor2 = new JsonExtractor(s2);
+        JsonExtractor<FuncParamVarJson> extractor2 = new JsonExtractor(s2, FuncParamVarJson.class);
         FuncParamVarJson data2 = extractor2.get_data();
         assertEquals(data2.new_func_name, "new function name");
         assertEquals(data2.orig_func_name, "original function name");
@@ -151,6 +187,48 @@ public class JsonExtractorTest {
         assertEquals(data2.variables.get(0).orig_var_name, "original variable name");
         assertEquals(data2.variables.get(1).new_var_name, "new variable name2");
         assertEquals(data2.variables.get(1).orig_var_name, "original variable name2");
+
+        String s3 = "```json\n" +
+                   "[\n" +
+                   "    {\n" +
+                   "        \"new_datatype\": \"new datatype name\",\n" +
+                   "        \"orig_datatype\": \"original datatype name\",\n" +
+                   "        \"var_name\": \"variable name\"\n" +
+                   "    }\n" +
+                   "]\n" +
+                   "```";
+        JsonExtractor<DataTypeListJson> extractor3 = new JsonExtractor(s3, DataTypeListJson.class);
+        DataTypeListJson data3 = extractor3.get_data();
+        assertEquals(data3.size(), 1);
+        assertEquals(data3.get(0).new_datatype, "new datatype name");
+        assertEquals(data3.get(0).orig_datatype, "original datatype name");
+        assertEquals(data3.get(0).var_name, "variable name");
+
+        String s4 = "This is markdown. ```cpp\nint main() {}\n```\n" +
+                   "```json\n" +
+                   "[\n" +
+                   "    {\n" +
+                   "        \"new_datatype\": \"new datatype name\",\n" +
+                   "        \"orig_datatype\": \"original datatype name\",\n" +
+                   "        \"var_name\": \"variable name\"\n" +
+                   "    },\n" +
+                   "    {\n" +
+                   "        \"new_datatype\": \"new datatype name2\",\n" +
+                   "        \"orig_datatype\": \"original datatype name2\",\n" +
+                   "        \"var_name\": \"variable name2\"\n" +
+                   "    }\n" +
+                   "]\n" +
+                   "```\n" +
+                   "This is markdown. ```cpp\nint main() {}\n```\n";
+        JsonExtractor<DataTypeListJson> extractor4 = new JsonExtractor(s4, DataTypeListJson.class);
+        DataTypeListJson data4 = extractor4.get_data();
+        assertEquals(data4.size(), 2);
+        assertEquals(data4.get(0).new_datatype, "new datatype name");
+        assertEquals(data4.get(0).orig_datatype, "original datatype name");
+        assertEquals(data4.get(0).var_name, "variable name");
+        assertEquals(data4.get(1).new_datatype, "new datatype name2");
+        assertEquals(data4.get(1).orig_datatype, "original datatype name2");
+        assertEquals(data4.get(1).var_name, "variable name2");
     }
 
     @Test
@@ -174,7 +252,7 @@ public class JsonExtractorTest {
                    "}\n" +
                    "```\n" +
                    "This is markdown.";
-        JsonExtractor extractor = new JsonExtractor(s1);
+        JsonExtractor<FuncParamVarJson> extractor = new JsonExtractor(s1, FuncParamVarJson.class);
         FuncParamVarJson data1 = extractor.get_data();
         assertEquals(data1.new_func_name, "new function name");
         assertEquals(data1.orig_func_name, "original function name");
@@ -211,7 +289,7 @@ public class JsonExtractorTest {
                    "    ]\n" +
                    "}\n" +
                    "This is markdown. ```cpp\nint main() {}\n```\n";
-        JsonExtractor extractor2 = new JsonExtractor(s2);
+        JsonExtractor<FuncParamVarJson> extractor2 = new JsonExtractor(s2, FuncParamVarJson.class);
         FuncParamVarJson data2 = extractor2.get_data();
         assertEquals(data2.new_func_name, "new function name");
         assertEquals(data2.orig_func_name, "original function name");
@@ -225,5 +303,46 @@ public class JsonExtractorTest {
         assertEquals(data2.variables.get(0).orig_var_name, "original variable name");
         assertEquals(data2.variables.get(1).new_var_name, "new variable name2");
         assertEquals(data2.variables.get(1).orig_var_name, "original variable name2");
+
+        String s3 = "This is markdown.\n" +
+                   "[\n" +
+                   "    {\n" +
+                   "        \"new_datatype\": \"new datatype name\",\n" +
+                   "        \"orig_datatype\": \"original datatype name\",\n" +
+                   "        \"var_name\": \"variable name\"\n" +
+                   "    }\n" +
+                   "]\n" +
+                   "```\n" +
+                   "This is markdown.";
+        JsonExtractor<DataTypeListJson> extractor3 = new JsonExtractor(s3, DataTypeListJson.class);
+        DataTypeListJson data3 = extractor3.get_data();
+        assertEquals(data3.size(), 1);
+        assertEquals(data3.get(0).new_datatype, "new datatype name");
+        assertEquals(data3.get(0).orig_datatype, "original datatype name");
+        assertEquals(data3.get(0).var_name, "variable name");
+
+        String s4 = "This is markdown. ```cpp\nint main() {}\n```\n" +
+                   "[\n" +
+                   "    {\n" +
+                   "        \"new_datatype\": \"new datatype name\",\n" +
+                   "        \"orig_datatype\": \"original datatype name\",\n" +
+                   "        \"var_name\": \"variable name\"\n" +
+                   "    },\n" +
+                   "    {\n" +
+                   "        \"new_datatype\": \"new datatype name2\",\n" +
+                   "        \"orig_datatype\": \"original datatype name2\",\n" +
+                   "        \"var_name\": \"variable name2\"\n" +
+                   "    }\n" +
+                   "]\n" +
+                   "This is markdown. ```cpp\nint main() {}\n```\n";
+        JsonExtractor<DataTypeListJson> extractor4 = new JsonExtractor(s4, DataTypeListJson.class);
+        DataTypeListJson data4 = extractor4.get_data();
+        assertEquals(data4.size(), 2);
+        assertEquals(data4.get(0).new_datatype, "new datatype name");
+        assertEquals(data4.get(0).orig_datatype, "original datatype name");
+        assertEquals(data4.get(0).var_name, "variable name");
+        assertEquals(data4.get(1).new_datatype, "new datatype name2");
+        assertEquals(data4.get(1).orig_datatype, "original datatype name2");
+        assertEquals(data4.get(1).var_name, "variable name2");
     }
 }
