@@ -1,16 +1,7 @@
 package kingaidra.decom.ai;
 
 import java.util.List;
-
-class ParamJson {
-    public String new_param_name;
-    public String orig_param_name;
-}
-
-class VarJson {
-    public String new_var_name;
-    public String orig_var_name;
-}
+import com.fasterxml.jackson.annotation.JsonProperty;
 
 public class FuncParamVarJson implements JsonDataInterface {
     public String new_func_name;
