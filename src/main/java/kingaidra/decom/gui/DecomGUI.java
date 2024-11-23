@@ -22,15 +22,15 @@ import ghidra.program.model.listing.Program;
 import ghidra.util.task.TaskMonitor;
 import kingaidra.decom.DecomDiff;
 import kingaidra.decom.Guess;
-import kingaidra.decom.KinGAidraDecomTaskService;
 import kingaidra.decom.Refactor;
 import kingaidra.decom.ai.Ai;
-import kingaidra.decom.ai.Model;
-import kingaidra.decom.ai.ModelByScript;
+import kingaidra.chat.KinGAidraChatTaskService;
+import kingaidra.chat.ai.Model;
+import kingaidra.chat.ai.ModelByScript;
 import kingaidra.ghidra.GhidraPreferences;
 import kingaidra.ghidra.GhidraUtil;
 import kingaidra.ghidra.GhidraUtilImpl;
-import kingaidra.ghidra.ModelPreferences;
+import kingaidra.ghidra.ChatModelPreferences;
 import kingaidra.gui.MainProvider;
 import kingaidra.log.Logger;
 import resources.Icons;
@@ -45,7 +45,7 @@ public class DecomGUI extends JPanel {
 
     private Program program;
     private PluginTool plugin;
-    private KinGAidraDecomTaskService srv;
+    private KinGAidraChatTaskService srv;
     private GhidraUtil ghidra;
     private Ai ai;
     private GuessGUI ggui;
@@ -54,7 +54,7 @@ public class DecomGUI extends JPanel {
     private boolean busy;
 
     public DecomGUI(MainProvider provider, Tool dockingTool, Program program, Plugin plugin,
-            String owner, KinGAidraDecomTaskService srv) {
+            String owner, KinGAidraChatTaskService srv) {
         super();
         this.program = program;
         this.plugin = plugin.getTool();
@@ -68,7 +68,7 @@ public class DecomGUI extends JPanel {
     }
 
     private void buildPanel() {
-        GhidraPreferences<Model> pref = new ModelPreferences();
+        GhidraPreferences<Model> pref = new ChatModelPreferences();
         ghidra = new GhidraUtilImpl(program, TaskMonitor.DUMMY);
         ai = new Ai(plugin, program, srv);
         Guess guess = new Guess(ghidra, ai, pref);

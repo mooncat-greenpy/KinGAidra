@@ -5,13 +5,13 @@ import org.junit.jupiter.api.Test;
 import ghidra.program.model.listing.Program;
 import ghidra.util.task.TaskMonitor;
 import kingaidra.decom.ai.Ai;
-import kingaidra.decom.ai.Model;
+import kingaidra.chat.ai.Model;
 import kingaidra.ghidra.GhidraPreferences;
 import kingaidra.ghidra.GhidraUtil;
 import kingaidra.ghidra.GhidraUtilImpl;
 import kingaidra.testutil.GhidraTestUtil;
 import kingaidra.testutil.ModelDummy;
-import kingaidra.testutil.ModelPreferencesDummy;
+import kingaidra.testutil.ChatModelPreferencesDummy;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
@@ -24,7 +24,7 @@ public class GuessTest {
         Program program = util.create_program();
         GhidraUtil gu = new GhidraUtilImpl(program, TaskMonitor.DUMMY);
         Ai ai = new Ai(null, program, null);
-        GhidraPreferences<Model> pref = new ModelPreferencesDummy();
+        GhidraPreferences<Model> pref = new ChatModelPreferencesDummy();
         pref.store("Dummy", new ModelDummy("Dummy", "dummy.py", true));
         Guess guess = new Guess(gu, ai, pref);
         assertTrue(guess.exist_model("Dummy"));
@@ -43,7 +43,7 @@ public class GuessTest {
         Program program = util.create_program();
         GhidraUtil gu = new GhidraUtilImpl(program, TaskMonitor.DUMMY);
         Ai ai = new Ai(null, program, null);
-        GhidraPreferences<Model> pref = new ModelPreferencesDummy();
+        GhidraPreferences<Model> pref = new ChatModelPreferencesDummy();
         pref.store("Dummy", new ModelDummy("Dummy", "dummy.py", true));
         Guess guess = new Guess(gu, ai, pref);
         guess.set_model_name("Dummy", "d");
@@ -59,7 +59,7 @@ public class GuessTest {
         Program program = util.create_program();
         GhidraUtil gu = new GhidraUtilImpl(program, TaskMonitor.DUMMY);
         Ai ai = new Ai(null, program, null);
-        GhidraPreferences<Model> pref = new ModelPreferencesDummy();
+        GhidraPreferences<Model> pref = new ChatModelPreferencesDummy();
         pref.store("Dummy", new ModelDummy("Dummy", "dummy.py", true));
         Guess guess = new Guess(gu, ai, pref);
         guess.set_model_status(guess.get_models()[0], false);
@@ -74,7 +74,7 @@ public class GuessTest {
         Program program = util.create_program();
         GhidraUtil gu = new GhidraUtilImpl(program, TaskMonitor.DUMMY);
         Ai ai = new Ai(null, program, null);
-        GhidraPreferences<Model> pref = new ModelPreferencesDummy();
+        GhidraPreferences<Model> pref = new ChatModelPreferencesDummy();
         pref.store("Dummy", new ModelDummy("Dummy", "dummy.py", true));
         Guess guess = new Guess(gu, ai, pref);
         DecomDiff diff = guess.guess(guess.get_models()[0], util.get_addr(program, 0x402000));
@@ -97,7 +97,7 @@ public class GuessTest {
         Program program = util.create_program();
         GhidraUtil gu = new GhidraUtilImpl(program, TaskMonitor.DUMMY);
         Ai ai = new Ai(null, program, null);
-        GhidraPreferences<Model> pref = new ModelPreferencesDummy();
+        GhidraPreferences<Model> pref = new ChatModelPreferencesDummy();
         pref.store("Dummy1", new ModelDummy("Dummy1", "dummy.py", true));
         pref.store("Dummy2", new ModelDummy("Dummy2", "dummy.py", true));
         Guess guess = new Guess(gu, ai, pref);
@@ -135,7 +135,7 @@ public class GuessTest {
         Program program = util.create_program();
         GhidraUtil gu = new GhidraUtilImpl(program, TaskMonitor.DUMMY);
         Ai ai = new Ai(null, program, null);
-        GhidraPreferences<Model> pref = new ModelPreferencesDummy();
+        GhidraPreferences<Model> pref = new ChatModelPreferencesDummy();
         pref.store("Dummy1", new ModelDummy("Dummy1", "dummy.py", true));
         pref.store("Dummy2", new ModelDummy("Dummy2", "dummy.py", true));
         Guess guess = new Guess(gu, ai, pref);

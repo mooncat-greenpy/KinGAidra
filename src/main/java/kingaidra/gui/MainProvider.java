@@ -23,7 +23,7 @@ public class MainProvider extends ComponentProvider {
 
         main_panel = new JTabbedPane();
         if (decom_srv != null) {
-            decom_panel = new DecomGUI(this, this.dockingTool, program, plugin, owner, decom_srv);
+            decom_panel = new DecomGUI(this, this.dockingTool, program, plugin, owner, chat_srv);
             main_panel.add("Decom", decom_panel);
         }
         if (chat_srv != null) {

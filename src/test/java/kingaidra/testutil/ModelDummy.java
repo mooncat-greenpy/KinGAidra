@@ -4,8 +4,9 @@ import ghidra.framework.plugintool.PluginTool;
 import ghidra.program.model.listing.Program;
 import kingaidra.decom.DecomDiff;
 import kingaidra.decom.DiffPair;
-import kingaidra.decom.KinGAidraDecomTaskService;
-import kingaidra.decom.ai.Model;
+import kingaidra.chat.Conversation;
+import kingaidra.chat.KinGAidraChatTaskService;
+import kingaidra.chat.ai.Model;
 import kingaidra.decom.ai.ModelType;
 
 public class ModelDummy implements Model {
@@ -54,18 +55,115 @@ public class ModelDummy implements Model {
         this.type = type;
     }
 
-    public DecomDiff guess(DecomDiff diff, KinGAidraDecomTaskService service, PluginTool tool,
+    public Conversation guess(Conversation convo, KinGAidraChatTaskService service, PluginTool tool,
             Program program) {
-        diff.set_name(diff.get_name().get_new_name() + name);
-        for (DiffPair pair : diff.get_params()) {
-            pair.set_new_name(pair.get_new_name() + name);
+        if (convo.get_msg(convo.get_msgs_len() - 1).contains("func_401000") && convo.get_msg(convo.get_msgs_len() - 1).contains("new_func_name")) {
+            convo.add_assistant_msg("{\n" +
+                        "    \"new_func_name\": \"func_401000" + name + "\",\n" +
+                        "    \"orig_func_name\": \"func_401000\",\n" +
+                        "    \"parameters\": [\n" +
+                        "    ],\n" +
+                        "    \"variables\": [\n" +
+                        "        {\n" +
+                        "            \"new_var_name\": \"in_EAX" + name + "\",\n" +
+                        "            \"orig_var_name\": \"in_EAX\"\n" +
+                        "        }\n" +
+                        "    ]\n" +
+                        "}");
+        } else if (convo.get_msg(convo.get_msgs_len() - 1).contains("func_402000") && convo.get_msg(convo.get_msgs_len() - 1).contains("new_func_name")) {
+            convo.add_assistant_msg("{\n" +
+                        "    \"new_func_name\": \"func_402000" + name + "\",\n" +
+                        "    \"orig_func_name\": \"func_402000\",\n" +
+                        "    \"parameters\": [\n" +
+                        "        {\n" +
+                        "            \"new_param_name\": \"param_1" + name + "\",\n" +
+                        "            \"orig_param_name\": \"param_1\"\n" +
+                        "        }\n" +
+                        "    ],\n" +
+                        "    \"variables\": [\n" +
+                        "        {\n" +
+                        "            \"new_var_name\": \"piVar1" + name + "\",\n" +
+                        "            \"orig_var_name\": \"piVar1\"\n" +
+                        "        },\n" +
+                        "        {\n" +
+                        "            \"new_var_name\": \"in_EAX" + name + "\",\n" +
+                        "            \"orig_var_name\": \"in_EAX\"\n" +
+                        "        },\n" +
+                        "        {\n" +
+                        "            \"new_var_name\": \"puVar2" + name + "\",\n" +
+                        "            \"orig_var_name\": \"puVar2\"\n" +
+                        "        },\n" +
+                        "        {\n" +
+                        "            \"new_var_name\": \"in_EDX" + name + "\",\n" +
+                        "            \"orig_var_name\": \"in_EDX\"\n" +
+                        "        },\n" +
+                        "        {\n" +
+                        "            \"new_var_name\": \"unaff_EBX" + name + "\",\n" +
+                        "            \"orig_var_name\": \"unaff_EBX\"\n" +
+                        "        },\n" +
+                        "        {\n" +
+                        "            \"new_var_name\": \"unaff_EDI" + name + "\",\n" +
+                        "            \"orig_var_name\": \"unaff_EDI\"\n" +
+                        "        },\n" +
+                        "        {\n" +
+                        "            \"new_var_name\": \"in_stack_00000004" + name + "\",\n" +
+                        "            \"orig_var_name\": \"in_stack_00000004\"\n" +
+                        "        }\n" +
+                        "    ]\n" +
+                        "}");
+        } else if (convo.get_msg(convo.get_msgs_len() - 1).contains("func_401000") && convo.get_msg(convo.get_msgs_len() - 1).contains("new_datatype")) {
+            convo.add_assistant_msg("[\n" +
+                                "    {\n" +
+                                "        \"new_datatype\": \"int" + name + "\",\n" +
+                                "        \"orig_datatype\": \"int\",\n" +
+                                "        \"var_name\": \"in_EAX\"\n" +
+                                "    }\n" +
+                                "]");
+        } else if (convo.get_msg(convo.get_msgs_len() - 1).contains("func_402000") && convo.get_msg(convo.get_msgs_len() - 1).contains("new_datatype")) {
+            convo.add_assistant_msg("[\n" +
+                                "    {\n" +
+                                "        \"new_datatype\": \"pointer" + name + "\",\n" +
+                                "        \"orig_datatype\": \"pointer\",\n" +
+                                "        \"var_name\": \"param_1\"\n" +
+                                "    },\n" +
+                                "    {\n" +
+                                "        \"new_datatype\": \"int*" + name + "\",\n" +
+                                "        \"orig_datatype\": \"int*\",\n" +
+                                "        \"var_name\": \"piVar1\"\n" +
+                                "    },\n" +
+                                "    {\n" +
+                                "        \"new_datatype\": \"char*" + name + "\",\n" +
+                                "        \"orig_datatype\": \"char*\",\n" +
+                                "        \"var_name\": \"in_EAX\"\n" +
+                                "    },\n" +
+                                "    {\n" +
+                                "        \"new_datatype\": \"undefined4*" + name + "\",\n" +
+                                "        \"orig_datatype\": \"undefined4*\",\n" +
+                                "        \"var_name\": \"puVar2\"\n" +
+                                "    },\n" +
+                                "    {\n" +
+                                "        \"new_datatype\": \"int" + name + "\",\n" +
+                                "        \"orig_datatype\": \"int\",\n" +
+                                "        \"var_name\": \"in_EDX\"\n" +
+                                "    },\n" +
+                                "    {\n" +
+                                "        \"new_datatype\": \"int" + name + "\",\n" +
+                                "        \"orig_datatype\": \"int\",\n" +
+                                "        \"var_name\": \"unaff_EBX\"\n" +
+                                "    },\n" +
+                                "    {\n" +
+                                "        \"new_datatype\": \"int" + name + "\",\n" +
+                                "        \"orig_datatype\": \"int\",\n" +
+                                "        \"var_name\": \"unaff_EDI\"\n" +
+                                "    },\n" +
+                                "    {\n" +
+                                "        \"new_datatype\": \"undefined4*" + name + "\",\n" +
+                                "        \"orig_datatype\": \"undefined4*\",\n" +
+                                "        \"var_name\": \"in_stack_00000004\"\n" +
+                                "    }\n" +
+                                "]");
         }
-        for (DiffPair pair : diff.get_vars()) {
-            pair.set_new_name(pair.get_new_name() + name);
-        }
-        for (DiffPair pair : diff.get_datatypes()) {
-            pair.set_new_name(pair.get_new_name() + name);
-        }
-        return diff;
+
+        return convo;
     }
 }

@@ -6,8 +6,8 @@ import java.util.List;
 
 import ghidra.program.model.address.Address;
 import kingaidra.decom.ai.Ai;
-import kingaidra.decom.ai.Model;
-import kingaidra.decom.ai.ModelByScript;
+import kingaidra.chat.ai.Model;
+import kingaidra.chat.ai.ModelByScript;
 import kingaidra.ghidra.GhidraPreferences;
 import kingaidra.ghidra.GhidraUtil;
 
