@@ -2,8 +2,8 @@ package kingaidra.chat;
 
 import ghidra.framework.plugintool.ServiceInfo;
 import kingaidra.KinGAidraPlugin;
-import kingaidra.TaskStatus;
-import kingaidra.decom.ai.TaskType;
+import kingaidra.ai.TaskStatus;
+import kingaidra.ai.TaskType;
 
 //@formatter:off
 @ServiceInfo (

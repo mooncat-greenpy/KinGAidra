@@ -4,9 +4,9 @@ import java.util.ArrayList;
 import java.util.List;
 
 import ghidra.framework.preferences.Preferences;
-import kingaidra.chat.ai.Model;
-import kingaidra.chat.ai.ModelByScript;
-import kingaidra.decom.ai.ModelType;
+import kingaidra.ai.Model;
+import kingaidra.ai.ModelByScript;
+import kingaidra.ai.ModelType;
 
 public class RefactorModelPreferences implements GhidraPreferences<Model> {
 

@@ -7,7 +7,7 @@ import java.util.Set;
 import java.util.UUID;
 
 import ghidra.program.model.address.Address;
-import kingaidra.chat.ai.Model;
+import kingaidra.ai.Model;
 
 
 class Message {

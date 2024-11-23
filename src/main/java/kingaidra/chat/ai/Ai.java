@@ -2,9 +2,9 @@ package kingaidra.chat.ai;
 
 import ghidra.framework.plugintool.PluginTool;
 import ghidra.program.model.listing.Program;
+import kingaidra.ai.TaskType;
 import kingaidra.chat.Conversation;
 import kingaidra.chat.KinGAidraChatTaskService;
-import kingaidra.decom.ai.TaskType;
 
 public class Ai {
     private PluginTool tool;

@@ -4,11 +4,11 @@ import ghidra.framework.plugintool.PluginTool;
 import ghidra.program.model.listing.Program;
 import kingaidra.decom.DecomDiff;
 import kingaidra.decom.DiffPair;
+import kingaidra.ai.Model;
+import kingaidra.ai.ModelType;
+import kingaidra.ai.TaskType;
 import kingaidra.chat.Conversation;
 import kingaidra.chat.KinGAidraChatTaskService;
-import kingaidra.chat.ai.Model;
-import kingaidra.decom.ai.ModelType;
-import kingaidra.decom.ai.TaskType;
 
 public class ModelDummy implements Model {
     String name;

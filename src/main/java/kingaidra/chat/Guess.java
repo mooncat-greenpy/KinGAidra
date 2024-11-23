@@ -6,9 +6,9 @@ import java.util.regex.Pattern;
 
 import ghidra.program.model.address.Address;
 import ghidra.program.model.listing.Function;
+import kingaidra.ai.Model;
+import kingaidra.ai.ModelByScript;
 import kingaidra.chat.ai.Ai;
-import kingaidra.chat.ai.Model;
-import kingaidra.chat.ai.ModelByScript;
 import kingaidra.ghidra.GhidraPreferences;
 import kingaidra.ghidra.GhidraUtil;
 

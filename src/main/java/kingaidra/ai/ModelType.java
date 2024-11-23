@@ -1,4 +1,4 @@
-package kingaidra.decom.ai;
+package kingaidra.ai;
 
 public enum ModelType {
     DECOM_REFACTOR,

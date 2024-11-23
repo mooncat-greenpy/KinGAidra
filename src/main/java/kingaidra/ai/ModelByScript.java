@@ -1,4 +1,4 @@
-package kingaidra.chat.ai;
+package kingaidra.ai;
 
 import java.io.PrintWriter;
 import java.util.Random;
@@ -9,10 +9,7 @@ import ghidra.app.services.*;
 import ghidra.framework.plugintool.PluginTool;
 import ghidra.program.model.listing.Program;
 import ghidra.util.task.TaskMonitor;
-import kingaidra.TaskStatus;
 import kingaidra.chat.Conversation;
-import kingaidra.decom.ai.ModelType;
-import kingaidra.decom.ai.TaskType;
 import kingaidra.chat.KinGAidraChatTaskService;
 import kingaidra.log.Logger;
 

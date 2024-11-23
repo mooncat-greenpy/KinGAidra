@@ -4,6 +4,7 @@ import ghidra.framework.plugintool.PluginTool;
 import ghidra.program.model.listing.Program;
 import kingaidra.decom.DecomDiff;
 import kingaidra.chat.KinGAidraChatTaskService;
+import kingaidra.ai.TaskType;
 import kingaidra.chat.Conversation;
 
 public class Ai {

@@ -1,10 +1,8 @@
-package kingaidra.chat.ai;
+package kingaidra.ai;
 
 import ghidra.framework.plugintool.PluginTool;
 import ghidra.program.model.listing.Program;
 import kingaidra.chat.Conversation;
-import kingaidra.decom.ai.ModelType;
-import kingaidra.decom.ai.TaskType;
 import kingaidra.chat.KinGAidraChatTaskService;
 
 public interface Model {
