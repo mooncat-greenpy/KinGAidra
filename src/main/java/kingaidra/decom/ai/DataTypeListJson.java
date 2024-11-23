@@ -20,6 +20,7 @@ class DataTypeJson {
     }
 }
 
+
 public class DataTypeListJson extends ArrayList<DataTypeJson> implements JsonDataInterface {
 
     @Override

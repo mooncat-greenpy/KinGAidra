@@ -3,7 +3,7 @@ package kingaidra.testutil;
 import java.util.HashMap;
 import java.util.Map;
 
-import kingaidra.decom.ai.Model;
+import kingaidra.chat.ai.Model;
 import kingaidra.ghidra.GhidraPreferences;
 
 public class ModelPreferencesDummy implements GhidraPreferences<Model> {

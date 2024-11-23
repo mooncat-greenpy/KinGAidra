@@ -6,7 +6,6 @@ import docking.ComponentProvider;
 import ghidra.framework.plugintool.Plugin;
 import ghidra.program.model.listing.Program;
 import kingaidra.chat.gui.ChatGUI;
-import kingaidra.decom.KinGAidraDecomTaskService;
 import kingaidra.chat.KinGAidraChatTaskService;
 import kingaidra.decom.gui.DecomGUI;
 
@@ -18,18 +17,17 @@ public class MainProvider extends ComponentProvider {
     private JPanel zzz_panel;
 
     public MainProvider(Program program, Plugin plugin, String owner,
-            KinGAidraDecomTaskService decom_srv, KinGAidraChatTaskService chat_srv) {
+            KinGAidraChatTaskService srv) {
         super(plugin.getTool(), owner, owner);
 
         main_panel = new JTabbedPane();
-        if (decom_srv != null) {
-            decom_panel = new DecomGUI(this, this.dockingTool, program, plugin, owner, chat_srv);
-            main_panel.add("Decom", decom_panel);
-        }
-        if (chat_srv != null) {
-            chat_panel = new ChatGUI(this, this.dockingTool, program, plugin, owner, chat_srv);
-            main_panel.add("Chat", chat_panel);
-        }
+
+        decom_panel = new DecomGUI(this, this.dockingTool, program, plugin, owner, srv);
+        main_panel.add("Decom", decom_panel);
+
+        chat_panel = new ChatGUI(this, this.dockingTool, program, plugin, owner, srv);
+        main_panel.add("Chat", chat_panel);
+
         zzz_panel = new JPanel();
         main_panel.add("ZZZ", zzz_panel);
 

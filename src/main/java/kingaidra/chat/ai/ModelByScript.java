@@ -12,6 +12,7 @@ import ghidra.util.task.TaskMonitor;
 import kingaidra.TaskStatus;
 import kingaidra.chat.Conversation;
 import kingaidra.decom.ai.ModelType;
+import kingaidra.decom.ai.TaskType;
 import kingaidra.chat.KinGAidraChatTaskService;
 import kingaidra.log.Logger;
 
@@ -60,8 +61,8 @@ public class ModelByScript implements Model {
         this.type = type;
     }
 
-    public Conversation guess(Conversation convo, KinGAidraChatTaskService service, PluginTool tool,
-            Program program) {
+    public Conversation guess(TaskType type, Conversation convo, KinGAidraChatTaskService service,
+            PluginTool tool, Program program) {
         if (!active) {
             return null;
         }
@@ -70,7 +71,7 @@ public class ModelByScript implements Model {
         String key = String.format("%x", rand.nextLong());
 
         convo.set_model(this);
-        service.add_task(key, convo);
+        service.add_task(key, type, convo);
 
         ResourceFile file = GhidraScriptUtil.findScriptByName(script_file);
         if (file == null) {

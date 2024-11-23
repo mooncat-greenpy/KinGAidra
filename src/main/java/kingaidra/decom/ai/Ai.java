@@ -5,7 +5,6 @@ import ghidra.program.model.listing.Program;
 import kingaidra.decom.DecomDiff;
 import kingaidra.chat.KinGAidraChatTaskService;
 import kingaidra.chat.Conversation;
-import kingaidra.chat.ai.Model;
 
 public class Ai {
     private PluginTool tool;
@@ -32,7 +31,7 @@ public class Ai {
 
     private boolean guess_func_param_var(DecomDiff diff) {
         Conversation convo = new Conversation(diff.get_model());
-        convo.add_user_msg(String.format("Please improve the readability of the following code by renaming the functions, parameters, and variables with more descriptive and meaningful names. The new names should better reflect the purpose of the functions and the role of each variable in the code.\n" +
+        if (!convo.add_user_msg(String.format("Please improve the readability of the following code by renaming the functions, parameters, and variables with more descriptive and meaningful names. The new names should better reflect the purpose of the functions and the role of each variable in the code.\n" +
                         "```\n" +
                         "%s\n" +
                         "```\n" +
@@ -56,8 +55,13 @@ public class Ai {
                         "        }\n" +
                         "    ]\n" +
                         "}\n" +
-                        "```", diff.get_src_code()));
-        convo = diff.get_model().guess(convo, service, tool, program);
+                        "```", diff.get_src_code()))) {
+            return false;
+        }
+        convo = diff.get_model().guess(TaskType.DECOM_REFACTOR_FUNC_PARAM_VAR, convo, service, tool, program);
+        if (convo == null) {
+            return false;
+        }
         JsonExtractor<FuncParamVarJson> extractor = new JsonExtractor<>(convo.get_msg(convo.get_msgs_len() - 1), FuncParamVarJson.class);
         FuncParamVarJson func_json = extractor.get_data();
         if (func_json == null) {
@@ -75,7 +79,7 @@ public class Ai {
 
     private boolean guess_datatype(DecomDiff diff) {
         Conversation convo = new Conversation(diff.get_model());
-        convo.add_user_msg(String.format("I have decompiled C code that contains various data type issues due to the decompilation process. I need your help to review the code and make the necessary corrections to the data types. Please go over the code and make these adjustments to improve the accuracy of the data types.\n" +
+        if (!convo.add_user_msg(String.format("I have decompiled C code that contains various data type issues due to the decompilation process. I need your help to review the code and make the necessary corrections to the data types. Please go over the code and make these adjustments to improve the accuracy of the data types.\n" +
                         "```cpp\n" +
                         "%s\n" +
                         "```\n" +
@@ -89,8 +93,13 @@ public class Ai {
                         "    },\n" +
                         "    ...\n" +
                         "]\n" +
-                        "```", diff.get_src_code()));
-        convo = diff.get_model().guess(convo, service, tool, program);
+                        "```", diff.get_src_code()))) {
+            return false;
+        }
+        convo = diff.get_model().guess(TaskType.DECOM_REFACTOR_DATATYPE, convo, service, tool, program);
+        if (convo == null) {
+            return false;
+        }
         JsonExtractor<DataTypeListJson> extractor = new JsonExtractor<>(convo.get_msg(convo.get_msgs_len() - 1), DataTypeListJson.class);
         DataTypeListJson datatype_json = extractor.get_data();
         if (datatype_json == null) {

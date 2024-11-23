@@ -4,6 +4,7 @@ import ghidra.framework.plugintool.PluginTool;
 import ghidra.program.model.listing.Program;
 import kingaidra.chat.Conversation;
 import kingaidra.decom.ai.ModelType;
+import kingaidra.decom.ai.TaskType;
 import kingaidra.chat.KinGAidraChatTaskService;
 
 public interface Model {
@@ -23,6 +24,6 @@ public interface Model {
 
     public void set_type(ModelType type);
 
-    public Conversation guess(Conversation convo, KinGAidraChatTaskService service, PluginTool tool,
+    public Conversation guess(TaskType type, Conversation convo, KinGAidraChatTaskService service, PluginTool tool,
             Program program);
 }

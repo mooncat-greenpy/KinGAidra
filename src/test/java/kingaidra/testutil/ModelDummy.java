@@ -8,6 +8,7 @@ import kingaidra.chat.Conversation;
 import kingaidra.chat.KinGAidraChatTaskService;
 import kingaidra.chat.ai.Model;
 import kingaidra.decom.ai.ModelType;
+import kingaidra.decom.ai.TaskType;
 
 public class ModelDummy implements Model {
     String name;
@@ -55,7 +56,7 @@ public class ModelDummy implements Model {
         this.type = type;
     }
 
-    public Conversation guess(Conversation convo, KinGAidraChatTaskService service, PluginTool tool,
+    public Conversation guess(TaskType type, Conversation convo, KinGAidraChatTaskService service, PluginTool tool,
             Program program) {
         if (convo.get_msg(convo.get_msgs_len() - 1).contains("func_401000") && convo.get_msg(convo.get_msgs_len() - 1).contains("new_func_name")) {
             convo.add_assistant_msg("{\n" +

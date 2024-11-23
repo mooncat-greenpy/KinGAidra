@@ -27,6 +27,7 @@ public class FuncParamVarJson implements JsonDataInterface {
 
     @Override
     public boolean validate() {
-        return new_func_name != null && orig_func_name != null && parameters != null && variables != null;
+        return new_func_name != null && orig_func_name != null && parameters != null
+                && variables != null;
     }
 }

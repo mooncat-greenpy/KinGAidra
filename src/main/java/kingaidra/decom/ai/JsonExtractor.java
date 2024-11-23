@@ -7,6 +7,7 @@ interface JsonDataInterface {
     public boolean validate();
 }
 
+
 public class JsonExtractor<T extends JsonDataInterface> {
 
     private T data;

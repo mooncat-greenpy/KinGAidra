@@ -11,9 +11,9 @@ import ghidra.framework.plugintool.PluginTool;
 import ghidra.framework.plugintool.util.PluginStatus;
 import ghidra.program.model.listing.Program;
 import ghidra.util.HelpLocation;
-import kingaidra.decom.DecomDiff;
-import kingaidra.decom.KinGAidraDecomTaskService;
 import kingaidra.chat.KinGAidraChatTaskService;
+import kingaidra.decom.ai.TaskType;
+import kingaidra.chat.Conversation;
 import kingaidra.gui.MainProvider;
 import kingaidra.log.Logger;
 
@@ -25,11 +25,11 @@ import kingaidra.log.Logger;
     shortDescription = "AI-powered Ghidra extension for enhanced analysis.",
     description = "KinGAidra is a Ghidra extension that uses AI to enhance reverse engineering by refining decompilation results. " +
                   "It provides tools for refactoring the decompiled code, making it easier to analyze and understand.",
-    servicesProvided = { KinGAidraDecomTaskService.class },
+    servicesProvided = { KinGAidraChatTaskService.class },
     servicesRequired = {}
 )
 //@formatter:on
-public class KinGAidraPlugin extends ProgramPlugin implements KinGAidraDecomTaskService {
+public class KinGAidraPlugin extends ProgramPlugin implements KinGAidraChatTaskService {
 
     private final String NAME = "KinGAidra";
     MainProvider provider;
@@ -40,7 +40,8 @@ public class KinGAidraPlugin extends ProgramPlugin implements KinGAidraDecomTask
         Logger.set_logger(tool, false);
 
         status_map = new HashMap<>();
-        diff_map = new HashMap<>();
+        type_map = new HashMap<>();
+        convo_map = new HashMap<>();
     }
 
     @Override
@@ -50,16 +51,7 @@ public class KinGAidraPlugin extends ProgramPlugin implements KinGAidraDecomTask
 
     @Override
     public void programOpened(Program program) {
-        KinGAidraChatTaskService service = null;
-        for (Object obj : program.getConsumerList()) {
-            if (!(obj instanceof PluginTool)) {
-                continue;
-            }
-            PluginTool plugin_tool = (PluginTool) obj;
-            service = plugin_tool.getService(KinGAidraChatTaskService.class);
-            break;
-        }
-        provider = new MainProvider(program, this, NAME, this, service);
+        provider = new MainProvider(program, this, NAME, this);
 
         String topicName = "kingaidra";
         String anchorName = "HelpAnchor";
@@ -68,30 +60,22 @@ public class KinGAidraPlugin extends ProgramPlugin implements KinGAidraDecomTask
 
 
     private Map<String, TaskStatus> status_map;
-    private Map<String, DecomDiff> diff_map;
+    private Map<String, TaskType> type_map;
+    private Map<String, Conversation> convo_map;
 
     @Override
-    public void add_task(String key, DecomDiff diff) {
+    public void add_task(String key, TaskType type, Conversation convo) {
         status_map.put(key, TaskStatus.RUNNING);
-        diff_map.put(key, diff);
+        type_map.put(key, type);
+        convo_map.put(key, convo);
     }
 
     @Override
-    public void commit_task(String key, String func_name, Map<String, String> params,
-            Map<String, String> vars, Map<String, String> datatypes) {
-        DecomDiff diff = diff_map.get(key);
-        diff.set_name(func_name);
-        for (String p_key : params.keySet()) {
-            diff.set_param_new_name(p_key, params.get(p_key));
-        }
-        for (String v_key : vars.keySet()) {
-            diff.set_var_new_name(v_key, vars.get(v_key));
-        }
-        for (String v_key : datatypes.keySet()) {
-            diff.set_datatype_new_name(v_key, datatypes.get(v_key));
-        }
+    public void commit_task(String key, String msg) {
+        Conversation convo = convo_map.get(key);
+        convo.add_assistant_msg(msg);
         status_map.put(key, TaskStatus.SUCCESS);
-        diff_map.put(key, diff);
+        convo_map.put(key, convo);
     }
 
     @Override
@@ -100,8 +84,13 @@ public class KinGAidraPlugin extends ProgramPlugin implements KinGAidraDecomTask
     }
 
     @Override
-    public DecomDiff get_task(String key) {
-        return diff_map.get(key);
+    public Conversation get_task(String key) {
+        return convo_map.get(key);
+    }
+
+    @Override
+    public TaskType get_task_type(String key, TaskType type) {
+        return type_map.get(key);
     }
 
     @Override
@@ -110,10 +99,11 @@ public class KinGAidraPlugin extends ProgramPlugin implements KinGAidraDecomTask
     }
 
     @Override
-    public DecomDiff pop_task(String key) {
-        DecomDiff diff = get_task(key);
+    public Conversation pop_task(String key) {
+        Conversation convo = get_task(key);
         status_map.remove(key);
-        diff_map.remove(key);
-        return diff;
+        type_map.remove(key);
+        convo_map.remove(key);
+        return convo;
     }
 }

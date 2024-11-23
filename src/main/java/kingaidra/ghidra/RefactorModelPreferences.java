@@ -5,15 +5,15 @@ import java.util.List;
 
 import ghidra.framework.preferences.Preferences;
 import kingaidra.chat.ai.Model;
-import kingaidra.decom.ai.ModelType;
 import kingaidra.chat.ai.ModelByScript;
+import kingaidra.decom.ai.ModelType;
 
-public class ChatModelPreferences implements GhidraPreferences<Model> {
+public class RefactorModelPreferences implements GhidraPreferences<Model> {
 
-    private static final String PATH = BASE + "chat.model.";
+    private static final String PATH = BASE + "model.";
     private static final String VERSION = "0.0.1";
 
-    public ChatModelPreferences() {
+    public RefactorModelPreferences() {
         Preferences.setProperty(PATH.substring(0, PATH.length() - 1), VERSION);
     }
 
@@ -25,9 +25,6 @@ public class ChatModelPreferences implements GhidraPreferences<Model> {
                     Boolean.parseBoolean(Preferences.getProperty(path + ".active", "false"));
             ModelType model_type =
                     ModelType.valueOf(Preferences.getProperty(path + ".type", "DECOM_REFACTOR"));
-            if (model_type != ModelType.CHAT) {
-                return null;
-            }
             if (model_name.isEmpty() || model_script_file.isEmpty()) {
                 return null;
             }

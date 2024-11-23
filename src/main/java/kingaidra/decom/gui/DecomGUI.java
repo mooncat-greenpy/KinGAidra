@@ -30,7 +30,7 @@ import kingaidra.chat.ai.ModelByScript;
 import kingaidra.ghidra.GhidraPreferences;
 import kingaidra.ghidra.GhidraUtil;
 import kingaidra.ghidra.GhidraUtilImpl;
-import kingaidra.ghidra.ChatModelPreferences;
+import kingaidra.ghidra.RefactorModelPreferences;
 import kingaidra.gui.MainProvider;
 import kingaidra.log.Logger;
 import resources.Icons;
@@ -68,7 +68,7 @@ public class DecomGUI extends JPanel {
     }
 
     private void buildPanel() {
-        GhidraPreferences<Model> pref = new ChatModelPreferences();
+        GhidraPreferences<Model> pref = new RefactorModelPreferences();
         ghidra = new GhidraUtilImpl(program, TaskMonitor.DUMMY);
         ai = new Ai(plugin, program, srv);
         Guess guess = new Guess(ghidra, ai, pref);
@@ -78,6 +78,8 @@ public class DecomGUI extends JPanel {
         Model none_model = new ModelByScript("None", "kingaidra_none.py", true);
         Model chatgptlike_model =
                 new ModelByScript("ChatGPTLike", "kingaidra_chatgptlike.py", true);
+        Model chatgptlike_chat_model =
+                new ModelByScript("ChatGPTLikeChat", "kingaidra_chat_chatgptlike.py", true);
         if (!guess.exist_model(sample_model.get_name())) {
             guess.add_model(sample_model.get_name(), sample_model.get_script());
             guess.set_model_status(sample_model.get_name(), sample_model.get_active());
@@ -89,6 +91,10 @@ public class DecomGUI extends JPanel {
         if (!guess.exist_model(chatgptlike_model.get_name())) {
             guess.add_model(chatgptlike_model.get_name(), chatgptlike_model.get_script());
             guess.set_model_status(chatgptlike_model.get_name(), chatgptlike_model.get_active());
+        }
+        if (!guess.exist_model(chatgptlike_chat_model.get_name())) {
+            guess.add_model(chatgptlike_chat_model.get_name(), chatgptlike_chat_model.get_script());
+            guess.set_model_status(chatgptlike_chat_model.get_name(), chatgptlike_chat_model.get_active());
         }
 
         ggui = new GuessGUI(guess);

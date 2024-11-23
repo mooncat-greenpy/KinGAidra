@@ -214,9 +214,9 @@ public class GhidraUtilImpl implements GhidraUtil {
                     try {
                         param.setName(param_pair.get_new_name(), SourceType.USER_DEFINED);
                     } catch (DuplicateNameException | InvalidInputException e) {
-                        Logger.append_message(
-                                String.format("Failed to rename param name \\\"%s\\\" to \\\"%s\\\"",
-                                        param_pair.get_var_name(), param_pair.get_new_name()));
+                        Logger.append_message(String.format(
+                                "Failed to rename param name \\\"%s\\\" to \\\"%s\\\"",
+                                param_pair.get_var_name(), param_pair.get_new_name()));
                     }
                 }
 
@@ -224,15 +224,14 @@ public class GhidraUtilImpl implements GhidraUtil {
                 if (datatype_pair != null) {
                     try {
                         List<DataType> dt_l = new LinkedList<>();
-                        datatype_manager.findDataTypes(datatype_pair.get_new_name(),
-                                dt_l);
+                        datatype_manager.findDataTypes(datatype_pair.get_new_name(), dt_l);
                         if (dt_l.size() > 0) {
                             param.setDataType(dt_l.get(0), SourceType.USER_DEFINED);
                         }
                     } catch (InvalidInputException e) {
-                        Logger.append_message(
-                                String.format("Failed to retype param name \\\"%s\\\" to \\\"%s\\\"",
-                                        datatype_pair.get_var_name(), datatype_pair.get_new_name()));
+                        Logger.append_message(String.format(
+                                "Failed to retype param name \\\"%s\\\" to \\\"%s\\\"",
+                                datatype_pair.get_var_name(), datatype_pair.get_new_name()));
                     }
                 }
             }
@@ -264,7 +263,7 @@ public class GhidraUtilImpl implements GhidraUtil {
 
                     try {
                         HighFunctionDBUtil.updateDBVariable(sym, new_name, new_dt,
-                            SourceType.USER_DEFINED);
+                                SourceType.USER_DEFINED);
                     } catch (InvalidInputException | DuplicateNameException e) {
                         Logger.append_message(
                                 String.format("Failed to rename var name \\\"%s\\\" to \\\"%s\\\"",

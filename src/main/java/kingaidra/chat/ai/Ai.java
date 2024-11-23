@@ -4,6 +4,7 @@ import ghidra.framework.plugintool.PluginTool;
 import ghidra.program.model.listing.Program;
 import kingaidra.chat.Conversation;
 import kingaidra.chat.KinGAidraChatTaskService;
+import kingaidra.decom.ai.TaskType;
 
 public class Ai {
     private PluginTool tool;
@@ -17,6 +18,6 @@ public class Ai {
     }
 
     public Conversation guess(Conversation convo) {
-        return convo.get_model().guess(convo, service, tool, program);
+        return convo.get_model().guess(TaskType.CHAT, convo, service, tool, program);
     }
 }
