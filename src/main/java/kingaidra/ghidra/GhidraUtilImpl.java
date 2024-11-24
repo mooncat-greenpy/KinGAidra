@@ -1,15 +1,20 @@
 package kingaidra.ghidra;
 
+import java.io.StringReader;
 import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Map;
 
 import ghidra.app.decompiler.DecompInterface;
 import ghidra.app.decompiler.DecompileResults;
 import ghidra.app.decompiler.DecompiledFunction;
 import ghidra.app.services.CodeViewerService;
+import ghidra.app.util.cparser.C.CParser;
 import ghidra.framework.plugintool.PluginTool;
 import ghidra.program.model.address.Address;
+import ghidra.program.model.data.Category;
+import ghidra.program.model.data.CategoryPath;
 import ghidra.program.model.data.DataType;
 import ghidra.program.model.data.DataTypeManager;
 import ghidra.program.model.listing.Function;
@@ -188,6 +193,41 @@ public class GhidraUtilImpl implements GhidraUtil {
         return decom_diff;
     }
 
+    public void find_datatypes(String name, List<DataType> dt_list) {
+        DataTypeManager datatype_manager = program.getDataTypeManager();
+        datatype_manager.findDataTypes(name, dt_list);
+    }
+
+    public boolean parse_datatypes(String code) {
+        DataTypeManager datatype_manager = program.getDataTypeManager();
+        CParser parser = new CParser(datatype_manager);
+        DataType dt;
+        try {
+            dt = parser.parse(code);
+        } catch (Exception e) {
+            return false;
+        }
+        if (dt == null) {
+            return false;
+        }
+
+        int tid = program.startTransaction("KinGAidra datatype");
+        try {
+            CategoryPath category_path = new CategoryPath("/KinGAidra");
+            Category category;
+            if (datatype_manager.containsCategory(category_path)) {
+                category = datatype_manager.getCategory(category_path);
+            } else {
+                category = datatype_manager.createCategory(category_path);
+            }
+            category.addDataType(dt, null);
+        } finally {
+            program.endTransaction(tid, true);
+        }
+
+        return true;
+    }
+
     public boolean refact(DecomDiff diff) {
         Function func = get_func(diff.get_addr());
         if (func == null) {
@@ -196,7 +236,6 @@ public class GhidraUtilImpl implements GhidraUtil {
             return false;
         }
 
-        DataTypeManager datatype_manager = program.getDataTypeManager();
         int tid = program.startTransaction("KinGAidra decompiler");
         try {
             try {
@@ -224,7 +263,7 @@ public class GhidraUtilImpl implements GhidraUtil {
                 if (datatype_pair != null) {
                     try {
                         List<DataType> dt_l = new LinkedList<>();
-                        datatype_manager.findDataTypes(datatype_pair.get_new_name(), dt_l);
+                        find_datatypes(datatype_pair.get_new_name(), dt_l);
                         if (dt_l.size() > 0) {
                             param.setDataType(dt_l.get(0), SourceType.USER_DEFINED);
                         }
@@ -254,8 +293,8 @@ public class GhidraUtilImpl implements GhidraUtil {
                     DataType new_dt = null;
                     if (datatype_pair != null) {
                         List<DataType> dt_l = new LinkedList<>();
-                        datatype_manager.findDataTypes(
-                                diff.get_datatype(datatype_pair.get_id()).get_new_name(), dt_l);
+                        find_datatypes(diff.get_datatype(datatype_pair.get_id()).get_new_name(),
+                                dt_l);
                         if (dt_l.size() > 0) {
                             new_dt = dt_l.get(0);
                         }

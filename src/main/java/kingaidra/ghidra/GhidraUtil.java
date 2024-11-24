@@ -1,6 +1,10 @@
 package kingaidra.ghidra;
 
+import java.util.List;
+import java.util.Map;
+
 import ghidra.program.model.address.Address;
+import ghidra.program.model.data.DataType;
 import ghidra.program.model.listing.Function;
 import kingaidra.decom.DecomDiff;
 
@@ -16,6 +20,10 @@ public interface GhidraUtil {
     public String get_decom(Address addr);
 
     public DecomDiff get_decomdiff(Address addr);
+
+    public void find_datatypes(String name, List<DataType> dt_list);
+
+    public boolean parse_datatypes(String code);
 
     public boolean refact(DecomDiff diff);
 }
