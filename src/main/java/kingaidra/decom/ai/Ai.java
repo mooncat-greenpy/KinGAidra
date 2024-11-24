@@ -1,21 +1,47 @@
 package kingaidra.decom.ai;
 
 import ghidra.framework.plugintool.PluginTool;
+import ghidra.program.model.data.DataType;
 import ghidra.program.model.listing.Program;
 import kingaidra.decom.DecomDiff;
+import kingaidra.ghidra.GhidraUtil;
 import kingaidra.chat.KinGAidraChatTaskService;
+import kingaidra.ai.Model;
 import kingaidra.ai.TaskType;
 import kingaidra.chat.Conversation;
 
 public class Ai {
     private PluginTool tool;
     private Program program;
+    private GhidraUtil ghidra;
     private KinGAidraChatTaskService service;
 
-    public Ai(PluginTool tool, Program program, KinGAidraChatTaskService service) {
+    public Ai(PluginTool tool, Program program, GhidraUtil ghidra, KinGAidraChatTaskService service) {
         this.tool = tool;
         this.program = program;
+        this.ghidra = ghidra;
         this.service = service;
+    }
+
+    public DataType guess(String datatype_name, Model model) {
+        Conversation convo = new Conversation(model);
+        if (!convo.add_user_msg(String.format("Please write the %s structure in C language. " +
+                        "Include any dependent data types and structures. " +
+                        "Do not use #include or #define. " +
+                        "It is for %d-bit. ", datatype_name, program.getDefaultPointerSize() * 8))) {
+            return null;
+        }
+        convo = model.guess(TaskType.RESOLVE_DATATYPE, convo, service, tool, program);
+        if (convo == null) {
+            return null;
+        }
+
+        String msg = convo.get_msg(convo.get_msgs_len() - 1);
+        ClangExtractor extractor = new ClangExtractor(msg);
+        String target = extractor.get_data();
+
+        DataType dt = ghidra.parse_datatypes(target);
+        return dt;
     }
 
     public DecomDiff guess(DecomDiff diff) {

@@ -2,6 +2,7 @@ package kingaidra.decom.ai;
 
 import org.junit.jupiter.api.Test;
 
+import ghidra.program.model.data.DataType;
 import ghidra.program.model.listing.Program;
 import ghidra.util.task.TaskMonitor;
 import kingaidra.decom.DecomDiff;
@@ -19,9 +20,9 @@ public class AiTest {
     void test_guess() throws Exception {
         GhidraTestUtil util = new GhidraTestUtil();
         Program program = util.create_program();
-        Ai ai = new Ai(null, program, null);
-
         GhidraUtil gu = new GhidraUtilImpl(program, TaskMonitor.DUMMY);
+        Ai ai = new Ai(null, program, gu, null);
+
         DecomDiff diff = gu.get_decomdiff(util.get_addr(program, 0x401000));
         diff.set_model(new ModelDummy("Dummy", "dummy.py", true));
 
@@ -45,5 +46,8 @@ public class AiTest {
                             pair.get_new_name().length() - diff.get_model().get_name().length()),
                     "Dummy");
         }
+
+        DataType dt = ai.guess("PROCESSENTRY32", new ModelDummy("Dummy", "dummy.py", true));
+        assertEquals(dt.getName(), "PROCESSENTRY32");
     }
 }

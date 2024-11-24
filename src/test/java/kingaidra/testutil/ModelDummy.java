@@ -163,6 +163,47 @@ public class ModelDummy implements Model {
                                 "        \"var_name\": \"in_stack_00000004\"\n" +
                                 "    }\n" +
                                 "]");
+        } else if (type == TaskType.RESOLVE_DATATYPE) {
+            convo.add_assistant_msg("Here is the `PROCESSENTRY32` structure written in C for a 32-bit environment, including any necessary dependent data types and structures:\n" +
+                                "\n" +
+                                "```c\n" +
+                                "typedef unsigned long DWORD;\n" +
+                                "typedef unsigned long long ULONG_PTR;\n" +
+                                "typedef void* HANDLE;\n" +
+                                "typedef char TCHAR;\n" +
+                                "typedef unsigned short WORD;\n" +
+                                "typedef unsigned long ULONG;\n" +
+                                "\n" +
+                                "typedef struct _PROCESSENTRY32 {\n" +
+                                "    DWORD dwSize;              // Size of the structure in bytes\n" +
+                                "    DWORD cntUsage;            // Count of the number of times the process has been used\n" +
+                                "    ULONG_PTR th32ProcessID;   // Process ID\n" +
+                                "    ULONG_PTR th32DefaultHeapID; // Default heap ID\n" +
+                                "    DWORD th32ModuleID;        // Module ID\n" +
+                                "    HANDLE hProcess;           // Handle to the process\n" +
+                                "    DWORD th32ParentProcessID; // Parent process ID\n" +
+                                "    DWORD dwPriorityClass;     // Priority class of the process\n" +
+                                "    DWORD dwFlags;             // Flags related to the process\n" +
+                                "    TCHAR szExeFile[MAX_PATH]; // Path of the executable file for the process\n" +
+                                "} PROCESSENTRY32;\n" +
+                                "\n" +
+                                "// Maximum length of the executable file path\n" +
+                                "#define MAX_PATH 260\n" +
+                                "```\n" +
+                                "\n" +
+                                "### Breakdown of the structure:\n" +
+                                "1. **`dwSize`**: Specifies the size of the structure, which is used for versioning.\n" +
+                                "2. **`cntUsage`**: A count of how many times the process has been used (although not typically used in modern API calls).\n" +
+                                "3. **`th32ProcessID`**: The process ID of the target process.\n" +
+                                "4. **`th32DefaultHeapID`**: The default heap ID for the process, typically used in older Windows APIs.\n" +
+                                "5. **`th32ModuleID`**: Module ID of the process (often not used in current Windows versions).\n" +
+                                "6. **`hProcess`**: A handle to the process.\n" +
+                                "7. **`th32ParentProcessID`**: The parent process ID.\n" +
+                                "8. **`dwPriorityClass`**: The priority class for the process (like normal, high, etc.).\n" +
+                                "9. **`dwFlags`**: Flags indicating various process attributes.\n" +
+                                "10. **`szExeFile`**: The executable file's full path.\n" +
+                                "\n" +
+                                "Additionally, I defined **`MAX_PATH`** as `260`, which is the typical maximum length of file paths in Windows.");
         }
 
         return convo;

@@ -23,7 +23,7 @@ public class GuessTest {
         GhidraTestUtil util = new GhidraTestUtil();
         Program program = util.create_program();
         GhidraUtil gu = new GhidraUtilImpl(program, TaskMonitor.DUMMY);
-        Ai ai = new Ai(null, program, null);
+        Ai ai = new Ai(null, program, gu, null);
         GhidraPreferences<Model> pref = new ChatModelPreferencesDummy();
         pref.store("Dummy", new ModelDummy("Dummy", "dummy.py", true));
         Guess guess = new Guess(gu, ai, pref);
@@ -42,7 +42,7 @@ public class GuessTest {
         GhidraTestUtil util = new GhidraTestUtil();
         Program program = util.create_program();
         GhidraUtil gu = new GhidraUtilImpl(program, TaskMonitor.DUMMY);
-        Ai ai = new Ai(null, program, null);
+        Ai ai = new Ai(null, program, gu, null);
         GhidraPreferences<Model> pref = new ChatModelPreferencesDummy();
         pref.store("Dummy", new ModelDummy("Dummy", "dummy.py", true));
         Guess guess = new Guess(gu, ai, pref);
@@ -58,7 +58,7 @@ public class GuessTest {
         GhidraTestUtil util = new GhidraTestUtil();
         Program program = util.create_program();
         GhidraUtil gu = new GhidraUtilImpl(program, TaskMonitor.DUMMY);
-        Ai ai = new Ai(null, program, null);
+        Ai ai = new Ai(null, program, gu, null);
         GhidraPreferences<Model> pref = new ChatModelPreferencesDummy();
         pref.store("Dummy", new ModelDummy("Dummy", "dummy.py", true));
         Guess guess = new Guess(gu, ai, pref);
@@ -73,7 +73,7 @@ public class GuessTest {
         GhidraTestUtil util = new GhidraTestUtil();
         Program program = util.create_program();
         GhidraUtil gu = new GhidraUtilImpl(program, TaskMonitor.DUMMY);
-        Ai ai = new Ai(null, program, null);
+        Ai ai = new Ai(null, program, gu, null);
         GhidraPreferences<Model> pref = new ChatModelPreferencesDummy();
         pref.store("Dummy", new ModelDummy("Dummy", "dummy.py", true));
         Guess guess = new Guess(gu, ai, pref);
@@ -96,7 +96,7 @@ public class GuessTest {
         GhidraTestUtil util = new GhidraTestUtil();
         Program program = util.create_program();
         GhidraUtil gu = new GhidraUtilImpl(program, TaskMonitor.DUMMY);
-        Ai ai = new Ai(null, program, null);
+        Ai ai = new Ai(null, program, gu, null);
         GhidraPreferences<Model> pref = new ChatModelPreferencesDummy();
         pref.store("Dummy1", new ModelDummy("Dummy1", "dummy.py", true));
         pref.store("Dummy2", new ModelDummy("Dummy2", "dummy.py", true));
@@ -134,7 +134,7 @@ public class GuessTest {
         GhidraTestUtil util = new GhidraTestUtil();
         Program program = util.create_program();
         GhidraUtil gu = new GhidraUtilImpl(program, TaskMonitor.DUMMY);
-        Ai ai = new Ai(null, program, null);
+        Ai ai = new Ai(null, program, gu, null);
         GhidraPreferences<Model> pref = new ChatModelPreferencesDummy();
         pref.store("Dummy1", new ModelDummy("Dummy1", "dummy.py", true));
         pref.store("Dummy2", new ModelDummy("Dummy2", "dummy.py", true));

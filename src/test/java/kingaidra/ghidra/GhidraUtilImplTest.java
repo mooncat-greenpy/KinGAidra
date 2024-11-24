@@ -124,106 +124,83 @@ class GhidraUtilImplTest {
         gu.find_datatypes("PROCESSENTRY32", dt_list);
         assertEquals(dt_list.size(), 1);
 
-        dt = gu.parse_datatypes("typedef unsigned long DWORD;\n" +
-                                "\n" +
-                                "typedef long LONG;\n" +
-                                "\n" +
-                                "typedef void* PVOID;\n" +
-                                "\n" +
-                                "typedef char TCHAR;\n" +
-                                "\n" +
-                                "#define MAX_PATH 260" +
-                                "\n" +
-                                "typedef struct _LIST_ENTRY {\n" +
-                                "    struct _LIST_ENTRY* Flink;\n" +
-                                "    struct _LIST_ENTRY* Blink;\n" +
-                                "} LIST_ENTRY;\n" +
-                                "\n" +
-                                "typedef struct _PEB_LDR_DATA {\n" +
-                                "    DWORD Length;\n" +
-                                "    DWORD Initialized;\n" +
-                                "    PVOID SsHandle;\n" +
-                                "    LIST_ENTRY InLoadOrderModuleList;\n" +
-                                "    LIST_ENTRY InMemoryOrderModuleList;\n" +
-                                "    LIST_ENTRY InInitializationOrderModuleList;\n" +
-                                "} PEB_LDR_DATA;\n" +
+        dt = gu.parse_datatypes("typedef struct _RTL_DRIVE_LETTER_CURDIR {\n" +
+                                "    unsigned short Length;\n" +
+                                "    unsigned short Flags;\n" +
+                                "    unsigned long  DriveLetter;\n" +
+                                "    wchar_t        CurrentPath[1];   // this is a dynamic size array, typically varies\n" +
+                                "} RTL_DRIVE_LETTER_CURDIR, *PRTL_DRIVE_LETTER_CURDIR;\n" +
                                 "\n" +
                                 "typedef struct _RTL_USER_PROCESS_PARAMETERS {\n" +
-                                "    DWORD MaximumLength;\n" +
-                                "    DWORD Length;\n" +
-                                "    DWORD Flags;\n" +
-                                "    DWORD DebugFlags;\n" +
-                                "    PVOID ConsoleHandle;\n" +
-                                "    DWORD ConsoleFlags;\n" +
-                                "    PVOID StandardInput;\n" +
-                                "    PVOID StandardOutput;\n" +
-                                "    PVOID StandardError;\n" +
-                                "    LIST_ENTRY CurrentDirectoryPath;\n" +
-                                "    PVOID CurrentDirectoryHandle;\n" +
-                                "    TCHAR DllPath[MAX_PATH];\n" +
-                                "    TCHAR ImagePathName[MAX_PATH];\n" +
-                                "    TCHAR CommandLine[MAX_PATH];\n" +
-                                "    PVOID Environment;\n" +
-                                "    DWORD StartingPositionLeft;\n" +
-                                "    DWORD StartingPositionTop;\n" +
-                                "    DWORD Width;\n" +
-                                "    DWORD Height;\n" +
-                                "    DWORD CharWidth;\n" +
-                                "    DWORD CharHeight;\n" +
-                                "    DWORD ConsoleTextAttribute;\n" +
-                                "    DWORD ConsoleWindowFlags;\n" +
-                                "    DWORD ConsoleScreenBufferSize;\n" +
-                                "    DWORD ConSelection;\n" +
-                                "    PVOID hConsoleOutput;\n" +
-                                "    PVOID hConsoleInput;\n" +
-                                "    PVOID hConsoleError;\n" +
-                                "} RTL_USER_PROCESS_PARAMETERS;\n" +
+                                "    unsigned long MaximumLength;\n" +
+                                "    unsigned long Length;\n" +
+                                "    unsigned long Flags;\n" +
+                                "    unsigned long DebugFlags;\n" +
+                                "    void* ConsoleHandle;\n" +
+                                "    unsigned long ConsoleFlags;\n" +
+                                "    void* StandardInput;\n" +
+                                "    void* StandardOutput;\n" +
+                                "    void* StandardError;\n" +
+                                "    PRTL_DRIVE_LETTER_CURDIR CurrentDirectory;\n" +
+                                "    wchar_t* DllPath;\n" +
+                                "    wchar_t* ImagePathName;\n" +
+                                "    wchar_t* CommandLine;\n" +
+                                "    wchar_t* Environment;\n" +
+                                "    unsigned long StartingX;\n" +
+                                "    unsigned long StartingY;\n" +
+                                "    unsigned long CountX;\n" +
+                                "    unsigned long CountY;\n" +
+                                "    unsigned long CountCharsX;\n" +
+                                "    unsigned long CountCharsY;\n" +
+                                "    unsigned long ConsoleTextAttributes;\n" +
+                                "    unsigned long ConsoleFullScreen;\n" +
+                                "    unsigned long ConsoleKeyShortcuts;\n" +
+                                "    wchar_t* DefaultTerminal;\n" +
+                                "} RTL_USER_PROCESS_PARAMETERS, *PRTL_USER_PROCESS_PARAMETERS;\n" +
+                                "\n" +
+                                "typedef struct _PEB_LDR_DATA {\n" +
+                                "    unsigned long Length;\n" +
+                                "    unsigned long Initialized;\n" +
+                                "    void* SsHandle;\n" +
+                                "    void* InLoadOrderModuleList;\n" +
+                                "    void* InMemoryOrderModuleList;\n" +
+                                "    void* InInitializationOrderModuleList;\n" +
+                                "} PEB_LDR_DATA, *PPEB_LDR_DATA;\n" +
                                 "\n" +
                                 "typedef struct _PEB {\n" +
-                                "    DWORD Reserved1[2];\n" +
-                                "    PVOID BeingDebugged;\n" +
-                                "    PVOID Reserved2[1];\n" +
+                                "    unsigned char InheritedAddressSpace;\n" +
+                                "    unsigned char ReadImageFileExecOptions;\n" +
+                                "    unsigned char BeingDebugged;\n" +
+                                "    unsigned char SpareBool;\n" +
+                                "    void* Mutant;\n" +
+                                "    void* ImageBaseAddress;\n" +
                                 "    PEB_LDR_DATA* Ldr;\n" +
-                                "    RTL_USER_PROCESS_PARAMETERS* ProcessParameters;\n" +
-                                "    PVOID Reserved3[3];\n" +
-                                "    DWORD AtlThunkSListPtr;\n" +
-                                "    PVOID Reserved4;\n" +
-                                "    DWORD Reserved5;\n" +
-                                "    DWORD CriticalSectionTimeout;\n" +
-                                "    PVOID HeapSegmentReserve;\n" +
-                                "    PVOID HeapSegmentCommit;\n" +
-                                "    PVOID HeapDeCommitTotalFreeThreshold;\n" +
-                                "    PVOID HeapDeCommitFreeBlockThreshold;\n" +
-                                "    DWORD NumberOfHeaps;\n" +
-                                "    DWORD MaximumNumberOfHeaps;\n" +
-                                "    PVOID ProcessHeaps;\n" +
-                                "    PVOID GdiSharedHandleTable;\n" +
-                                "    PVOID ProcessStarterHelper;\n" +
-                                "    DWORD GdiDCAttributeList;\n" +
-                                "    PVOID LoaderLock;\n" +
-                                "    DWORD OSMajorVersion;\n" +
-                                "    DWORD OSMinorVersion;\n" +
-                                "    DWORD OSBuildNumber;\n" +
-                                "    DWORD OSPlatformId;\n" +
-                                "    DWORD ImageSubsystem;\n" +
-                                "    DWORD ImageSubsystemMajorVersion;\n" +
-                                "    DWORD ImageSubsystemMinorVersion;\n" +
-                                "    PVOID ImageEntryPoint;\n" +
-                                "    PVOID ImageBaseAddress;\n" +
-                                "    DWORD LoadOrder;\n" +
-                                "    DWORD StackBase;\n" +
-                                "    DWORD StackLimit;\n" +
-                                "    DWORD CurrentDirectory;\n" +
-                                "    PVOID KernelBaseAddress;\n" +
-                                "    PVOID UserBaseAddress;\n" +
-                                "    DWORD UserProfilePath;\n" +
-                                "    DWORD GdiSharedHandleTableIndex;\n" +
-                                "    DWORD NumberOfGdiSharedHandles;\n" +
-                                "    DWORD GdiSharedHandleTableHandle;\n" +
-                                "} PEB;");
+                                "    PRTL_USER_PROCESS_PARAMETERS* ProcessParameters;\n" +
+                                "    void* SubSystemData;\n" +
+                                "    void* ProcessHeap;\n" +
+                                "    PRTL_USER_PROCESS_PARAMETERS* FastPebLock;\n" +
+                                "    void* AtlThunkSListPtr;\n" +
+                                "    void* IFEOKey;\n" +
+                                "    PEB_LDR_DATA* CrossProcessFlags;\n" +
+                                "    unsigned long KernelCallbackTable;\n" +
+                                "    unsigned long UserSharedInfoPtr;\n" +
+                                "    unsigned long SystemReserved;\n" +
+                                "    unsigned long AtlThunkSListPtr32;\n" +
+                                "    void* ApiSetMap;\n" +
+                                "    unsigned long TlsExpansionCounter;\n" +
+                                "    void* TlsBitmap;\n" +
+                                "    unsigned long TlsBitmapBits[2];\n" +
+                                "    void* ReadOnlySharedMemoryBase;\n" +
+                                "    void* SharedData;\n" +
+                                "    void* ReadOnlySharedMemoryHeap;\n" +
+                                "    void* TlsExpansionBitmap;\n" +
+                                "    unsigned long TlsExpansionBitmapBits[2];\n" +
+                                "    unsigned long SessionId;\n" +
+                                "} PEB, *PPEB;");
         gu.add_datatype(dt);
         dt_list.clear();
-        gu.find_datatypes("PEB", dt_list);
+        // PEB
+        gu.find_datatypes("PPEB", dt_list);
         assertEquals(dt_list.size(), 1);
         dt_list.clear();
         gu.find_datatypes("PEB_LDR_DATA", dt_list);
