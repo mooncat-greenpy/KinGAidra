@@ -5,6 +5,8 @@ import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 import ghidra.app.decompiler.DecompInterface;
 import ghidra.app.decompiler.DecompileResults;
@@ -198,19 +200,8 @@ public class GhidraUtilImpl implements GhidraUtil {
         datatype_manager.findDataTypes(name, dt_list);
     }
 
-    public boolean parse_datatypes(String code) {
+    public void add_datatype(DataType dt) {
         DataTypeManager datatype_manager = program.getDataTypeManager();
-        CParser parser = new CParser(datatype_manager);
-        DataType dt;
-        try {
-            dt = parser.parse(code);
-        } catch (Exception e) {
-            return false;
-        }
-        if (dt == null) {
-            return false;
-        }
-
         int tid = program.startTransaction("KinGAidra datatype");
         try {
             CategoryPath category_path = new CategoryPath("/KinGAidra");
@@ -224,8 +215,29 @@ public class GhidraUtilImpl implements GhidraUtil {
         } finally {
             program.endTransaction(tid, true);
         }
+    }
 
-        return true;
+    public DataType parse_datatypes(String code) {
+        String regex = "#define\\s+(\\S+)\\s+(\\S+)";
+        Pattern pattern = Pattern.compile(regex);
+        Matcher matcher = pattern.matcher(code);
+        while (matcher.find()) {
+            String define = matcher.group(0);
+            String key = matcher.group(1);
+            String value = matcher.group(2);
+            code = code.replace(define, "");
+            code = code.replace(key, value);
+        }
+
+        DataTypeManager datatype_manager = program.getDataTypeManager();
+        CParser parser = new CParser(datatype_manager);
+        DataType dt;
+        try {
+            dt = parser.parse(code);
+        } catch (Exception e) {
+            return null;
+        }
+        return dt;
     }
 
     public boolean refact(DecomDiff diff) {

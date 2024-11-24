@@ -76,7 +76,7 @@ class GhidraUtilImplTest {
         GhidraTestUtil util = new GhidraTestUtil();
         Program program = util.create_program();
         GhidraUtil gu = new GhidraUtilImpl(program, TaskMonitor.DUMMY);
-        gu.parse_datatypes("struct person1 {\n" +
+        DataType dt = gu.parse_datatypes("struct person1 {\n" +
                                 "    char *name;\n" +
                                 "    int age;\n" +
                                 "    char *job;\n" +
@@ -88,6 +88,7 @@ class GhidraUtilImplTest {
                                 "    int hour;        \n" +
                                 "    char title[100]; \n" +
                                 "};");
+        gu.add_datatype(dt);
         List<DataType> dt_list = new LinkedList<>();
         gu.find_datatypes("person1", dt_list);
         assertEquals(dt_list.size(), 0);
@@ -95,7 +96,8 @@ class GhidraUtilImplTest {
         gu.find_datatypes("schedule", dt_list);
         assertEquals(dt_list.size(), 1);
 
-        gu.parse_datatypes("typedef char TCHAR;\n" +
+        dt = gu.parse_datatypes("typedef char TCHAR;\n" +
+                                "#define MAX_PATH 260\n" +
                                 "typedef unsigned long DWORD;\n" +
                                 "typedef long LONG;\n" +
                                 "typedef unsigned long ULONG_PTR;\n" +
@@ -109,8 +111,9 @@ class GhidraUtilImplTest {
                                 "    DWORD th32ParentProcessID;  \n" +
                                 "    LONG pcPriClassBase;        \n" +
                                 "    DWORD dwFlags;              \n" +
-                                "    TCHAR szExeFile[260];       \n" +
+                                "    TCHAR szExeFile[MAX_PATH];       \n" +
                                 "} PROCESSENTRY32;");
+        gu.add_datatype(dt);
         dt_list.clear();
         gu.find_datatypes("DWORD", dt_list);
         assertEquals(dt_list.size(), 1);
@@ -121,7 +124,7 @@ class GhidraUtilImplTest {
         gu.find_datatypes("PROCESSENTRY32", dt_list);
         assertEquals(dt_list.size(), 1);
 
-        gu.parse_datatypes("typedef unsigned long DWORD;\n" +
+        dt = gu.parse_datatypes("typedef unsigned long DWORD;\n" +
                                 "\n" +
                                 "typedef long LONG;\n" +
                                 "\n" +
@@ -129,7 +132,7 @@ class GhidraUtilImplTest {
                                 "\n" +
                                 "typedef char TCHAR;\n" +
                                 "\n" +
-                                // "#define MAX_PATH 260\n" +
+                                "#define MAX_PATH 260" +
                                 "\n" +
                                 "typedef struct _LIST_ENTRY {\n" +
                                 "    struct _LIST_ENTRY* Flink;\n" +
@@ -157,9 +160,9 @@ class GhidraUtilImplTest {
                                 "    PVOID StandardError;\n" +
                                 "    LIST_ENTRY CurrentDirectoryPath;\n" +
                                 "    PVOID CurrentDirectoryHandle;\n" +
-                                "    TCHAR DllPath[260];\n" +
-                                "    TCHAR ImagePathName[260];\n" +
-                                "    TCHAR CommandLine[260];\n" +
+                                "    TCHAR DllPath[MAX_PATH];\n" +
+                                "    TCHAR ImagePathName[MAX_PATH];\n" +
+                                "    TCHAR CommandLine[MAX_PATH];\n" +
                                 "    PVOID Environment;\n" +
                                 "    DWORD StartingPositionLeft;\n" +
                                 "    DWORD StartingPositionTop;\n" +
@@ -218,6 +221,7 @@ class GhidraUtilImplTest {
                                 "    DWORD NumberOfGdiSharedHandles;\n" +
                                 "    DWORD GdiSharedHandleTableHandle;\n" +
                                 "} PEB;");
+        gu.add_datatype(dt);
         dt_list.clear();
         gu.find_datatypes("PEB", dt_list);
         assertEquals(dt_list.size(), 1);

@@ -23,7 +23,9 @@ public interface GhidraUtil {
 
     public void find_datatypes(String name, List<DataType> dt_list);
 
-    public boolean parse_datatypes(String code);
+    public void add_datatype(DataType dt);
+
+    public DataType parse_datatypes(String code);
 
     public boolean refact(DecomDiff diff);
 }
