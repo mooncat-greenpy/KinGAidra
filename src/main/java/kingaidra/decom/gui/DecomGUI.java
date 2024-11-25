@@ -72,7 +72,7 @@ public class DecomGUI extends JPanel {
         ghidra = new GhidraUtilImpl(program, TaskMonitor.DUMMY);
         ai = new Ai(plugin, program, ghidra, srv);
         Guess guess = new Guess(ghidra, ai, pref);
-        Refactor refactor = new Refactor(ghidra);
+        Refactor refactor = new Refactor(ghidra, ai);
 
         Model sample_model = new ModelByScript("Sample", "kingaidra_sample.py", true);
         Model none_model = new ModelByScript("None", "kingaidra_none.py", true);

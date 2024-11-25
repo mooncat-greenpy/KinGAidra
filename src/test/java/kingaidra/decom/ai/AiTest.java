@@ -47,7 +47,9 @@ public class AiTest {
                     "Dummy");
         }
 
-        DataType dt = ai.guess("PROCESSENTRY32", new ModelDummy("Dummy", "dummy.py", true));
+        DataType dt = ai.guess("PROCESSENTRY32W", new ModelDummy("Dummy", "dummy.py", true));
+        assertEquals(dt.getName(), "PROCESSENTRY32W");
+        dt = ai.guess("PROCESSENTRY32", new ModelDummy("Dummy", "dummy.py", true));
         assertEquals(dt.getName(), "PROCESSENTRY32");
     }
 }

@@ -23,7 +23,11 @@ public class ClangExtractor {
             pre = "```c";
             start = s.indexOf(pre);
             if (start < 0) {
-                return null;
+                pre = "```";
+                start = s.indexOf(pre);
+                if (start < 0) {
+                    return null;
+                }
             }
         }
         start += pre.length();

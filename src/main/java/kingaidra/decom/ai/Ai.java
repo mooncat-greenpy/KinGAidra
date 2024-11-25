@@ -25,6 +25,7 @@ public class Ai {
 
     public DataType guess(String datatype_name, Model model) {
         Conversation convo = new Conversation(model);
+        datatype_name = datatype_name.replaceAll("\\[\\d:\\]", "");
         if (!convo.add_user_msg(String.format("Please write the %s structure in C language. " +
                         "Include any dependent data types and structures. " +
                         "Do not use #include or #define. " +
@@ -39,6 +40,9 @@ public class Ai {
         String msg = convo.get_msg(convo.get_msgs_len() - 1);
         ClangExtractor extractor = new ClangExtractor(msg);
         String target = extractor.get_data();
+        if (target == null) {
+            return null;
+        }
 
         DataType dt = ghidra.parse_datatypes(target);
         return dt;

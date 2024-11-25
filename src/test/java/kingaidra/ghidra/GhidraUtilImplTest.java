@@ -196,7 +196,7 @@ class GhidraUtilImplTest {
                                 "    void* TlsExpansionBitmap;\n" +
                                 "    unsigned long TlsExpansionBitmapBits[2];\n" +
                                 "    unsigned long SessionId;\n" +
-                                "} PEB, *PPEB;");
+                                "} PEB, *PPEB;");// wrong
         gu.add_datatype(dt);
         dt_list.clear();
         // PEB
