@@ -98,6 +98,7 @@ public class RefactorGUI extends JPanel {
     private JLabel info_label;
     private JCheckBox rename_chkbox;
     private JCheckBox retype_chkbox;
+    private JCheckBox datatype_checkbox;
     private Refactor refactor;
     private JTabbedPane tabbed_panel;
 
@@ -116,11 +117,14 @@ public class RefactorGUI extends JPanel {
         rename_chkbox.setSelected(true);
         retype_chkbox = new JCheckBox("Retype");
         retype_chkbox.setSelected(true);
+        datatype_checkbox = new JCheckBox("Resolve datatype");
+        datatype_checkbox.setSelected(false);
         JPanel panel = new JPanel();
         panel.setLayout(new BoxLayout(panel, BoxLayout.X_AXIS));
         panel.add(info_label);
         panel.add(rename_chkbox);
         panel.add(retype_chkbox);
+        panel.add(datatype_checkbox);
 
         tabbed_panel = new JTabbedPane();
         add(panel, BorderLayout.NORTH);
@@ -141,6 +145,7 @@ public class RefactorGUI extends JPanel {
         name = diff.get_name().get_var_name();
         rename_chkbox.setSelected(true);
         retype_chkbox.setSelected(true);
+        datatype_checkbox.setSelected(false);
         set_info_label();
 
         DiffTableModel tableModel = new DiffTableModel();
@@ -194,7 +199,7 @@ public class RefactorGUI extends JPanel {
         DecomDiff diff = model.get_diff(rename_chkbox.isSelected(), retype_chkbox.isSelected());
 
         try {
-            refactor.refact(diff);
+            refactor.refact(diff, datatype_checkbox.isSelected());
         } finally {
             reset();
         }

@@ -34,7 +34,7 @@ public class RefactorTest {
             pair.set_new_name(pair.get_var_name() + "_new");
         }
 
-        refactor.refact(diff);
+        refactor.refact(diff, true);
         assertEquals(gu.get_func(util.get_addr(program, 0x402000)).getName(), "new_func");
         assertTrue(gu.get_decom(util.get_addr(program, 0x402005))
                 .contains("int __fastcall new_func(undefined *new_param_1)"));
