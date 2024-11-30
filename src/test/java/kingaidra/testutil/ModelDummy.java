@@ -1,5 +1,7 @@
 package kingaidra.testutil;
 
+import java.io.Serializable;
+
 import ghidra.framework.plugintool.PluginTool;
 import ghidra.program.model.listing.Program;
 import kingaidra.decom.DecomDiff;
@@ -10,7 +12,7 @@ import kingaidra.ai.TaskType;
 import kingaidra.chat.Conversation;
 import kingaidra.chat.KinGAidraChatTaskService;
 
-public class ModelDummy implements Model {
+public class ModelDummy implements Model, Serializable {
     String name;
     String script_file;
     boolean active;

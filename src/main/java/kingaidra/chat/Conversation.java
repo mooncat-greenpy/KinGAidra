@@ -1,5 +1,6 @@
 package kingaidra.chat;
 
+import java.io.Serializable;
 import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.List;
@@ -10,7 +11,7 @@ import ghidra.program.model.address.Address;
 import kingaidra.ai.Model;
 
 
-class Message {
+class Message implements Serializable {
 
     private String role;
     private String content;
@@ -30,7 +31,7 @@ class Message {
 }
 
 
-public class Conversation {
+public class Conversation implements Serializable {
 
     public static final String SYSTEM_ROLE = "system";
     public static final String USER_ROLE = "user";
@@ -43,6 +44,13 @@ public class Conversation {
 
     public Conversation(Model model) {
         uuid = UUID.randomUUID();
+        msgs = new LinkedList<>();
+        addrs = new HashSet<>();
+        this.model = model;
+    }
+
+    public Conversation(Model model, String uuid) {
+        this.uuid = UUID.fromString(uuid);
         msgs = new LinkedList<>();
         addrs = new HashSet<>();
         this.model = model;
@@ -84,6 +92,17 @@ public class Conversation {
         }
         msgs.add(new Message(SYSTEM_ROLE, content));
         return true;
+    }
+
+    public boolean add_msg(String role, String content) {
+        if (role.equals(SYSTEM_ROLE)) {
+            return add_system_msg(content);
+        } else if (role.equals(USER_ROLE)) {
+            return add_user_msg(content);
+        } else if (role.equals(ASSISTANT_ROLE)) {
+            return add_assistant_msg(content);
+        }
+        return false;
     }
 
     public boolean add_user_msg(String content) {

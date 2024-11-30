@@ -1,6 +1,7 @@
 package kingaidra.ai;
 
 import java.io.PrintWriter;
+import java.io.Serializable;
 import java.util.Random;
 
 import generic.jar.ResourceFile;
@@ -13,7 +14,7 @@ import kingaidra.chat.Conversation;
 import kingaidra.chat.KinGAidraChatTaskService;
 import kingaidra.log.Logger;
 
-public class ModelByScript implements Model {
+public class ModelByScript implements Model, Serializable {
     private String name;
     private String script_file;
     private boolean active;
