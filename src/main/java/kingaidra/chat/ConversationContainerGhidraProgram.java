@@ -32,12 +32,10 @@ public class ConversationContainerGhidraProgram {
     private static final String CONVO_TABLE_NAME = "KinGAidra_Conversation";
     private Program program;
     private GhidraUtil ghidra;
-    private Map<UUID, Conversation> data;
 
     public ConversationContainerGhidraProgram(Program program) {
         this.program = program;
         ghidra = new GhidraUtilImpl(program, TaskMonitor.DUMMY);
-        data = new HashMap<>();
     }
 
     private Table get_table(String name) {
@@ -162,13 +160,13 @@ public class ConversationContainerGhidraProgram {
         if (model == null) {
             return null;
         }
-        List<Message> msgs =
-                (List<Message>) bytes_to_obj(record.getBinaryData(RECORD_MESSAGES_INDEX_V1));
+        Message[] msgs =
+                (Message[]) bytes_to_obj(record.getBinaryData(RECORD_MESSAGES_INDEX_V1));
         if (msgs == null) {
             return null;
         }
-        List<Long> addrs =
-                (List<Long>) bytes_to_obj(record.getBinaryData(RECORD_ADDRESSES_INDEX_V1));
+        Long[] addrs =
+                (Long[]) bytes_to_obj(record.getBinaryData(RECORD_ADDRESSES_INDEX_V1));
         if (addrs == null) {
             return null;
         }
@@ -203,7 +201,7 @@ public class ConversationContainerGhidraProgram {
             for (int i = 0; i < convo.get_msgs_len(); i++) {
                 msgs.add(new Message(convo.get_role(i), convo.get_msg(i)));
             }
-            byte[] msgs_byte = obj_to_bytes(msgs);
+            byte[] msgs_byte = obj_to_bytes(msgs.toArray(new Message[] {}));
             if (msgs_byte == null) {
                 return;
             }
@@ -212,7 +210,7 @@ public class ConversationContainerGhidraProgram {
             for (Address addr : convo.get_addrs()) {
                 addrs.add(addr.getOffset());
             }
-            byte[] addrs_byte = obj_to_bytes(addrs);
+            byte[] addrs_byte = obj_to_bytes(addrs.toArray(new Long[] {}));
             if (addrs_byte == null) {
                 return;
             }
@@ -225,7 +223,5 @@ public class ConversationContainerGhidraProgram {
         } finally {
             program.endTransaction(tid, true);
         }
-
-        data.put(convo.get_uuid(), convo);
     }
 }
