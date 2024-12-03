@@ -62,8 +62,6 @@ public class ChatGUI extends JPanel {
     private PluginTool plugin;
     private KinGAidraChatTaskService srv;
     private GhidraUtil ghidra;
-    private Ai ai;
-    private ConversationContainer container;
     private GuessGUI ggui;
     private LogGUI lgui;
     private Conversation cur_convo;
@@ -135,12 +133,15 @@ public class ChatGUI extends JPanel {
 
         add(info_label);
         add(s);
+
+        lgui.update(program);
     }
 
     private void init_panel() {
         GhidraPreferences<Model> pref = new ChatModelPreferences();
         ghidra = new GhidraUtilImpl(program, TaskMonitor.DUMMY);
-        ai = new Ai(plugin, program, srv);
+        ConversationContainer container = new ConversationContainerDummy();
+        Ai ai = new Ai(plugin, program, container, srv);
         Guess guess = new Guess(ghidra, ai, pref);
 
         Model sample_model = new ModelByScript("ChatSample", "kingaidra_chat_sample.py", true);
@@ -161,7 +162,6 @@ public class ChatGUI extends JPanel {
         }
 
         ggui = new GuessGUI(guess);
-        container = new ConversationContainerDummy();
         lgui = new LogGUI(container, this, plugin, program);
 
         btn_panel = new JPanel();
@@ -325,11 +325,6 @@ public class ChatGUI extends JPanel {
                     } else {
                         cur_convo = ggui.run_guess(cur_convo, input_area.getText(), addr);
                     }
-                    if (cur_convo != null) {
-                        container.add_convo(cur_convo);
-                        lgui.update(program);
-                    }
-
                     build_panel();
                 }
             } finally {

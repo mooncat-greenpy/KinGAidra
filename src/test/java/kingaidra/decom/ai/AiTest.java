@@ -5,6 +5,8 @@ import org.junit.jupiter.api.Test;
 import ghidra.program.model.data.DataType;
 import ghidra.program.model.listing.Program;
 import ghidra.util.task.TaskMonitor;
+import kingaidra.chat.ConversationContainer;
+import kingaidra.chat.ConversationContainerDummy;
 import kingaidra.decom.DecomDiff;
 import kingaidra.decom.DiffPair;
 import kingaidra.ghidra.GhidraUtil;
@@ -21,7 +23,8 @@ public class AiTest {
         GhidraTestUtil util = new GhidraTestUtil();
         Program program = util.create_program();
         GhidraUtil gu = new GhidraUtilImpl(program, TaskMonitor.DUMMY);
-        Ai ai = new Ai(null, program, gu, null);
+        ConversationContainer container = new ConversationContainerDummy();
+        Ai ai = new Ai(null, program, gu, container, null);
 
         DecomDiff diff = gu.get_decomdiff(util.get_addr(program, 0x401000));
         diff.set_model(new ModelDummy("Dummy", "dummy.py", true));

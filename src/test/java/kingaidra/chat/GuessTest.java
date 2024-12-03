@@ -23,7 +23,8 @@ public class GuessTest {
         GhidraTestUtil util = new GhidraTestUtil();
         Program program = util.create_program();
         GhidraUtil gu = new GhidraUtilImpl(program, TaskMonitor.DUMMY);
-        Ai ai = new Ai(null, program, null);
+        ConversationContainer container = new ConversationContainerDummy();
+        Ai ai = new Ai(null, program, container, null);
         GhidraPreferences<Model> pref = new ChatModelPreferencesDummy();
         pref.store("Dummy", new ChatModelDummy("Dummy", "dummy.py", true));
         Guess guess = new Guess(gu, ai, pref);
@@ -43,7 +44,8 @@ public class GuessTest {
         GhidraTestUtil util = new GhidraTestUtil();
         Program program = util.create_program();
         GhidraUtil gu = new GhidraUtilImpl(program, TaskMonitor.DUMMY);
-        Ai ai = new Ai(null, program, null);
+        ConversationContainer container = new ConversationContainerDummy();
+        Ai ai = new Ai(null, program, container, null);
         GhidraPreferences<Model> pref = new ChatModelPreferencesDummy();
         pref.store("Dummy", new ChatModelDummy("Dummy", "dummy.py", true));
         Guess guess = new Guess(gu, ai, pref);
@@ -59,7 +61,8 @@ public class GuessTest {
         GhidraTestUtil util = new GhidraTestUtil();
         Program program = util.create_program();
         GhidraUtil gu = new GhidraUtilImpl(program, TaskMonitor.DUMMY);
-        Ai ai = new Ai(null, program, null);
+        ConversationContainer container = new ConversationContainerDummy();
+        Ai ai = new Ai(null, program, container, null);
         GhidraPreferences<Model> pref1 = new ChatModelPreferencesDummy();
         pref1.store("Dummy1", new ChatModelDummy("Dummy1", "dummy.py", true));
         pref1.store("Dummy2", new ChatModelDummy("Dummy2", "dummy.py", true));
@@ -92,7 +95,8 @@ public class GuessTest {
         GhidraTestUtil util = new GhidraTestUtil();
         Program program = util.create_program();
         GhidraUtil gu = new GhidraUtilImpl(program, TaskMonitor.DUMMY);
-        Ai ai = new Ai(null, program, null);
+        ConversationContainer container = new ConversationContainerDummy();
+        Ai ai = new Ai(null, program, container, null);
         GhidraPreferences<Model> pref = new ChatModelPreferencesDummy();
         pref.store("Dummy", new ChatModelDummy("Dummy", "dummy.py", false));
         Guess guess = new Guess(gu, ai, pref);
@@ -137,7 +141,8 @@ public class GuessTest {
         GhidraTestUtil util = new GhidraTestUtil();
         Program program = util.create_program();
         GhidraUtil gu = new GhidraUtilImpl(program, TaskMonitor.DUMMY);
-        Ai ai = new Ai(null, program, null);
+        ConversationContainer container = new ConversationContainerDummy();
+        Ai ai = new Ai(null, program, container, null);
         GhidraPreferences<Model> pref = new ChatModelPreferencesDummy();
         pref.store("Dummy", new ChatModelDummy("Dummy", "dummy.py", false));
         Guess guess = new Guess(gu, ai, pref);
@@ -184,7 +189,8 @@ public class GuessTest {
         GhidraTestUtil util = new GhidraTestUtil();
         Program program = util.create_program();
         GhidraUtil gu = new GhidraUtilImpl(program, TaskMonitor.DUMMY);
-        Ai ai = new Ai(null, program, null);
+        ConversationContainer container = new ConversationContainerDummy();
+        Ai ai = new Ai(null, program, container, null);
         GhidraPreferences<Model> pref = new ChatModelPreferencesDummy();
         pref.store("Dummy1", new ChatModelDummy("Dummy1", "dummy.py", false));
         pref.store("Dummy2", new ChatModelDummy("Dummy2", "dummy.py", true));

@@ -5,6 +5,8 @@ import ghidra.program.model.data.DataType;
 import ghidra.program.model.listing.Program;
 import kingaidra.decom.DecomDiff;
 import kingaidra.ghidra.GhidraUtil;
+import kingaidra.chat.ConversationContainer;
+import kingaidra.chat.ConversationContainerDummy;
 import kingaidra.chat.KinGAidraChatTaskService;
 import kingaidra.ai.Model;
 import kingaidra.ai.TaskType;
@@ -14,12 +16,14 @@ public class Ai {
     private PluginTool tool;
     private Program program;
     private GhidraUtil ghidra;
+    private ConversationContainer container;
     private KinGAidraChatTaskService service;
 
-    public Ai(PluginTool tool, Program program, GhidraUtil ghidra, KinGAidraChatTaskService service) {
+    public Ai(PluginTool tool, Program program, GhidraUtil ghidra, ConversationContainer container, KinGAidraChatTaskService service) {
         this.tool = tool;
         this.program = program;
         this.ghidra = ghidra;
+        this.container = container;
         this.service = service;
     }
 
@@ -36,6 +40,7 @@ public class Ai {
         if (convo == null) {
             return null;
         }
+        container.add_convo(convo);
 
         String msg = convo.get_msg(convo.get_msgs_len() - 1);
         ClangExtractor extractor = new ClangExtractor(msg);
@@ -93,6 +98,8 @@ public class Ai {
         if (convo == null) {
             return false;
         }
+        container.add_convo(convo);
+
         JsonExtractor<FuncParamVarJson> extractor = new JsonExtractor<>(convo.get_msg(convo.get_msgs_len() - 1), FuncParamVarJson.class);
         FuncParamVarJson func_json = extractor.get_data();
         if (func_json == null) {
@@ -131,6 +138,8 @@ public class Ai {
         if (convo == null) {
             return false;
         }
+        container.add_convo(convo);
+
         JsonExtractor<DataTypeListJson> extractor = new JsonExtractor<>(convo.get_msg(convo.get_msgs_len() - 1), DataTypeListJson.class);
         DataTypeListJson datatype_json = extractor.get_data();
         if (datatype_json == null) {

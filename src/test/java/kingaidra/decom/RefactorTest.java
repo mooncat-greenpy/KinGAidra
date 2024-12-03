@@ -4,6 +4,8 @@ import org.junit.jupiter.api.Test;
 
 import ghidra.program.model.listing.Program;
 import ghidra.util.task.TaskMonitor;
+import kingaidra.chat.ConversationContainer;
+import kingaidra.chat.ConversationContainerDummy;
 import kingaidra.decom.ai.Ai;
 import kingaidra.ghidra.GhidraUtil;
 import kingaidra.ghidra.GhidraUtilImpl;
@@ -19,7 +21,8 @@ public class RefactorTest {
         GhidraTestUtil util = new GhidraTestUtil();
         Program program = util.create_program();
         GhidraUtil gu = new GhidraUtilImpl(program, TaskMonitor.DUMMY);
-        Ai ai = new Ai(null, program, gu, null);
+        ConversationContainer container = new ConversationContainerDummy();
+        Ai ai = new Ai(null, program, gu, container, null);
         Refactor refactor = new Refactor(gu, ai);
 
         assertEquals(gu.get_func(util.get_addr(program, 0x402000)).getName(), "func_402000");

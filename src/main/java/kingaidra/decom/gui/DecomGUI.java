@@ -26,6 +26,8 @@ import kingaidra.decom.Refactor;
 import kingaidra.decom.ai.Ai;
 import kingaidra.ai.Model;
 import kingaidra.ai.ModelByScript;
+import kingaidra.chat.ConversationContainer;
+import kingaidra.chat.ConversationContainerDummy;
 import kingaidra.chat.KinGAidraChatTaskService;
 import kingaidra.ghidra.GhidraPreferences;
 import kingaidra.ghidra.GhidraUtil;
@@ -47,7 +49,6 @@ public class DecomGUI extends JPanel {
     private PluginTool plugin;
     private KinGAidraChatTaskService srv;
     private GhidraUtil ghidra;
-    private Ai ai;
     private GuessGUI ggui;
     private RefactorGUI rgui;
 
@@ -70,7 +71,8 @@ public class DecomGUI extends JPanel {
     private void buildPanel() {
         GhidraPreferences<Model> pref = new RefactorModelPreferences();
         ghidra = new GhidraUtilImpl(program, TaskMonitor.DUMMY);
-        ai = new Ai(plugin, program, ghidra, srv);
+        ConversationContainer container = new ConversationContainerDummy();
+        Ai ai = new Ai(plugin, program, ghidra, container, srv);
         Guess guess = new Guess(ghidra, ai, pref);
         Refactor refactor = new Refactor(ghidra, ai);
 
