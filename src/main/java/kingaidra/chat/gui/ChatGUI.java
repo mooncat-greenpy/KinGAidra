@@ -141,8 +141,8 @@ public class ChatGUI extends JPanel {
         GhidraPreferences<Model> pref = new ChatModelPreferences();
         ghidra = new GhidraUtilImpl(program, TaskMonitor.DUMMY);
         ConversationContainer container = new ConversationContainerDummy();
-        Ai ai = new Ai(plugin, program, container, srv);
-        Guess guess = new Guess(ghidra, ai, pref);
+        Ai ai = new Ai(plugin, program, ghidra, container, srv);
+        Guess guess = new Guess(ai, pref);
 
         Model sample_model = new ModelByScript("ChatSample", "kingaidra_chat_sample.py", true);
         Model none_model = new ModelByScript("ChatNone", "kingaidra_chat_none.py", true);
