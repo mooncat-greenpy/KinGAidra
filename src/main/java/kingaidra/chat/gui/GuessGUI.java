@@ -17,8 +17,8 @@ import javax.swing.event.TableModelListener;
 import javax.swing.table.DefaultTableModel;
 
 import ghidra.program.model.address.Address;
+import kingaidra.ai.convo.Conversation;
 import kingaidra.chat.Guess;
-import kingaidra.chat.Conversation;
 import kingaidra.log.Logger;
 
 public class GuessGUI extends JPanel {

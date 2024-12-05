@@ -1,7 +1,7 @@
-package kingaidra.chat;
+package kingaidra.ai.convo;
 
 import org.junit.jupiter.api.Test;
-
+import kingaidra.ai.convo.Conversation;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;

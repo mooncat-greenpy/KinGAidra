@@ -5,7 +5,7 @@ import java.util.HashMap;
 import java.util.Map;
 
 import ghidra.program.model.address.Address;
-import kingaidra.ai.Model;
+import kingaidra.ai.model.Model;
 
 public class DecomDiff implements Cloneable {
     private Address addr;

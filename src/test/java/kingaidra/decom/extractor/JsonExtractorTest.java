@@ -1,4 +1,4 @@
-package kingaidra.decom.ai;
+package kingaidra.decom.extractor;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 
@@ -7,7 +7,6 @@ import org.junit.jupiter.api.Test;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
 public class JsonExtractorTest {
-
 
     @Test
     void test() throws Exception {

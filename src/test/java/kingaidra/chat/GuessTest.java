@@ -4,8 +4,11 @@ import org.junit.jupiter.api.Test;
 
 import ghidra.program.model.listing.Program;
 import ghidra.util.task.TaskMonitor;
-import kingaidra.ai.Model;
-import kingaidra.chat.ai.Ai;
+import kingaidra.ai.Ai;
+import kingaidra.ai.convo.Conversation;
+import kingaidra.ai.convo.ConversationContainer;
+import kingaidra.ai.convo.ConversationContainerDummy;
+import kingaidra.ai.model.Model;
 import kingaidra.ghidra.GhidraPreferences;
 import kingaidra.ghidra.GhidraUtil;
 import kingaidra.ghidra.GhidraUtilImpl;

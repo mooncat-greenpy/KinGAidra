@@ -1,8 +1,6 @@
-package kingaidra.decom.ai;
+package kingaidra.decom.extractor;
 
-import java.util.ArrayList;
-
-class DataTypeJson {
+public class DataTypeJson {
     public String new_datatype;
     public String orig_datatype;
     public String var_name;
@@ -17,14 +15,5 @@ class DataTypeJson {
 
     public String get_var_name() {
         return var_name;
-    }
-}
-
-
-public class DataTypeListJson extends ArrayList<DataTypeJson> implements JsonDataInterface {
-
-    @Override
-    public boolean validate() {
-        return true;
     }
 }

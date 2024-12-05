@@ -2,7 +2,7 @@ package kingaidra.testutil;
 
 import java.util.HashMap;
 import java.util.Map;
-import kingaidra.ai.Model;
+import kingaidra.ai.model.Model;
 import kingaidra.ghidra.GhidraPreferences;
 
 public class ModelPreferencesDummy implements GhidraPreferences<Model> {

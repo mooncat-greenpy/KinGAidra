@@ -1,4 +1,4 @@
-package kingaidra.chat;
+package kingaidra.ai.convo;
 
 import org.junit.jupiter.api.Test;
 
@@ -7,6 +7,8 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import java.util.UUID;
 
 import ghidra.program.model.listing.Program;
+import kingaidra.ai.convo.Conversation;
+import kingaidra.ai.convo.ConversationContainerGhidraProgram;
 import kingaidra.testutil.GhidraTestUtil;
 import kingaidra.testutil.ModelDummy;
 

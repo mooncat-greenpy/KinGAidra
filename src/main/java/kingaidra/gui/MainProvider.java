@@ -5,8 +5,8 @@ import javax.swing.*;
 import docking.ComponentProvider;
 import ghidra.framework.plugintool.Plugin;
 import ghidra.program.model.listing.Program;
+import kingaidra.ai.task.KinGAidraChatTaskService;
 import kingaidra.chat.gui.ChatGUI;
-import kingaidra.chat.KinGAidraChatTaskService;
 import kingaidra.decom.gui.DecomGUI;
 
 public class MainProvider extends ComponentProvider {

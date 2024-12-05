@@ -2,11 +2,12 @@ package kingaidra.decom;
 
 import org.junit.jupiter.api.Test;
 
+import ghidra.program.model.data.DataType;
 import ghidra.program.model.listing.Program;
 import ghidra.util.task.TaskMonitor;
-import kingaidra.chat.ConversationContainer;
-import kingaidra.chat.ConversationContainerDummy;
-import kingaidra.decom.ai.Ai;
+import kingaidra.ai.Ai;
+import kingaidra.ai.convo.ConversationContainer;
+import kingaidra.ai.convo.ConversationContainerDummy;
 import kingaidra.ghidra.GhidraUtil;
 import kingaidra.ghidra.GhidraUtilImpl;
 import kingaidra.testutil.GhidraTestUtil;
@@ -44,5 +45,11 @@ public class RefactorTest {
         for (DiffPair pair : gu.get_decomdiff(util.get_addr(program, 0x402000)).get_vars()) {
             assertEquals(pair.get_new_name().substring(pair.get_new_name().length() - 4), "_new");
         }
+
+        DataType dt = refactor.resolve_datatype("PROCESSENTRY32W",
+                new ModelDummy("Dummy", "dummy.py", true));
+        assertEquals(dt.getName(), "PROCESSENTRY32W");
+        dt = refactor.resolve_datatype("PROCESSENTRY32", new ModelDummy("Dummy", "dummy.py", true));
+        assertEquals(dt.getName(), "PROCESSENTRY32");
     }
 }

@@ -1,4 +1,4 @@
-package kingaidra.chat;
+package kingaidra.ai.convo;
 
 import java.io.Serializable;
 import java.util.HashSet;
@@ -8,7 +8,7 @@ import java.util.Set;
 import java.util.UUID;
 
 import ghidra.program.model.address.Address;
-import kingaidra.ai.Model;
+import kingaidra.ai.model.Model;
 
 
 class Message implements Serializable {

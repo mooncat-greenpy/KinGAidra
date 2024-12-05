@@ -22,8 +22,8 @@ import ghidra.util.table.GhidraTableFilterPanel;
 import ghidra.util.table.GhidraThreadedTablePanel;
 import ghidra.util.table.field.AbstractProgramBasedDynamicTableColumn;
 import ghidra.util.task.TaskMonitor;
-import kingaidra.chat.Conversation;
-import kingaidra.chat.ConversationContainer;
+import kingaidra.ai.convo.Conversation;
+import kingaidra.ai.convo.ConversationContainer;
 
 public class LogGUI extends JPanel {
 

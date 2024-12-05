@@ -11,10 +11,10 @@ import ghidra.framework.plugintool.PluginTool;
 import ghidra.framework.plugintool.util.PluginStatus;
 import ghidra.program.model.listing.Program;
 import ghidra.util.HelpLocation;
-import kingaidra.chat.KinGAidraChatTaskService;
-import kingaidra.ai.TaskStatus;
-import kingaidra.ai.TaskType;
-import kingaidra.chat.Conversation;
+import kingaidra.ai.convo.Conversation;
+import kingaidra.ai.task.KinGAidraChatTaskService;
+import kingaidra.ai.task.TaskStatus;
+import kingaidra.ai.task.TaskType;
 import kingaidra.gui.MainProvider;
 import kingaidra.log.Logger;
 

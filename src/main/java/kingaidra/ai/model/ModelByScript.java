@@ -1,4 +1,4 @@
-package kingaidra.ai;
+package kingaidra.ai.model;
 
 import java.io.PrintWriter;
 import java.io.Serializable;
@@ -10,8 +10,10 @@ import ghidra.app.services.*;
 import ghidra.framework.plugintool.PluginTool;
 import ghidra.program.model.listing.Program;
 import ghidra.util.task.TaskMonitor;
-import kingaidra.chat.Conversation;
-import kingaidra.chat.KinGAidraChatTaskService;
+import kingaidra.ai.convo.Conversation;
+import kingaidra.ai.task.KinGAidraChatTaskService;
+import kingaidra.ai.task.TaskStatus;
+import kingaidra.ai.task.TaskType;
 import kingaidra.log.Logger;
 
 public class ModelByScript implements Model, Serializable {

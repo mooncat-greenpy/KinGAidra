@@ -1,4 +1,4 @@
-package kingaidra.decom.ai;
+package kingaidra.decom.extractor;
 
 import java.util.List;
 import com.fasterxml.jackson.annotation.JsonProperty;

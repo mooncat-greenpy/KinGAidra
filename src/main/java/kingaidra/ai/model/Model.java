@@ -1,9 +1,10 @@
-package kingaidra.ai;
+package kingaidra.ai.model;
 
 import ghidra.framework.plugintool.PluginTool;
 import ghidra.program.model.listing.Program;
-import kingaidra.chat.Conversation;
-import kingaidra.chat.KinGAidraChatTaskService;
+import kingaidra.ai.convo.Conversation;
+import kingaidra.ai.task.KinGAidraChatTaskService;
+import kingaidra.ai.task.TaskType;
 
 public interface Model {
     public String get_name();

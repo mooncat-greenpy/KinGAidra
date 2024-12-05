@@ -1,4 +1,4 @@
-package kingaidra.decom.ai;
+package kingaidra.decom.extractor;
 
 public class VarJson {
     public String new_var_name;

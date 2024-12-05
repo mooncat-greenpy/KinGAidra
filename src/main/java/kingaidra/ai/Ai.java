@@ -1,4 +1,4 @@
-package kingaidra.chat.ai;
+package kingaidra.ai;
 
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -7,10 +7,10 @@ import ghidra.framework.plugintool.PluginTool;
 import ghidra.program.model.address.Address;
 import ghidra.program.model.listing.Function;
 import ghidra.program.model.listing.Program;
-import kingaidra.ai.TaskType;
-import kingaidra.chat.Conversation;
-import kingaidra.chat.ConversationContainer;
-import kingaidra.chat.KinGAidraChatTaskService;
+import kingaidra.ai.convo.Conversation;
+import kingaidra.ai.convo.ConversationContainer;
+import kingaidra.ai.task.KinGAidraChatTaskService;
+import kingaidra.ai.task.TaskType;
 import kingaidra.ghidra.GhidraUtil;
 
 public class Ai {
@@ -20,7 +20,8 @@ public class Ai {
     private ConversationContainer container;
     private KinGAidraChatTaskService service;
 
-    public Ai(PluginTool tool, Program program, GhidraUtil ghidra, ConversationContainer container, KinGAidraChatTaskService service) {
+    public Ai(PluginTool tool, Program program, GhidraUtil ghidra, ConversationContainer container,
+            KinGAidraChatTaskService service) {
         this.tool = tool;
         this.program = program;
         this.ghidra = ghidra;
@@ -29,6 +30,9 @@ public class Ai {
     }
 
     public String resolve_asm_code(Conversation convo, String msg, Address addr) {
+        if (addr == null) {
+            return msg;
+        }
         Function func = ghidra.get_func(addr);
         String asm_code = ghidra.get_asm(addr);
         if (func == null || asm_code == null) {
@@ -59,6 +63,9 @@ public class Ai {
     }
 
     public String resolve_src_code(Conversation convo, String msg, Address addr) {
+        if (addr == null) {
+            return msg;
+        }
         Function func = ghidra.get_func(addr);
         String src_code = ghidra.get_decom(addr);
         if (func == null || src_code == null) {
@@ -88,12 +95,12 @@ public class Ai {
         return result.toString();
     }
 
-    public Conversation guess(Conversation convo, String msg, Address addr) {
+    public Conversation guess(TaskType type, Conversation convo, String msg, Address addr) {
         msg = resolve_src_code(convo, msg, addr);
         msg = resolve_asm_code(convo, msg, addr);
         convo.add_user_msg(msg);
 
-        Conversation rep = convo.get_model().guess(TaskType.CHAT, convo, service, tool, program);
+        Conversation rep = convo.get_model().guess(type, convo, service, tool, program);
         if (rep != null) {
             container.add_convo(rep);
         }

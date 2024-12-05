@@ -1,4 +1,4 @@
-package kingaidra.chat;
+package kingaidra.ai.convo;
 
 import java.util.HashMap;
 import java.util.Map;

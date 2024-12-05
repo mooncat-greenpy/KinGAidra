@@ -10,7 +10,7 @@ import kingaidra
 
 def main():
     consumer_list = currentProgram.getConsumerList()
-    service = consumer_list[0].getService(kingaidra.chat.KinGAidraChatTaskService)
+    service = consumer_list[0].getService(kingaidra.ai.task.KinGAidraChatTaskService)
 
     convo = service.get_task(state.getEnvironmentVar("KEY"))
     service.commit_task(state.getEnvironmentVar("KEY"), "Response:\n" + convo.get_msg(convo.get_msgs_len() - 1))

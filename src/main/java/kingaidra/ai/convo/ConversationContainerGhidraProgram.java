@@ -1,4 +1,4 @@
-package kingaidra.chat;
+package kingaidra.ai.convo;
 
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
@@ -21,7 +21,7 @@ import ghidra.program.database.ProgramDB;
 import ghidra.program.model.address.Address;
 import ghidra.program.model.listing.Program;
 import ghidra.util.task.TaskMonitor;
-import kingaidra.ai.Model;
+import kingaidra.ai.model.Model;
 import kingaidra.ghidra.GhidraUtil;
 import kingaidra.ghidra.GhidraUtilImpl;
 
@@ -158,13 +158,11 @@ public class ConversationContainerGhidraProgram {
         if (model == null) {
             return null;
         }
-        Message[] msgs =
-                (Message[]) bytes_to_obj(record.getBinaryData(RECORD_MESSAGES_INDEX_V1));
+        Message[] msgs = (Message[]) bytes_to_obj(record.getBinaryData(RECORD_MESSAGES_INDEX_V1));
         if (msgs == null) {
             return null;
         }
-        Long[] addrs =
-                (Long[]) bytes_to_obj(record.getBinaryData(RECORD_ADDRESSES_INDEX_V1));
+        Long[] addrs = (Long[]) bytes_to_obj(record.getBinaryData(RECORD_ADDRESSES_INDEX_V1));
         if (addrs == null) {
             return null;
         }

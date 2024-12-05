@@ -3,9 +3,11 @@ package kingaidra.chat;
 import java.util.Arrays;
 
 import ghidra.program.model.address.Address;
-import kingaidra.ai.Model;
-import kingaidra.ai.ModelByScript;
-import kingaidra.chat.ai.Ai;
+import kingaidra.ai.Ai;
+import kingaidra.ai.convo.Conversation;
+import kingaidra.ai.model.Model;
+import kingaidra.ai.model.ModelByScript;
+import kingaidra.ai.task.TaskType;
 import kingaidra.ghidra.GhidraPreferences;
 
 public class Guess {
@@ -117,7 +119,7 @@ public class Guess {
     }
 
     public Conversation guess(Conversation convo, String msg, Address addr) {
-        convo = ai.guess(convo, msg, addr);
+        convo = ai.guess(TaskType.CHAT, convo, msg, addr);
         return convo;
     }
 

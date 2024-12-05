@@ -17,7 +17,7 @@ API_KEY = ""
 
 def main():
     consumer_list = currentProgram.getConsumerList()
-    service = consumer_list[0].getService(kingaidra.chat.KinGAidraChatTaskService)
+    service = consumer_list[0].getService(kingaidra.ai.task.KinGAidraChatTaskService)
 
     convo = service.get_task(state.getEnvironmentVar("KEY"))
 
