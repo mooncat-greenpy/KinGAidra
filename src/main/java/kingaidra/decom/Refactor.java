@@ -1,7 +1,14 @@
 package kingaidra.decom;
 
+import javax.swing.JTextArea;
+import javax.swing.JOptionPane;
+import javax.swing.JScrollPane;
+
+import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Set;
+import java.util.function.Function;
 
 import ghidra.program.model.data.DataType;
 import kingaidra.ai.Ai;
@@ -14,26 +21,34 @@ import kingaidra.ghidra.GhidraUtil;
 public class Refactor {
     private GhidraUtil ghidra;
     private Ai ai;
+    private Function<String, String> fix_func;
 
-    public Refactor(GhidraUtil ghidra, Ai ai) {
+    public Refactor(GhidraUtil ghidra, Ai ai, Function<String, String> fix_func) {
         this.ghidra = ghidra;
         this.ai = ai;
+        this.fix_func = fix_func;
     }
 
     public DataType resolve_datatype(String datatype_name, Model model) {
         Conversation convo = new Conversation(model);
-        datatype_name = datatype_name.replaceAll("\\[\\d:\\]", "");
+        datatype_name = datatype_name.replaceAll("\\[\\d+\\]", "");
         String msg = String.format("Please write the %s structure in C language. " +
                         "Include any dependent data types and structures. " +
-                        "Do not use #include or #define. " +
+                        "Do not use typedef, #include and #define. " +
                         "It is for %d-bit. ", datatype_name, ghidra.get_addr(0).getSize());
 
         convo = ai.guess(TaskType.RESOLVE_DATATYPE, convo, msg, null);
         if (convo == null) {
             return null;
         }
-
         String rsp_msg = convo.get_msg(convo.get_msgs_len() - 1);
+
+        // TODO: Refact
+        rsp_msg = fix_func.apply(rsp_msg);
+        if (rsp_msg == null) {
+            return null;
+        }
+
         ClangExtractor extractor = new ClangExtractor(rsp_msg);
         String target = extractor.get_data();
         if (target == null) {
@@ -46,13 +61,18 @@ public class Refactor {
 
     public void refact(DecomDiff diff, boolean datatype_resolving) {
         if (datatype_resolving) {
+            Set<String> datatype_names = new HashSet<>();
             for (DiffPair pair : diff.get_datatypes()) {
+                datatype_names.add(pair.get_new_name());
+            }
+
+            for (String name : datatype_names) {
                 List<DataType> dt_list = new LinkedList<>();
-                ghidra.find_datatypes(pair.get_new_name(), dt_list);
+                ghidra.find_datatypes(name, dt_list);
                 if (dt_list.size() > 0) {
                     continue;
                 }
-                DataType dt = resolve_datatype(pair.get_new_name(), diff.get_model());
+                DataType dt = resolve_datatype(name, diff.get_model());
                 if (dt == null) {
                     continue;
                 }

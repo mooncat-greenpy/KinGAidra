@@ -42,7 +42,7 @@ public class JsonExtractor<T extends JsonDataInterface> {
         } else {
             start += pre.length();
         }
-        int end = s.lastIndexOf(post);
+        int end = s.indexOf(post, start);
         if (end < 0) {
             end = s.length();
         }

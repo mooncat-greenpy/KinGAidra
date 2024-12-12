@@ -16,6 +16,8 @@ import kingaidra.testutil.ModelDummy;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
+import java.util.function.Function;
+
 public class RefactorTest {
     @Test
     void test_refact() throws Exception {
@@ -24,7 +26,12 @@ public class RefactorTest {
         GhidraUtil gu = new GhidraUtilImpl(program, TaskMonitor.DUMMY);
         ConversationContainer container = new ConversationContainerDummy();
         Ai ai = new Ai(null, program, gu, container, null);
-        Refactor refactor = new Refactor(gu, ai);
+        Refactor refactor = new Refactor(gu, ai, new Function<String, String>() {
+            @Override
+            public String apply(String msg) {
+                return msg;
+            }
+        });
 
         assertEquals(gu.get_func(util.get_addr(program, 0x402000)).getName(), "func_402000");
         assertTrue(gu.get_decomdiff(util.get_addr(program, 0x402000)).get_src_code()

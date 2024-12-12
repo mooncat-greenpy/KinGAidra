@@ -3,11 +3,15 @@ package kingaidra.decom.gui;
 import java.awt.Dimension;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.util.function.Function;
+
 import javax.swing.BoxLayout;
 import javax.swing.JButton;
 import javax.swing.JLabel;
 import javax.swing.JOptionPane;
 import javax.swing.JPanel;
+import javax.swing.JScrollPane;
+import javax.swing.JTextArea;
 
 import docking.ActionContext;
 import docking.Tool;
@@ -74,7 +78,19 @@ public class DecomGUI extends JPanel {
         ConversationContainer container = new ConversationContainerDummy();
         Ai ai = new Ai(plugin, program, ghidra, container, srv);
         Guess guess = new Guess(ghidra, ai, pref);
-        Refactor refactor = new Refactor(ghidra, ai);
+        Refactor refactor = new Refactor(ghidra, ai, new Function<String, String>() {
+            @Override
+            public String apply(String msg) {
+                JTextArea text = new JTextArea(30, 100);
+                text.setText(msg);
+                JScrollPane scroll = new JScrollPane(text);
+                int option = JOptionPane.showConfirmDialog(null, scroll, "Fix!", JOptionPane.OK_CANCEL_OPTION);
+                if (option == JOptionPane.CANCEL_OPTION) {
+                    return null;
+                }
+                return text.getText();
+            }
+        });
 
         Model sample_model = new ModelByScript("Sample", "kingaidra_sample.py", true);
         Model none_model = new ModelByScript("None", "kingaidra_none.py", true);

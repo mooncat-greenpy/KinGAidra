@@ -31,7 +31,7 @@ public class ClangExtractor {
             }
         }
         start += pre.length();
-        int end = s.lastIndexOf(post);
+        int end = s.indexOf(post, start);
         if (end < 0) {
             return null;
         }
