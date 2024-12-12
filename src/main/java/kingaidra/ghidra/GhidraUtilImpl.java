@@ -1,6 +1,8 @@
 package kingaidra.ghidra;
 
 import java.io.StringReader;
+import java.util.ArrayList;
+import java.util.Collections;
 import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
@@ -257,7 +259,7 @@ public class GhidraUtilImpl implements GhidraUtil {
                         diff.get_name().get_var_name(), diff.get_name().get_new_name()));
             }
 
-            for (int i = 0; i < func.getParameterCount(); i++) {
+            for (int i = func.getParameterCount() - 1; i >= 0 ; i--) {
                 Parameter param = func.getParameter(i);
 
                 DiffPair param_pair = diff.get_param(i);
@@ -287,39 +289,42 @@ public class GhidraUtilImpl implements GhidraUtil {
                 }
             }
 
-            HighFunction high_func = get_high_func(func);
-            if (high_func == null) {
-                Logger.append_message("Failed to get vars");
-            } else {
-                Iterator<HighSymbol> sym_itr = high_func.getLocalSymbolMap().getSymbols();
-                while (sym_itr.hasNext()) {
-                    HighSymbol sym = sym_itr.next();
+            List<DiffPair> reverse_vars = new LinkedList<>();
+            for (DiffPair pair : diff.get_vars()) {
+                reverse_vars.add(pair);
+            }
+            Collections.reverse(reverse_vars);
+            for (DiffPair pair : reverse_vars) {
+                HighFunction high_func = get_high_func(func);
+                if (high_func == null) {
+                    Logger.append_message("Failed to get vars");
+                    break;
+                }
+                HighSymbol sym = high_func.getLocalSymbolMap().getSymbol(pair.get_id());
+                if (sym == null) {
+                    continue;
+                }
 
-                    DiffPair var_pair = diff.get_var(sym.getId());
-                    String new_name = null;
-                    if (var_pair != null) {
-                        new_name = var_pair.get_new_name();
-                    }
+                String new_name = pair.get_new_name();
 
-                    DiffPair datatype_pair = diff.get_datatype(sym.getId());
-                    DataType new_dt = null;
-                    if (datatype_pair != null) {
-                        List<DataType> dt_l = new LinkedList<>();
-                        find_datatypes(diff.get_datatype(datatype_pair.get_id()).get_new_name(),
-                                dt_l);
-                        if (dt_l.size() > 0) {
-                            new_dt = dt_l.get(0);
-                        }
+                DiffPair datatype_pair = diff.get_datatype(sym.getId());
+                DataType new_dt = null;
+                if (datatype_pair != null) {
+                    List<DataType> dt_l = new LinkedList<>();
+                    find_datatypes(diff.get_datatype(datatype_pair.get_id()).get_new_name(),
+                            dt_l);
+                    if (dt_l.size() > 0) {
+                        new_dt = dt_l.get(0);
                     }
+                }
 
-                    try {
-                        HighFunctionDBUtil.updateDBVariable(sym, new_name, new_dt,
-                                SourceType.USER_DEFINED);
-                    } catch (InvalidInputException | DuplicateNameException e) {
-                        Logger.append_message(
-                                String.format("Failed to rename var name \\\"%s\\\" to \\\"%s\\\"",
-                                        var_pair.get_var_name(), var_pair.get_new_name()));
-                    }
+                try {
+                    HighFunctionDBUtil.updateDBVariable(sym, new_name, new_dt,
+                            SourceType.USER_DEFINED);
+                } catch (InvalidInputException | DuplicateNameException e) {
+                    Logger.append_message(
+                            String.format("Failed to rename var name \\\"%s\\\" to \\\"%s\\\"",
+                                    pair.get_var_name(), pair.get_new_name()));
                 }
             }
         } finally {

@@ -219,7 +219,7 @@ public class ChatGUI extends JPanel {
                             "Please explain what the following decompiled C function does. "
                                     + "Break down its logic, and describe the purpose of each part of the function, including any key operations, conditionals, loops, and data structures involved. "
                                     + "Providea step-by-step explanation of how the function works and what its expected behavior would be when executed.\n"
-                                    + "```json\n" + "<code>\n" + "```");
+                                    + "```cpp\n" + "<code>\n" + "```");
                     submit_btn.doClick();
                 }).popupMenuPath(new String[] {"Explain using AI"}).popupMenuGroup("KinGAidra")
                 .buildAndInstall(plugin);
@@ -242,7 +242,7 @@ public class ChatGUI extends JPanel {
                     provider.change_tab("Chat");
 
                     reset(null);
-                    input_area.setText("Decompile below assembly.\n```json\n<asm>\n```");
+                    input_area.setText("Decompile below assembly.\n```asm\n<asm>\n```");
                     submit_btn.doClick();
                 }).popupMenuPath(new String[] {"Decompile using AI"}).popupMenuGroup("KinGAidra")
                 .buildAndInstall(plugin);

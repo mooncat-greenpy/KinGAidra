@@ -108,6 +108,8 @@ public class Guess {
     public void add_model(String name, String script_file) {
         Model m = new ModelByScript(name, script_file, true);
         pref.store(name, m);
+
+        set_model_status(name, true);
     }
 
     public void remove_model(String name) {

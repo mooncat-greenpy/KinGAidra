@@ -31,7 +31,6 @@ public class Refactor {
 
     public DataType resolve_datatype(String datatype_name, Model model) {
         Conversation convo = new Conversation(model);
-        datatype_name = datatype_name.replaceAll("\\[\\d+\\]", "");
         String msg = String.format("Please write the %s structure in C language. " +
                         "Include any dependent data types and structures. " +
                         "Do not use typedef, #include and #define. " +
@@ -66,7 +65,8 @@ public class Refactor {
                 datatype_names.add(pair.get_new_name());
             }
 
-            for (String name : datatype_names) {
+            for (String datatype_name : datatype_names) {
+                String name = datatype_name.replaceAll("\\[\\d+\\]", "");
                 List<DataType> dt_list = new LinkedList<>();
                 ghidra.find_datatypes(name, dt_list);
                 if (dt_list.size() > 0) {
