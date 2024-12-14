@@ -12,9 +12,8 @@ import kingaidra.decom.gui.DecomGUI;
 public class MainProvider extends ComponentProvider {
 
     private JTabbedPane main_panel;
-    private DecomGUI decom_panel;
     private ChatGUI chat_panel;
-    private JPanel zzz_panel;
+    private DecomGUI decom_panel;
 
     public MainProvider(Program program, Plugin plugin, String owner,
             KinGAidraChatTaskService srv) {
@@ -22,14 +21,13 @@ public class MainProvider extends ComponentProvider {
 
         main_panel = new JTabbedPane();
 
-        decom_panel = new DecomGUI(this, this.dockingTool, program, plugin, owner, srv);
-        main_panel.add("Decom", decom_panel);
-
         chat_panel = new ChatGUI(this, this.dockingTool, program, plugin, owner, srv);
         main_panel.add("Chat", chat_panel);
 
-        zzz_panel = new JPanel();
-        main_panel.add("ZZZ", zzz_panel);
+        decom_panel = new DecomGUI(this, this.dockingTool, program, plugin, owner, srv);
+        main_panel.add("Decom", decom_panel);
+
+        // Currently considering a feature to identify areas that should be prioritized for analysis in binary analysis
 
         setVisible(true);
 
