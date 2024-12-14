@@ -92,23 +92,12 @@ public class DecomGUI extends JPanel {
             }
         });
 
-        Model sample_model = new ModelByScript("Sample", "kingaidra_sample.py", true);
-        Model none_model = new ModelByScript("None", "kingaidra_none.py", true);
-        Model chatgptlike_model =
-                new ModelByScript("ChatGPTLike", "kingaidra_chatgptlike.py", true);
+        Model test_model = new ModelByScript("Test", "kingaidra_test.py", true);
         Model chatgptlike_chat_model =
                 new ModelByScript("ChatGPTLikeChat", "kingaidra_chat_chatgptlike.py", true);
-        if (!guess.exist_model(sample_model.get_name())) {
-            guess.add_model(sample_model.get_name(), sample_model.get_script());
-            guess.set_model_status(sample_model.get_name(), sample_model.get_active());
-        }
-        if (!guess.exist_model(none_model.get_name())) {
-            guess.add_model(none_model.get_name(), none_model.get_script());
-            guess.set_model_status(none_model.get_name(), none_model.get_active());
-        }
-        if (!guess.exist_model(chatgptlike_model.get_name())) {
-            guess.add_model(chatgptlike_model.get_name(), chatgptlike_model.get_script());
-            guess.set_model_status(chatgptlike_model.get_name(), chatgptlike_model.get_active());
+        if (!guess.exist_model(test_model.get_name())) {
+            guess.add_model(test_model.get_name(), test_model.get_script());
+            guess.set_model_status(test_model.get_name(), test_model.get_active());
         }
         if (!guess.exist_model(chatgptlike_chat_model.get_name())) {
             guess.add_model(chatgptlike_chat_model.get_name(), chatgptlike_chat_model.get_script());

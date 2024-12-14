@@ -19,7 +19,7 @@ public interface KinGAidraChatTaskService {
 
     public Conversation get_task(String key);
 
-    public TaskType get_task_type(String key, TaskType type);
+    public TaskType get_task_type(String key);
 
     public TaskStatus get_task_status(String key);
 

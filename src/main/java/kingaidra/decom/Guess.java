@@ -10,7 +10,6 @@ import kingaidra.ai.convo.Conversation;
 import kingaidra.ai.model.Model;
 import kingaidra.ai.model.ModelByScript;
 import kingaidra.ai.task.TaskType;
-import kingaidra.decom.extractor.ClangExtractor;
 import kingaidra.decom.extractor.DataTypeJson;
 import kingaidra.decom.extractor.DataTypeListJson;
 import kingaidra.decom.extractor.FuncParamVarJson;

@@ -1,7 +1,6 @@
 package kingaidra.ghidra;
 
 import java.util.List;
-import java.util.Map;
 
 import ghidra.program.model.address.Address;
 import ghidra.program.model.data.DataType;

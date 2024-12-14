@@ -90,7 +90,7 @@ public class KinGAidraPlugin extends ProgramPlugin implements KinGAidraChatTaskS
     }
 
     @Override
-    public TaskType get_task_type(String key, TaskType type) {
+    public TaskType get_task_type(String key) {
         return type_map.get(key);
     }
 
