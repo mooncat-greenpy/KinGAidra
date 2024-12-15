@@ -40,6 +40,7 @@ import kingaidra.ghidra.RefactorModelPreferences;
 import kingaidra.gui.MainProvider;
 import kingaidra.log.Logger;
 import resources.Icons;
+import resources.ResourceManager;
 
 public class DecomGUI extends JPanel {
 
@@ -245,7 +246,8 @@ public class DecomGUI extends JPanel {
                 JOptionPane.showMessageDialog(null, p, "Configure", JOptionPane.PLAIN_MESSAGE);
             }
         };
-        conf_action.setToolBarData(new ToolBarData(Icons.CONFIGURE_FILTER_ICON, null));
+
+        conf_action.setToolBarData(new ToolBarData(ResourceManager.loadImage("images/decom_conf.png"), null));
         conf_action.setEnabled(true);
         conf_action.markHelpUnnecessary();
         dockingTool.addLocalAction(provider, conf_action);

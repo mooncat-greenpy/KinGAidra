@@ -42,6 +42,7 @@ import kingaidra.gui.MainProvider;
 import kingaidra.ghidra.ChatModelPreferences;
 import kingaidra.log.Logger;
 import resources.Icons;
+import resources.ResourceManager;
 
 import com.vladsch.flexmark.parser.Parser;
 import com.vladsch.flexmark.util.data.MutableDataSet;
@@ -253,7 +254,7 @@ public class ChatGUI extends JPanel {
                 JOptionPane.showMessageDialog(null, p, "ChatConfigure", JOptionPane.PLAIN_MESSAGE);
             }
         };
-        conf_action.setToolBarData(new ToolBarData(Icons.CONFIGURE_FILTER_ICON, null));
+        conf_action.setToolBarData(new ToolBarData(ResourceManager.loadImage("images/chat_conf.png"), null));
         conf_action.setEnabled(true);
         conf_action.markHelpUnnecessary();
         dockingTool.addLocalAction(provider, conf_action);
