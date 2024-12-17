@@ -17,9 +17,9 @@ def main():
     msg = convo.get_msg(convo.get_msgs_len() - 1)
 
     type = service.get_task_type(state.getEnvironmentVar("KEY"))
-    if type == kingaidra.ai.task.TaskType.CHAT:
+    if type == kingaidra.ai.task.TaskType.CHAT and "test" in msg:
         data = """Hello! How can I assist you today?"""
-    elif type == kingaidra.ai.task.TaskType.EXPLAIN_FUNC and "void __fastcall FUN_01222300(PHANDLE param_1)" in msg:
+    elif type == kingaidra.ai.task.TaskType.CHAT and "Please explain what the following decompiled C function does." in msg and "FUN_01222300" in msg:
         data = """Let's break down the decompiled C function step-by-step. The function's purpose seems to be related to interacting with system processes, specifically locating a process (likely `Explorer.exe`), opening it, and then obtaining a process token.
 
 ### Function Signature:
@@ -141,8 +141,84 @@ When executed, the function will:
 - Clean up all resources and exit.
 
 This function might be part of a larger program that interacts with system processes, possibly for managing or impersonating the `Explorer.exe` process."""
-    elif type == kingaidra.ai.task.TaskType.DECOM_ASM and "FUN_01222300" in msg:
-        data = """ddecom"""
+    elif type == kingaidra.ai.task.TaskType.CHAT and "Decompile the following assembly code into equivalent C code." in msg and "FUN_01222300" in msg:
+        data = """The assembly code provided is quite complex and involves calls to Windows API functions such as `CreateToolhelp32Snapshot`, `Process32FirstW`, `Process32NextW`, `OpenProcess`, `OpenProcessToken`, and `CloseHandle`. These are used to interact with system processes, and the logic appears to involve creating a snapshot of running processes, filtering them, and checking for certain processes (like `Explorer.exe`). The program then interacts with processes by opening their tokens and performing various actions.
+
+### Let's decompile the assembly to C code step by step:
+
+```c
+#include <windows.h>
+#include <tlhelp32.h>
+#include <advapi32.h>
+
+void FUN_01222300(void) {
+    // Local variables
+    HANDLE hSnapshot;
+    PROCESSENTRY32 pe32;
+    HANDLE hProcess = NULL;
+    HANDLE hToken = NULL;
+    BOOL processFound = FALSE;
+
+    // Initialize process entry structure
+    memset(&pe32, 0, sizeof(PROCESSENTRY32));
+
+    // Take a snapshot of all processes
+    hSnapshot = CreateToolhelp32Snapshot(TH32CS_SNAPPROCESS, 0);
+    if (hSnapshot == INVALID_HANDLE_VALUE) {
+        return;
+    }
+
+    // Initialize PROCESSENTRY32 structure
+    pe32.dwSize = sizeof(PROCESSENTRY32);
+
+    // Start enumerating processes
+    if (Process32First(hSnapshot, &pe32)) {
+        do {
+            // Check for "Explorer.exe"
+            if (_stricmp(pe32.szExeFile, "Explorer.exe") == 0) {
+                // Process found, now open the process
+                hProcess = OpenProcess(PROCESS_QUERY_INFORMATION | PROCESS_VM_READ, FALSE, pe32.th32ProcessID);
+                if (hProcess != NULL) {
+                    // Open process token
+                    if (OpenProcessToken(hProcess, TOKEN_QUERY, &hToken)) {
+                        // Successfully opened token, perform some operations
+                        // (Additional logic goes here, depending on what needs to be done with the token)
+                        processFound = TRUE;
+                    }
+                    // Close process handle
+                    CloseHandle(hProcess);
+                }
+            }
+        } while (Process32Next(hSnapshot, &pe32) && !processFound);
+    }
+
+    // Close the snapshot handle
+    CloseHandle(hSnapshot);
+
+    // If no process was found, do additional actions
+    if (!processFound) {
+        // (Additional logic can go here)
+    }
+}
+```
+
+### Explanation of the C Code:
+1. **Snapshot Creation**: The assembly code creates a snapshot of the current running processes with `CreateToolhelp32Snapshot`. In C, we do this with the `CreateToolhelp32Snapshot` function, using `TH32CS_SNAPPROCESS` to indicate that we are interested in processes.
+   
+2. **Process Enumeration**: The assembly code uses `Process32First` and `Process32Next` to iterate over the processes. The C code uses the same API calls to check each process. It looks for `Explorer.exe`, which is a common process in Windows.
+
+3. **Checking the Process**: When a match is found (the process is `Explorer.exe`), the code opens the process with `OpenProcess`. It uses `PROCESS_QUERY_INFORMATION | PROCESS_VM_READ` as the desired access rights.
+
+4. **Token Operations**: If `Explorer.exe` is found, the program attempts to open the process's access token with `OpenProcessToken`. The C code doesn't specify what happens with the token, but in the original assembly, it seems like further operations might be intended on the token (this could include security operations like altering access rights or querying the token).
+
+5. **Handling the Snapshot and Closing Handles**: After processing, it is important to close the snapshot and any opened handles to avoid resource leaks, as done with `CloseHandle` in both the C code and assembly.
+
+### Notes:
+- **The assembly logic includes some additional operations that aren't fully translated here**, particularly with handling tokens and process-related actions. These actions would need more context to be properly converted into C code.
+- **Error handling** is minimal in the assembly code, which means some areas in the C code (like checking `INVALID_HANDLE_VALUE` for `CreateToolhelp32Snapshot` or `NULL` for `OpenProcess`) help prevent runtime errors.
+- **The `FUN_01230cbe` and other function calls** in the original assembly are not fully clear, so they aren't included in the C code. These would need to be examined separately to understand their purpose.
+
+"""
     elif type == kingaidra.ai.task.TaskType.DECOM_REFACTOR_FUNC_PARAM_VAR and "FUN_01222300" in msg:
         data = """```json
 {

@@ -145,7 +145,7 @@ public class ChatGUI extends JPanel {
         Ai ai = new Ai(plugin, program, ghidra, container, srv);
         Guess guess = new Guess(ai, pref);
 
-        Model test_model = new ModelByScript("Test", "kingaidra_test.py", true);
+        Model test_model = new ModelByScript("Test", "kingaidra_test.py", false);
         Model chatgptlike_model =
                 new ModelByScript("ChatChatGPTLike", "kingaidra_chat_chatgptlike.py", true);
         if (!guess.exist_model(test_model.get_name())) {

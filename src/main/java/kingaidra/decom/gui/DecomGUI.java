@@ -93,7 +93,7 @@ public class DecomGUI extends JPanel {
             }
         });
 
-        Model test_model = new ModelByScript("Test", "kingaidra_test.py", true);
+        Model test_model = new ModelByScript("Test", "kingaidra_test.py", false);
         Model chatgptlike_chat_model =
                 new ModelByScript("ChatGPTLikeChat", "kingaidra_chat_chatgptlike.py", true);
         if (!guess.exist_model(test_model.get_name())) {
