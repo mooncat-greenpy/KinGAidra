@@ -238,7 +238,7 @@ public class ChatGUI extends JPanel {
                     provider.change_tab("Chat");
 
                     reset(null);
-                    input_area.setText("Decompile below assembly.\n```asm\n<asm>\n```");
+                    input_area.setText("Decompile the following assembly code into equivalent C code.\n```asm\n<asm>\n```");
                     submit_btn.doClick();
                 }).popupMenuPath(new String[] {"Decompile using AI"}).popupMenuGroup("KinGAidra")
                 .buildAndInstall(plugin);

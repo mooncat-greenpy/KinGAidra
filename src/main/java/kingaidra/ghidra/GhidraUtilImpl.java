@@ -18,17 +18,20 @@ import ghidra.program.model.data.Category;
 import ghidra.program.model.data.CategoryPath;
 import ghidra.program.model.data.DataType;
 import ghidra.program.model.data.DataTypeManager;
+import ghidra.program.model.listing.Data;
 import ghidra.program.model.listing.Function;
 import ghidra.program.model.listing.Instruction;
 import ghidra.program.model.listing.Listing;
 import ghidra.program.model.listing.Parameter;
 import ghidra.program.model.listing.Program;
+import ghidra.program.model.mem.Memory;
 import ghidra.program.model.pcode.HighFunction;
 import ghidra.program.model.pcode.HighFunctionDBUtil;
 import ghidra.program.model.pcode.HighSymbol;
 import ghidra.program.model.symbol.ExternalReference;
 import ghidra.program.model.symbol.Reference;
 import ghidra.program.model.symbol.ReferenceManager;
+import ghidra.program.model.symbol.RefType;
 import ghidra.program.model.symbol.SourceType;
 import ghidra.program.model.symbol.Symbol;
 import ghidra.program.model.symbol.SymbolTable;
@@ -89,6 +92,7 @@ public class GhidraUtilImpl implements GhidraUtil {
         Instruction inst = program_listing.getInstructionAt(func.getEntryPoint());
         while (inst.getAddress().getOffset() <= end_addr.getOffset()) {
             String asm = inst.toString();
+            String comment = "";
 
             ReferenceManager ref_manager = program.getReferenceManager();
             for (Reference ref : ref_manager.getExternalReferences()) {
@@ -113,6 +117,16 @@ public class GhidraUtilImpl implements GhidraUtil {
                         }
                     }
                 }
+                Reference[] refs = inst.getOperandReferences(i);
+                for (Reference ref : refs) {
+                    if (ref.getReferenceType() == RefType.DATA) {
+                        Address to = ref.getToAddress();
+                        Data data = get_data(to);
+                        if (data != null && data.getValueClass() == String.class) {
+                            comment += String.format("[%x]=\"%s\" ", to.getOffset(), (String) data.getValue());
+                        }
+                    }
+                }
             }
 
             SymbolTable label_sym_table = program.getSymbolTable();
@@ -120,7 +134,7 @@ public class GhidraUtilImpl implements GhidraUtil {
             if (label_sym != null) {
                 result += label_sym.getName() + ":\n";
             }
-            result += "    " + asm + "\n";
+            result += "    " + asm + (comment.isEmpty()?"":(" ; " + comment)) + "\n";
 
             inst = program_listing.getInstructionAfter(inst.getAddress());
         }
@@ -328,5 +342,16 @@ public class GhidraUtilImpl implements GhidraUtil {
             program.endTransaction(tid, true);
         }
         return true;
+    }
+
+    public Data get_data(Address addr) {
+        Memory memory = program.getMemory();
+        DataTypeManager datatype_manager = program.getDataTypeManager();
+
+        try {
+            return program_listing.getDataAt(addr);
+        } catch (Exception e) {
+            return null;
+        }
     }
 }
