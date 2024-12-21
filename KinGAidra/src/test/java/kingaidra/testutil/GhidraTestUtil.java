@@ -36,7 +36,7 @@ public class GhidraTestUtil {
 
     public Program create_program() throws Exception {
         ProgramBuilder builder = new ProgramBuilder("test", ProgramBuilder._X86, null);
-        builder.createMemory(".text", "0x0401000", 0x9000);
+        builder.createMemory(".text", "0x0401000", 0xf000);
         builder.setBytes("0x401000", "55 89 e5 5d c3");
         builder.createEmptyFunction("func_401000", "0x401000", 0x5, new IntegerDataType());
 
@@ -49,6 +49,38 @@ public class GhidraTestUtil {
         Parameter p1 = new ParameterImpl("param_1", str_dt, v1, builder.getProgram(),
                 SourceType.USER_DEFINED);
         builder.createEmptyFunction("func_402000", "0x402000", 0x72, new Undefined4DataType(), p1);
+
+        // call func_402000, func_401000
+        builder.setBytes("0x403000", "55 89 e5 e8 f8 ef ff ff e8 f3 df ff ff 5d c3");
+        builder.createEmptyFunction("func_403000", "0x403000", 0xf, new IntegerDataType());
+
+        // call func_403000, func_405000
+        builder.setBytes("0x404000", "55 89 e5 e8 f8 ef ff ff e8 f3 0f 00 00 5d c3");
+        builder.createEmptyFunction("func_404000", "0x404000", 0xf, new IntegerDataType());
+
+        // call func_402000
+        builder.setBytes("0x405000", "55 89 e5 e8 f8 cf ff ff 5d c3");
+        builder.createEmptyFunction("func_405000", "0x405000", 0x5, new IntegerDataType());
+
+        // call func_405000
+        builder.setBytes("0x406000", "55 89 e5 e8 f8 ef ff ff 5d c3");
+        builder.createEmptyFunction("func_406000", "0x406000", 0xf, new IntegerDataType());
+
+        builder.setBytes("0x407000", "55 89 e5 5d c3");
+        builder.createEmptyFunction("func_407000", "0x407000", 0x5, new IntegerDataType());
+
+        // call func_407000
+        builder.setBytes("0x408000", "55 89 e5 e8 f8 ef ff ff 5d c3");
+        builder.createEmptyFunction("func_408000", "0x408000", 0xf, new IntegerDataType());
+
+        // call func_40a000
+        builder.setBytes("0x409000", "55 89 e5 e8 f8 0f 00 00 5d c3");
+        builder.createEmptyFunction("func_409000", "0x409000", 0xf, new IntegerDataType());
+
+        // call func_409000
+        builder.setBytes("0x40a000", "55 89 e5 e8 f8 ef ff ff 5d c3");
+        builder.createEmptyFunction("func_40a000", "0x40a000", 0xf, new IntegerDataType());
+
         builder.analyze();
         return builder.getProgram();
     }

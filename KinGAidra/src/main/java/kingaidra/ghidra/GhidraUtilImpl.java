@@ -1,9 +1,11 @@
 package kingaidra.ghidra;
 
 import java.util.Collections;
+import java.util.HashSet;
 import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Set;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -20,6 +22,7 @@ import ghidra.program.model.data.DataType;
 import ghidra.program.model.data.DataTypeManager;
 import ghidra.program.model.listing.Data;
 import ghidra.program.model.listing.Function;
+import ghidra.program.model.listing.FunctionIterator;
 import ghidra.program.model.listing.Instruction;
 import ghidra.program.model.listing.Listing;
 import ghidra.program.model.listing.Parameter;
@@ -79,6 +82,29 @@ public class GhidraUtilImpl implements GhidraUtil {
             Logger.append_message("Failed to get function");
         }
         return func;
+    }
+
+    public void get_root_func(List<Function> root) {
+        FunctionIterator itr = program_listing.getFunctions(true);
+        while (itr.hasNext()) {
+            add_root_func(itr.next(), root, new HashSet<>());
+        }
+    }
+
+    private void add_root_func(Function target, List<Function> root, Set<Function> visited) {
+        if (visited.contains(target)) {
+            return;
+        }
+        visited.add(target);
+        Set<Function> calling_set = target.getCallingFunctions(monitor);
+        if (calling_set.isEmpty() && !root.contains(target)) {
+            root.add(target);
+            return;
+        }
+        for (Function calling : calling_set) {
+            add_root_func(calling, root, visited);
+        }
+        root.forEach(Function::getEntryPoint);
     }
 
     public String get_asm(Address addr) {

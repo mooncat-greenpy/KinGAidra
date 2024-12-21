@@ -2,6 +2,7 @@ package kingaidra.ghidra;
 
 import org.junit.jupiter.api.Test;
 
+import ghidra.program.model.listing.Function;
 import ghidra.program.model.listing.Program;
 import ghidra.program.model.data.DataType;
 import ghidra.util.task.TaskMonitor;
@@ -30,6 +31,20 @@ class GhidraUtilImplTest {
                 gu.get_decom(util.get_addr(program, 0x401002)).contains("int func_401000(void)"));
         assertEquals(gu.get_asm(util.get_addr(program, 0x401002)),
                 "func_401000:\n    PUSH EBP\n    MOV EBP,ESP\n    POP EBP\n    RET\n");
+    }
+
+    @Test
+    void test_call_tree() throws Exception {
+        GhidraTestUtil util = new GhidraTestUtil();
+        Program program = util.create_program();
+        GhidraUtil gu = new GhidraUtilImpl(program, TaskMonitor.DUMMY);
+
+        List<Function> root = new LinkedList<>();
+        gu.get_root_func(root);
+        assertEquals(root.size(), 3);
+        assertEquals(root.get(0).getEntryPoint().getOffset(), 0x404000);
+        assertEquals(root.get(1).getEntryPoint().getOffset(), 0x406000);
+        assertEquals(root.get(2).getEntryPoint().getOffset(), 0x408000);
     }
 
     @Test
