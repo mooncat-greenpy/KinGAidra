@@ -237,7 +237,7 @@ public class ModelDummy implements Model, Serializable {
                                 "10. **`szExeFile`**: The executable file's full path.\n" +
                                 "\n" +
                                 "Additionally, I defined **`MAX_PATH`** as `260`, which is the typical maximum length of file paths in Windows.");
-        } else if (type == TaskType.KEY_FUNC && convo.get_msg(convo.get_msgs_len() - 1).contains("")) {
+        } else if (type == TaskType.KEY_FUNC && convo.get_msg(convo.get_msgs_len() - 1).contains("please list which functions")) {
             convo.add_assistant_msg("```json\n" +
                         "{\n" +
                         "    \"func\": [\n" +
