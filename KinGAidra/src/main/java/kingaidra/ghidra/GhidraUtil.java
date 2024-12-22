@@ -14,6 +14,8 @@ public interface GhidraUtil {
 
     public Function get_func(Address addr);
 
+    public List<Function> get_func(String name);
+
     public void get_root_func(List<Function> root);
 
     public String get_func_call_tree();

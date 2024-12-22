@@ -87,6 +87,10 @@ public class GhidraUtilImpl implements GhidraUtil {
         return func;
     }
 
+    public List<Function> get_func(String name) {
+        return program_listing.getGlobalFunctions(name);
+    }
+
     public void get_root_func(List<Function> root) {
         FunctionIterator itr = program_listing.getFunctions(true);
         while (itr.hasNext()) {

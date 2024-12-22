@@ -26,6 +26,8 @@ class GhidraUtilImplTest {
 
         assertEquals(gu.get_func(util.get_addr(program, 0x401002)).getEntryPoint().getOffset(),
                 0x401000);
+        assertEquals(gu.get_func("func_401000").get(0).getEntryPoint().getOffset(),
+                0x401000);
 
         assertTrue(
                 gu.get_decom(util.get_addr(program, 0x401002)).contains("int func_401000(void)"));
