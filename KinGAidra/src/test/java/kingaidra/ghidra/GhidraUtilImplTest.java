@@ -45,6 +45,17 @@ class GhidraUtilImplTest {
         assertEquals(root.get(0).getEntryPoint().getOffset(), 0x404000);
         assertEquals(root.get(1).getEntryPoint().getOffset(), 0x406000);
         assertEquals(root.get(2).getEntryPoint().getOffset(), 0x408000);
+
+        assertEquals(gu.get_func_call_tree(), "- func_404000\n" +
+                                "    - func_403000\n" +
+                                "        - func_401000\n" +
+                                "        - func_402000\n" +
+                                "    - func_405000\n" +
+                                "- func_406000\n" +
+                                "    - func_405000\n" +
+                                "        - func_402000\n" +
+                                "- func_408000\n" +
+                                "    - func_407000\n");
     }
 
     @Test

@@ -1,11 +1,14 @@
 package kingaidra.ghidra;
 
+import java.util.ArrayList;
 import java.util.Collections;
+import java.util.Comparator;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Set;
+import java.util.Stack;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -105,6 +108,49 @@ public class GhidraUtilImpl implements GhidraUtil {
             add_root_func(calling, root, visited);
         }
         root.forEach(Function::getEntryPoint);
+    }
+
+    private void build_call_tree_str(Function func, int indent, Set<Long> visited, StringBuilder call_tree) {
+        Stack<Function> func_stack = new Stack<>();
+        Stack<Integer> indent_stack = new Stack<>();
+        func_stack.push(func);
+        indent_stack.push(indent);
+
+        while (!func_stack.isEmpty()) {
+            Function cur_func = func_stack.pop();
+            int cur_indent = indent_stack.pop();
+
+            if (visited.contains(cur_func.getEntryPoint().getOffset())) {
+                continue;
+            }
+            visited.add(cur_func.getEntryPoint().getOffset());
+
+            call_tree.append("    ".repeat(cur_indent)).append("- ").append(cur_func.getName()).append("\n");
+
+            Set<Function> called_set = cur_func.getCalledFunctions(monitor);
+            List<Function> called_list = new ArrayList<>(called_set);
+            Collections.sort(called_list, new Comparator<Function>() {
+                @Override
+                public int compare(Function o1, Function o2) {
+                    return o2.getEntryPoint().compareTo(o1.getEntryPoint());
+                }
+            });
+            for (Function called : called_list) {
+                func_stack.push(called);
+                indent_stack.push(cur_indent + 1);
+            }
+        }
+    }
+
+    public String get_func_call_tree() {
+        FunctionIterator itr = program_listing.getFunctions(true);
+        List<Function> root = new LinkedList<>();
+        get_root_func(root);
+        StringBuilder call_tree = new StringBuilder();
+        for (Function func : root) {
+            build_call_tree_str(func, 0, new HashSet<>(), call_tree);
+        }
+        return call_tree.toString();
     }
 
     public String get_asm(Address addr) {
