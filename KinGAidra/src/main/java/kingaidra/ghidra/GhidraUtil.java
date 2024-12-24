@@ -20,6 +20,8 @@ public interface GhidraUtil {
 
     public String get_func_call_tree();
 
+    public String get_func_call_tree(Function func);
+
     public String get_asm(Address addr);
 
     public String get_decom(Address addr);

@@ -88,7 +88,13 @@ public class GhidraUtilImpl implements GhidraUtil {
     }
 
     public List<Function> get_func(String name) {
-        return program_listing.getGlobalFunctions(name);
+        List<Function> func_list = program_listing.getGlobalFunctions(name);
+        for (Function func : program_listing.getExternalFunctions()) {
+            if (func.getName().equals(name)) {
+                func_list.add(func);
+            }
+        }
+        return func_list;
     }
 
     public void get_root_func(List<Function> root) {
@@ -147,13 +153,18 @@ public class GhidraUtilImpl implements GhidraUtil {
     }
 
     public String get_func_call_tree() {
-        FunctionIterator itr = program_listing.getFunctions(true);
         List<Function> root = new LinkedList<>();
         get_root_func(root);
-        StringBuilder call_tree = new StringBuilder();
+        String call_tree = "";
         for (Function func : root) {
-            build_call_tree_str(func, 0, new HashSet<>(), call_tree);
+            call_tree += get_func_call_tree(func);
         }
+        return call_tree;
+    }
+
+    public String get_func_call_tree(Function func) {
+        StringBuilder call_tree = new StringBuilder();
+        build_call_tree_str(func, 0, new HashSet<>(), call_tree);
         return call_tree.toString();
     }
 
