@@ -134,8 +134,6 @@ public class ChatGUI extends JPanel {
 
         add(info_label);
         add(s);
-
-        lgui.update(program);
     }
 
     private void init_panel() {
@@ -264,6 +262,7 @@ public class ChatGUI extends JPanel {
             public void actionPerformed(ActionContext context) {
                 JPanel p = new JPanel();
                 if (lgui != null) {
+                    lgui.update(program);
                     p.add(lgui);
                 }
 

@@ -27,5 +27,5 @@ public class FunctionJsonTest {
         assertEquals(data1.get_funcs().get(0), "Func_1");
         assertEquals(data1.get_funcs().get(1), "Func_2");
         assertEquals(data1.get_funcs().get(2), "Func_3");
-	}
+    }
 }
