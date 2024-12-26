@@ -62,6 +62,75 @@ class GhidraUtilImplTest {
                                 "        - func_402000\n" +
                                 "- func_408000\n" +
                                 "    - func_407000\n");
+
+        assertEquals(gu.get_call_tree_parent("- func_404000\n" +
+                                "    - func_403000\n" +
+                                "        - func_401000\n" +
+                                "        - func_402000\n" +
+                                "    - func_405000\n" +
+                                "- func_406000\n" +
+                                "    - func_405000\n" +
+                                "        - func_402000\n" +
+                                "- func_408000\n" +
+                                "    - func_407000\n", 1, gu.get_func(util.get_addr(program, 0x404000))).toString(), "[]");
+        assertEquals(gu.get_call_tree_parent("- func_404000\n" +
+                                "    - func_403000\n" +
+                                "        - func_401000\n" +
+                                "        - func_402000\n" +
+                                "    - func_405000\n" +
+                                "- func_406000\n" +
+                                "    - func_405000\n" +
+                                "        - func_402000\n" +
+                                "- func_408000\n" +
+                                "    - func_407000\n", 1, gu.get_func(util.get_addr(program, 0x403000))).toString(), "[func_404000]");
+        assertEquals(gu.get_call_tree_parent("- func_404000\n" +
+                                "    - func_403000\n" +
+                                "        - func_401000\n" +
+                                "        - func_402000\n" +
+                                "    - func_405000\n" +
+                                "- func_406000\n" +
+                                "    - func_405000\n" +
+                                "        - func_402000\n" +
+                                "- func_408000\n" +
+                                "    - func_407000\n", 1, gu.get_func(util.get_addr(program, 0x405000))).toString(), "[func_404000, func_406000]");
+        assertEquals(gu.get_call_tree_parent("- func_404000\n" +
+                                "    - func_403000\n" +
+                                "        - func_401000\n" +
+                                "        - func_402000\n" +
+                                "    - func_405000\n" +
+                                "- func_406000\n" +
+                                "    - func_405000\n" +
+                                "        - func_402000\n" +
+                                "- func_408000\n" +
+                                "    - func_407000\n", 1, gu.get_func(util.get_addr(program, 0x402000))).toString(), "[func_403000, func_405000]");
+        assertEquals(gu.get_call_tree_parent("- func_404000\n" +
+                                "    - func_403000\n" +
+                                "        - func_401000\n" +
+                                "        - func_402000\n" +
+                                "    - func_405000\n" +
+                                "- func_406000\n" +
+                                "    - func_405000\n" +
+                                "        - func_402000\n" +
+                                "- func_408000\n" +
+                                "    - func_407000\n", 2, gu.get_func(util.get_addr(program, 0x407000))).toString(), "[]");
+        assertEquals(gu.get_call_tree_parent("- func_404000\n" +
+                                "    - func_403000\n" +
+                                "        - func_401000\n" +
+                                "        - func_402000\n" +
+                                "    - func_405000\n" +
+                                "- func_406000\n" +
+                                "    - func_405000\n" +
+                                "        - func_402000\n" +
+                                "- func_408000\n" +
+                                "    - func_407000\n", 2, gu.get_func(util.get_addr(program, 0x402000))).toString(), "[func_404000, func_406000]");
+        assertEquals(gu.get_call_tree_parent("- func_404000\n" +
+                                "    - func_405000\n" +
+                                "        - func_402000\n" +
+                                "- func_406000\n" +
+                                "    - func_405000\n" +
+                                "        - func_402000\n" +
+                                "- func_408000\n" +
+                                "    - func_402000\n", 1, gu.get_func(util.get_addr(program, 0x402000))).toString(), "[func_405000, func_408000]");
     }
 
     @Test

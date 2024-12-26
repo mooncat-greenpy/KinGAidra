@@ -168,6 +168,34 @@ public class GhidraUtilImpl implements GhidraUtil {
         return call_tree.toString();
     }
 
+    public List<String> get_call_tree_parent(String call_tree, int depth, Function target) {
+        return get_call_tree_parent(call_tree, depth, target.getName());
+    }
+
+    public List<String> get_call_tree_parent(String call_tree, int depth, String target) {
+        String[] call_tree_lines = call_tree.split("\n");
+        List<String> parent_funcs = new LinkedList<>();
+        for (int i = 0; i < call_tree_lines.length; i++) {
+            int size = call_tree_lines[i].indexOf("- " + target);
+            if (size < 0) {
+                continue;
+            }
+            for (int j = i - 1; j >= 0; j--) {
+                int parent_size = call_tree_lines[j].indexOf("- ");
+                if (parent_size < 0) {
+                    break;
+                }
+                if (size == parent_size + 4 * depth) {
+                    if (!parent_funcs.contains(call_tree_lines[j].substring(parent_size + 2, call_tree_lines[j].length()))) {
+                        parent_funcs.add(call_tree_lines[j].substring(parent_size + 2, call_tree_lines[j].length()));
+                    }
+                    break;
+                }
+            }
+        }
+        return parent_funcs;
+    }
+
     public String get_asm(Address addr) {
         String result = "";
         Function func = get_func(addr);
