@@ -10,10 +10,14 @@ import kingaidra.ai.model.ModelType;
 
 public class ChatModelPreferences implements GhidraPreferences<Model> {
 
-    private static final String PATH = BASE + "chat.model.";
-    private static final String VERSION = "0.0.1";
+    private static final String VERSION = "0.0.3";
+    private final String PATH;
 
-    public ChatModelPreferences() {
+    public ChatModelPreferences(String name) {
+        PATH = BASE + (name.isEmpty() ? "" : (name + ".")) + "model.";
+        if (Preferences.getProperty(PATH.substring(0, PATH.length() - 1), "").equals("0.0.1")) {
+            remove_all();
+        }
         Preferences.setProperty(PATH.substring(0, PATH.length() - 1), VERSION);
     }
 
@@ -24,7 +28,7 @@ public class ChatModelPreferences implements GhidraPreferences<Model> {
             boolean model_active =
                     Boolean.parseBoolean(Preferences.getProperty(path + ".active", "false"));
             ModelType model_type =
-                    ModelType.valueOf(Preferences.getProperty(path + ".type", "DECOM_REFACTOR"));
+                    ModelType.valueOf(Preferences.getProperty(path + ".type", ModelType.NONE.toString()));
             if (model_type != ModelType.CHAT) {
                 return null;
             }

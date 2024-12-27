@@ -137,7 +137,7 @@ public class ChatGUI extends JPanel {
     }
 
     private void init_panel() {
-        GhidraPreferences<Model> pref = new ChatModelPreferences();
+        GhidraPreferences<Model> pref = new ChatModelPreferences("chat");
         ghidra = new GhidraUtilImpl(program, TaskMonitor.DUMMY);
         ConversationContainer container = new ConversationContainerDummy();
         Ai ai = new Ai(plugin, program, ghidra, container, srv);

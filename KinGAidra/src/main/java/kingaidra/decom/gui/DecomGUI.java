@@ -33,10 +33,10 @@ import kingaidra.ai.convo.ConversationContainerDummy;
 import kingaidra.ai.model.Model;
 import kingaidra.ai.model.ModelByScript;
 import kingaidra.ai.task.KinGAidraChatTaskService;
+import kingaidra.ghidra.ChatModelPreferences;
 import kingaidra.ghidra.GhidraPreferences;
 import kingaidra.ghidra.GhidraUtil;
 import kingaidra.ghidra.GhidraUtilImpl;
-import kingaidra.ghidra.RefactorModelPreferences;
 import kingaidra.gui.MainProvider;
 import kingaidra.log.Logger;
 import resources.Icons;
@@ -74,7 +74,7 @@ public class DecomGUI extends JPanel {
     }
 
     private void buildPanel() {
-        GhidraPreferences<Model> pref = new RefactorModelPreferences();
+        GhidraPreferences<Model> pref = new ChatModelPreferences("refactor");
         ghidra = new GhidraUtilImpl(program, TaskMonitor.DUMMY);
         ConversationContainer container = new ConversationContainerDummy();
         Ai ai = new Ai(plugin, program, ghidra, container, srv);
