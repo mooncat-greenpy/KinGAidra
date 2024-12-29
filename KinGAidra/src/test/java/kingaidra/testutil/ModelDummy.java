@@ -22,7 +22,7 @@ public class ModelDummy implements Model, Serializable {
         this.name = name;
         this.script_file = script;
         this.active = active;
-        this.type = ModelType.DECOM_REFACTOR;
+        this.type = ModelType.CHAT;
     }
 
     public String get_name() {
