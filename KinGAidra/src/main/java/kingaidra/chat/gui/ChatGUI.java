@@ -6,6 +6,7 @@ import java.awt.event.ActionListener;
 
 import javax.swing.BoxLayout;
 import javax.swing.JButton;
+import javax.swing.JCheckBox;
 import javax.swing.JEditorPane;
 import javax.swing.JLabel;
 import javax.swing.JOptionPane;
@@ -55,6 +56,7 @@ public class ChatGUI extends JPanel {
     private JButton submit_btn;
     private JLabel info_label;
     private JPanel btn_panel;
+    private JCheckBox md_chk;
 
     private DockingAction conf_action;
     private DockingAction log_action;
@@ -103,10 +105,13 @@ public class ChatGUI extends JPanel {
                 msg_panel.setLayout(new BoxLayout(msg_panel, BoxLayout.X_AXIS));
                 msg_panel.setBorder(line_border);
 
-                String html = convert_md_to_html(cur_convo.get_msg(i));
+                String text = cur_convo.get_msg(i);
                 JEditorPane edit_panel = new JEditorPane();
-                edit_panel.setContentType("text/html");
-                edit_panel.setText(html);
+                if (md_chk.isSelected()) {
+                    text = convert_md_to_html(text);
+                    edit_panel.setContentType("text/html");
+                }
+                edit_panel.setText(text);
                 edit_panel.setEditable(false);
 
                 JLabel role_label = new JLabel(cur_convo.get_role(i));
@@ -182,6 +187,9 @@ public class ChatGUI extends JPanel {
         });
         submit_btn.setPreferredSize(button_size);
         btn_panel.add(submit_btn);
+
+        md_chk = new JCheckBox("markdown");
+        btn_panel.add(md_chk);
 
         input_area = new JTextArea("");
         input_area.setLineWrap(true);
