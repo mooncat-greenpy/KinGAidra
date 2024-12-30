@@ -114,10 +114,21 @@ public class Ai {
         });
     }
 
+    public String resolve_strings(Conversation convo, String msg) {
+        return resolve_placeholder(msg, null, "strings", new java.util.function.Function<Address, String>() {
+            @Override
+            public String apply(Address addr) {
+                String calltree = ghidra.get_strings();
+                return calltree;
+            }
+        });
+    }
+
     public Conversation guess(TaskType type, Conversation convo, String msg, Address addr) {
         msg = resolve_src_code(convo, msg, addr);
         msg = resolve_asm_code(convo, msg, addr);
         msg = resolve_calltree(convo, msg, addr);
+        msg = resolve_strings(convo, msg);
         convo.add_user_msg(msg);
 
         Conversation rep = convo.get_model().guess(type, convo, service, tool, program);

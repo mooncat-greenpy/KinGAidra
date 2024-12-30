@@ -9,6 +9,10 @@ import ghidra.program.model.data.DataType;
 import ghidra.program.model.data.IntegerDataType;
 import ghidra.program.model.data.PointerDataType;
 import ghidra.program.model.data.Undefined4DataType;
+import ghidra.program.model.data.StringDataType;
+import ghidra.program.model.data.TerminatedStringDataType;
+import ghidra.program.model.data.ArrayDataType;
+import ghidra.program.model.data.CharDataType;
 import ghidra.program.model.listing.Parameter;
 import ghidra.program.model.listing.ParameterImpl;
 import ghidra.program.model.listing.Program;
@@ -80,6 +84,13 @@ public class GhidraTestUtil {
         // call func_409000
         builder.setBytes("0x40a000", "55 89 e5 e8 f8 ef ff ff 5d c3");
         builder.createEmptyFunction("func_40a000", "0x40a000", 0xf, new IntegerDataType());
+
+        builder.setBytes("0x40f000", "61 62 63 64 65 00");
+        builder.applyDataType("0x40f000", new StringDataType());
+        builder.setBytes("0x40f100", "61 62 63 64 65 00");
+        builder.applyDataType("0x40f100", new TerminatedStringDataType());
+        builder.setBytes("0x40f200", "61 62 63 64 65 00");
+        builder.applyDataType("0x40f200", new ArrayDataType(new CharDataType(), 5, 1));
 
         builder.analyze();
         return builder.getProgram();

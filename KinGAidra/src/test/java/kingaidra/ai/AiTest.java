@@ -166,6 +166,23 @@ public class AiTest {
     }
 
     @Test
+    void test_resolve_strings() throws Exception {
+        GhidraTestUtil util = new GhidraTestUtil();
+        Program program = util.create_program();
+        GhidraUtil gu = new GhidraUtilImpl(program, TaskMonitor.DUMMY);
+        ConversationContainer container = new ConversationContainerDummy();
+        Ai ai = new Ai(null, program, gu, container, null);
+        Conversation convo1 = new Conversation(new ChatModelDummy("Dummy", "dummy.py", true));
+        String ret1 = ai.resolve_strings(convo1, "Explain\n<strings>\nend");
+        assertTrue(ret1.startsWith("Explain\n"));
+        assertTrue(ret1.contains("[40f000]=\"abcde\"\n" +
+                                "[40f100]=\"abcde\"\n" +
+                                "[40f200]=\"abcde\"\n"));
+        assertTrue(ret1.endsWith("\nend"));
+        assertEquals(convo1.get_addrs().length, 0);
+    }
+
+    @Test
     void test_guess() throws Exception {
         GhidraTestUtil util = new GhidraTestUtil();
         Program program = util.create_program();
@@ -210,5 +227,17 @@ public class AiTest {
         assertTrue(convo3.get_msg(3).endsWith("Dummy1"));
         assertEquals(convo3.get_addrs().length, 1);
         assertEquals(convo3.get_addrs()[0].getOffset(), 0x408000);
+
+        Conversation convo4 = new Conversation(new ChatModelDummy("Dummy1", "dummy.py", true));
+        convo4 = ai.guess(TaskType.CHAT, convo4, "msg", util.get_addr(program, 0x408000));
+        ai.guess(TaskType.CHAT, convo4, "Explain\n<strings>", util.get_addr(program, 0x408000));
+        assertEquals(convo4.get_msgs_len(), 4);
+        assertEquals(convo4.get_msg(0), "msg");
+        assertEquals(convo4.get_msg(1), "msgDummy1");
+        assertTrue(convo4.get_msg(2).contains("[40f000]=\"abcde\"\n" +
+                                "[40f100]=\"abcde\"\n" +
+                                "[40f200]=\"abcde\"\n"));
+        assertTrue(convo4.get_msg(3).endsWith("Dummy1"));
+        assertEquals(convo4.get_addrs().length, 0);
     }
 }

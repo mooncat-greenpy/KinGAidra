@@ -26,6 +26,8 @@ public interface GhidraUtil {
 
     public List<String> get_call_tree_parent(String call_tree, int depth, String target);
 
+    public String get_strings();
+
     public String get_asm(Address addr);
 
     public String get_decom(Address addr);

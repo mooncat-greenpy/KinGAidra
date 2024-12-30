@@ -134,6 +134,17 @@ class GhidraUtilImplTest {
     }
 
     @Test
+    void test_strings() throws Exception {
+        GhidraTestUtil util = new GhidraTestUtil();
+        Program program = util.create_program();
+        GhidraUtil gu = new GhidraUtilImpl(program, TaskMonitor.DUMMY);
+
+        assertEquals(gu.get_strings(), "[40f000]=\"abcde\"\n" +
+                                "[40f100]=\"abcde\"\n" +
+                                "[40f200]=\"abcde\"\n");
+    }
+
+    @Test
     void test_refactor() throws Exception {
         GhidraTestUtil util = new GhidraTestUtil();
         Program program = util.create_program();

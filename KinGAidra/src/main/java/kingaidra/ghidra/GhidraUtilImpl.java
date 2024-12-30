@@ -19,11 +19,13 @@ import ghidra.app.services.CodeViewerService;
 import ghidra.app.util.cparser.C.CParser;
 import ghidra.framework.plugintool.PluginTool;
 import ghidra.program.model.address.Address;
+import ghidra.program.model.address.AddressSetView;
 import ghidra.program.model.data.Category;
 import ghidra.program.model.data.CategoryPath;
 import ghidra.program.model.data.DataType;
 import ghidra.program.model.data.DataTypeManager;
 import ghidra.program.model.listing.Data;
+import ghidra.program.model.listing.DataIterator;
 import ghidra.program.model.listing.Function;
 import ghidra.program.model.listing.FunctionIterator;
 import ghidra.program.model.listing.Instruction;
@@ -194,6 +196,21 @@ public class GhidraUtilImpl implements GhidraUtil {
             }
         }
         return parent_funcs;
+    }
+
+    public String get_strings() {
+        AddressSetView addr_set = program.getMemory();
+        DataIterator data_itr = program_listing.getData(addr_set, true);
+        String ret = "";
+        while (data_itr.hasNext() && !monitor.isCancelled()) {
+            Data data = data_itr.next();
+            if (data.getValueClass() == String.class) {
+                Address addr = data.getAddress();
+                String value = data.getDefaultValueRepresentation();
+                ret += String.format("[%x]=%s\n", addr.getOffset(), value);
+            }
+        }
+        return ret;
     }
 
     public String get_asm(Address addr) {
