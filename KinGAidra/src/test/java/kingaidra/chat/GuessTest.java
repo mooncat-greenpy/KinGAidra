@@ -223,5 +223,16 @@ public class GuessTest {
         assertTrue(convo2.get_msg(3).endsWith("Dummy2"));
         assertEquals(convo2.get_addrs().length, 1);
         assertEquals(convo2.get_addrs()[0].getOffset(), 0x401000);
+
+        Conversation convo3 = guess.guess("msg", util.get_addr(program, 0x408000));
+        guess.guess(convo3, "Explain\n<calltree>", util.get_addr(program, 0x408000));
+        assertEquals(convo3.get_msgs_len(), 4);
+        assertEquals(convo3.get_msg(0), "msg");
+        assertEquals(convo3.get_msg(1), "msgDummy2");
+        assertTrue(convo3.get_msg(2).contains("- func_408000\n" +
+                                "    - func_407000\n"));
+        assertTrue(convo3.get_msg(3).endsWith("Dummy2"));
+        assertEquals(convo3.get_addrs().length, 1);
+        assertEquals(convo3.get_addrs()[0].getOffset(), 0x408000);
     }
 }

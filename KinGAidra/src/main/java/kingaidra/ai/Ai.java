@@ -95,9 +95,29 @@ public class Ai {
         });
     }
 
+    public String resolve_calltree(Conversation convo, String msg, Address addr) {
+        if (addr == null) {
+            return msg;
+        }
+
+        return resolve_placeholder(msg, addr, "calltree", new java.util.function.Function<Address, String>() {
+            @Override
+            public String apply(Address addr) {
+                Function match_func = ghidra.get_func(addr);
+                String calltree = ghidra.get_func_call_tree(match_func);
+                if (calltree == null) {
+                    return null;
+                }
+                convo.add_addr(match_func.getEntryPoint());
+                return calltree;
+            }
+        });
+    }
+
     public Conversation guess(TaskType type, Conversation convo, String msg, Address addr) {
         msg = resolve_src_code(convo, msg, addr);
         msg = resolve_asm_code(convo, msg, addr);
+        msg = resolve_calltree(convo, msg, addr);
         convo.add_user_msg(msg);
 
         Conversation rep = convo.get_model().guess(type, convo, service, tool, program);
