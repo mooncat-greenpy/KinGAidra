@@ -2,6 +2,7 @@ package kingaidra.ghidra;
 
 import org.junit.jupiter.api.Test;
 
+import ghidra.program.model.address.Address;
 import ghidra.program.model.listing.Function;
 import ghidra.program.model.listing.Program;
 import ghidra.program.model.data.DataType;
@@ -13,6 +14,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Map;
 
 class GhidraUtilImplTest {
 
@@ -139,7 +141,12 @@ class GhidraUtilImplTest {
         Program program = util.create_program();
         GhidraUtil gu = new GhidraUtilImpl(program, TaskMonitor.DUMMY);
 
-        assertEquals(gu.get_strings(), "[40f000]=\"abcde\"\n" +
+        Map<Address, String> strs = gu.get_strings();
+        assertEquals(strs.get(util.get_addr(program, 0x40f000)), "\"abcde\"");
+        assertEquals(strs.get(util.get_addr(program, 0x40f100)), "\"abcde\"");
+        assertEquals(strs.get(util.get_addr(program, 0x40f200)), "\"abcde\"");
+
+        assertEquals(gu.get_strings_str(), "[40f000]=\"abcde\"\n" +
                                 "[40f100]=\"abcde\"\n" +
                                 "[40f200]=\"abcde\"\n");
     }

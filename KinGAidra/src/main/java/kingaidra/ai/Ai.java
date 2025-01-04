@@ -115,7 +115,7 @@ public class Ai {
         return resolve_placeholder(msg, null, "strings", new java.util.function.Function<Address, String>() {
             @Override
             public String apply(Address addr) {
-                String calltree = ghidra.get_strings();
+                String calltree = ghidra.get_strings_str();
                 return calltree;
             }
         });

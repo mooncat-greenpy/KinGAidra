@@ -7,8 +7,10 @@ import java.util.HashSet;
 import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 import java.util.Stack;
+import java.util.TreeMap;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -198,17 +200,27 @@ public class GhidraUtilImpl implements GhidraUtil {
         return parent_funcs;
     }
 
-    public String get_strings() {
+    public Map<Address, String> get_strings() {
+        Map<Address, String> ret = new TreeMap<>();
         AddressSetView addr_set = program.getMemory();
         DataIterator data_itr = program_listing.getData(addr_set, true);
-        String ret = "";
         while (data_itr.hasNext() && !monitor.isCancelled()) {
             Data data = data_itr.next();
             if (data.getValueClass() == String.class) {
                 Address addr = data.getAddress();
                 String value = data.getDefaultValueRepresentation();
-                ret += String.format("[%x]=%s\n", addr.getOffset(), value);
+                ret.put(addr, value);
             }
+        }
+        return ret;
+    }
+
+    public String get_strings_str() {
+        String ret = "";
+        Map<Address, String> strs = get_strings();
+
+        for (Map.Entry<Address, String> e : strs.entrySet()) {
+            ret += String.format("[%x]=%s\n", e.getKey().getOffset(), e.getValue());
         }
         return ret;
     }
