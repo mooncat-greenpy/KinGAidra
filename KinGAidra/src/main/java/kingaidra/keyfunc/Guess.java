@@ -15,6 +15,7 @@ import kingaidra.decom.extractor.JsonExtractor;
 import kingaidra.ghidra.GhidraPreferences;
 import kingaidra.ghidra.GhidraUtil;
 import kingaidra.keyfunc.extractor.FunctionJson;
+import kingaidra.keyfunc.extractor.QuoteExtractor;
 
 public class Guess {
     private GhidraUtil ghidra;
