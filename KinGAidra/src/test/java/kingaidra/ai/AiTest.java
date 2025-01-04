@@ -31,8 +31,8 @@ public class AiTest {
         String ret1 = ai.resolve_src_code(convo1, "Explain\n<code:401000>\nend",
                 util.get_addr(program, 0x402000));
         assertFalse(ret1.contains("int __fastcall func_402000(undefined *param_1)"));
-        assertTrue(ret1.startsWith("Explain\n"));
         assertTrue(ret1.contains("int func_401000(void)"));
+        assertTrue(ret1.startsWith("Explain\n"));
         assertTrue(ret1.endsWith("\nend"));
         assertEquals(convo1.get_addrs().length, 1);
         assertEquals(convo1.get_addrs()[0].getOffset(), 0x401000);
@@ -40,11 +40,11 @@ public class AiTest {
         Conversation convo2 = new Conversation(new ChatModelDummy("Dummy", "dummy.py", true));
         String ret2 =
                 ai.resolve_src_code(convo2, "Explain\n<code:401000>\nand\n<code:402000>\nend",
-                        util.get_addr(program, 0x402000));
+                        null);
         assertTrue(ret2.startsWith("Explain\n"));
-        assertTrue(ret2.contains("int __fastcall func_402000(undefined *param_1)"));
-        assertTrue(ret2.contains("\nand\n"));
         assertTrue(ret2.contains("int func_401000(void)"));
+        assertTrue(ret2.contains("\nand\n"));
+        assertTrue(ret2.contains("int __fastcall func_402000(undefined *param_1)"));
         assertTrue(ret2.endsWith("\nend"));
         assertEquals(convo2.get_addrs().length, 2);
         assertEquals(convo2.get_addrs()[0].getOffset(), 0x401000);
@@ -54,13 +54,23 @@ public class AiTest {
         String ret3 = ai.resolve_src_code(convo3, "Explain\n<code:401000>\nand\n<code>\nend",
                 util.get_addr(program, 0x402000));
         assertTrue(ret3.startsWith("Explain\n"));
-        assertTrue(ret3.contains("int __fastcall func_402000(undefined *param_1)"));
-        assertTrue(ret3.contains("\nand\n"));
         assertTrue(ret3.contains("int func_401000(void)"));
+        assertTrue(ret3.contains("\nand\n"));
+        assertTrue(ret3.contains("int __fastcall func_402000(undefined *param_1)"));
         assertTrue(ret3.endsWith("\nend"));
         assertEquals(convo3.get_addrs().length, 2);
         assertEquals(convo3.get_addrs()[0].getOffset(), 0x402000);
         assertEquals(convo3.get_addrs()[1].getOffset(), 0x401000);
+
+        Conversation convo4 = new Conversation(new ChatModelDummy("Dummy", "dummy.py", true));
+        String ret4 = ai.resolve_src_code(convo4, "Explain\n<code:401000>\nand\n<code>\nend", null);
+        assertTrue(ret4.startsWith("Explain\n"));
+        assertTrue(ret3.contains("int func_401000(void)"));
+        assertTrue(ret4.contains("\nand\n"));
+        assertTrue(ret4.contains("<code>"));
+        assertTrue(ret4.endsWith("\nend"));
+        assertEquals(convo4.get_addrs().length, 1);
+        assertEquals(convo4.get_addrs()[0].getOffset(), 0x401000);
     }
 
     @Test
@@ -83,7 +93,7 @@ public class AiTest {
 
         Conversation convo2 = new Conversation(new ChatModelDummy("Dummy", "dummy.py", true));
         String ret2 = ai.resolve_asm_code(convo2,
-                "Explain\n<asm:401000>\nand\n<asm:402000>\nend", util.get_addr(program, 0x402000));
+                "Explain\n<asm:401000>\nand\n<asm:402000>\nend", null);
         assertTrue(ret2.startsWith("Explain\n"));
         assertTrue(ret2
                 .contains("func_401000:\n    PUSH EBP\n    MOV EBP,ESP\n    POP EBP\n    RET\n"));
@@ -106,6 +116,17 @@ public class AiTest {
         assertEquals(convo3.get_addrs().length, 2);
         assertEquals(convo3.get_addrs()[0].getOffset(), 0x402000);
         assertEquals(convo3.get_addrs()[1].getOffset(), 0x401000);
+
+        Conversation convo4 = new Conversation(new ChatModelDummy("Dummy", "dummy.py", true));
+        String ret4 = ai.resolve_asm_code(convo4, "Explain\n<asm:401000>\nand\n<asm>\nend", null);
+        assertTrue(ret4.startsWith("Explain\n"));
+        assertTrue(ret4
+                .contains("func_401000:\n    PUSH EBP\n    MOV EBP,ESP\n    POP EBP\n    RET\n"));
+        assertTrue(ret4.contains("\nand\n"));
+        assertTrue(ret4.contains("<asm>"));
+        assertTrue(ret4.endsWith("\nend"));
+        assertEquals(convo4.get_addrs().length, 1);
+        assertEquals(convo4.get_addrs()[0].getOffset(), 0x401000);
     }
 
     @Test
@@ -132,7 +153,7 @@ public class AiTest {
 
         Conversation convo2 = new Conversation(new ChatModelDummy("Dummy", "dummy.py", true));
         String ret2 = ai.resolve_calltree(convo2,
-                "Explain\n<calltree:404000>\nand\n<calltree:408000>\nend", util.get_addr(program, 0x408000));
+                "Explain\n<calltree:404000>\nand\n<calltree:408000>\nend", null);
         assertTrue(ret2.startsWith("Explain\n"));
         assertTrue(ret2.contains("- func_404000\n" +
                                 "    - func_403000\n" +
@@ -163,6 +184,27 @@ public class AiTest {
         assertEquals(convo3.get_addrs().length, 2);
         assertEquals(convo3.get_addrs()[0].getOffset(), 0x408000);
         assertEquals(convo3.get_addrs()[1].getOffset(), 0x404000);
+
+        Conversation convo4 = new Conversation(new ChatModelDummy("Dummy", "dummy.py", true));
+        String ret4 = ai.resolve_calltree(convo4, "Explain\n<calltree:403000>\nand\n<calltree>\nend", null);
+        assertTrue(ret4.startsWith("Explain\n"));
+        assertTrue(ret4.contains("- func_403000\n" +
+                                "    - func_401000\n" +
+                                "    - func_402000\n"));
+        assertTrue(ret4.contains("\nand\n"));
+        assertTrue(ret4.contains("- func_404000\n" +
+                                "    - func_403000\n" +
+                                "        - func_401000\n" +
+                                "        - func_402000\n" +
+                                "    - func_405000\n" +
+                                "- func_406000\n" +
+                                "    - func_405000\n" +
+                                "        - func_402000\n" +
+                                "- func_408000\n" +
+                                "    - func_407000\n"));
+        assertTrue(ret4.endsWith("\nend"));
+        assertEquals(convo4.get_addrs().length, 1);
+        assertEquals(convo4.get_addrs()[0].getOffset(), 0x403000);
     }
 
     @Test
