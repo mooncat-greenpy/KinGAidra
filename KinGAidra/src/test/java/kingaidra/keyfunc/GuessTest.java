@@ -124,4 +124,23 @@ public class GuessTest {
         assertEquals(funcs[2].getEntryPoint().getOffset(), 0x406000);
         assertEquals(funcs[2].getName(), "func_406000");
     }
+
+    @Test
+    void test_guess_by_strings() throws Exception {
+        GhidraTestUtil util = new GhidraTestUtil();
+        Program program = util.create_program();
+        GhidraUtil gu = new GhidraUtilImpl(program, TaskMonitor.DUMMY);
+        ConversationContainer container = new ConversationContainerDummy();
+        Ai ai = new Ai(null, program, gu, container, null);
+        GhidraPreferences<Model> pref = new ChatModelPreferencesDummy();
+        pref.store("Dummy1", new ModelDummy("Dummy1", "dummy.py", false));
+        pref.store("Dummy2", new ModelDummy("Dummy2", "dummy.py", true));
+        pref.store("Dummy3", new ModelDummy("Dummy3", "dummy.py", false));
+        Guess guess = new Guess(gu, ai, pref);
+        String[] strings = guess.guess_by_strings();
+        assertEquals(strings.length, 3);
+        assertEquals(strings[0], "string1");
+        assertEquals(strings[1], "string2");
+        assertEquals(strings[2], "string3");
+    }
 }

@@ -129,6 +129,51 @@ public class Guess {
         pref.remove(name);
     }
 
+    public Conversation guess_by_strings(Conversation convo) {
+        String msg = "Given a list of strings found within a malware sample, identify and list the strings that might be useful for further analysis. Focus on strings that could provide insight into the malware's functionality, its command-and-control server, or its intentions. Prioritize strings related to:\n" +
+                                                "\n" +
+                                                "1. URLs or IP addresses - Potential command-and-control servers, communication endpoints, or external resources.\n" +
+                                                "2. File paths or registry keys - Locations of potential artifacts, dropped files, or persistence mechanisms.\n" +
+                                                "3. Function names or API calls - Indications of specific malware behaviors or techniques.\n" +
+                                                "4. Encryption keys or sensitive data - Possible use of cryptography, encoding, or sensitive information handling.\n" +
+                                                "5. Error messages or logs - Clues to how the malware operates, crashes, or logs activity.\n" +
+                                                "6. Hardcoded credentials or authentication tokens - Useful for identifying compromised access methods.\n" +
+                                                "7. Strings associated with known malware families or threat actor tactics - Help in associating the sample with a specific threat group or malware variant.\n" +
+                                                "\n" +
+                                                "Filter out irrelevant or common strings such as system files, non-specific text, or internal programming strings. Focus on identifying strings that could reveal malicious actions or associations.\n" +
+                                                "\n" +
+                                                "Strings:\n" +
+                                                "<strings>";
+        convo = ai.guess(TaskType.KEY_FUNC, convo, msg, null);
+        return convo;
+    }
+
+    public String[] guess_by_strings() {
+        Model m = null;
+        for (String name : get_models()) {
+            Model tmp = get_model(name);
+            if (tmp.get_active()) {
+                m = tmp;
+                break;
+            }
+        }
+        if (m == null) {
+            return null;
+        }
+        Conversation convo = new Conversation(m);
+        convo.set_model(m);
+        convo = guess_by_strings(convo);
+        if (convo == null) {
+            return null;
+        }
+
+        QuoteExtractor extractor = new QuoteExtractor(convo.get_msg(convo.get_msgs_len() - 1));
+        List<String> strings = extractor.get_strings();
+        if (strings == null) {
+            return null;
+        }
+        return strings.toArray(new String[]{});
+    }
 
     public Conversation guess(Conversation convo, String call_tree, Address addr) {
         String pre_msg = "Step 1: Since the message is long, I will send it in many parts.\n" +
