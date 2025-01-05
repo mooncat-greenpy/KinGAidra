@@ -139,10 +139,11 @@ public class GuessTest {
         pref.store("Dummy3", new ModelDummy("Dummy3", "dummy.py", false));
         Guess guess = new Guess(gu, ai, pref);
         String[] strings = guess.guess_by_strings();
-        assertEquals(strings.length, 3);
+        assertEquals(strings.length, 4);
         assertEquals(strings[0], "string1");
         assertEquals(strings[1], "string2");
         assertEquals(strings[2], "string3");
+        assertEquals(strings[3], "ing2");
         Data[] data = guess.guess_string_data();
         assertEquals(data.length, 3);
         assertEquals(data[0].getAddress(), util.get_addr(program, 0x40f000));
