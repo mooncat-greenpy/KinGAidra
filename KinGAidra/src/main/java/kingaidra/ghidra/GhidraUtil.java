@@ -7,6 +7,7 @@ import ghidra.program.model.address.Address;
 import ghidra.program.model.data.DataType;
 import ghidra.program.model.listing.Data;
 import ghidra.program.model.listing.Function;
+import ghidra.program.model.symbol.Reference;
 import kingaidra.decom.DecomDiff;
 
 public interface GhidraUtil {
@@ -17,6 +18,8 @@ public interface GhidraUtil {
     public Function get_func(Address addr);
 
     public List<Function> get_func(String name);
+
+    public List<Reference> get_ref_to(Address addr);
 
     public void get_root_func(List<Function> root);
 

@@ -40,6 +40,7 @@ import ghidra.program.model.pcode.HighFunctionDBUtil;
 import ghidra.program.model.pcode.HighSymbol;
 import ghidra.program.model.symbol.ExternalReference;
 import ghidra.program.model.symbol.Reference;
+import ghidra.program.model.symbol.ReferenceIterator;
 import ghidra.program.model.symbol.ReferenceManager;
 import ghidra.program.model.symbol.RefType;
 import ghidra.program.model.symbol.SourceType;
@@ -99,6 +100,16 @@ public class GhidraUtilImpl implements GhidraUtil {
             }
         }
         return func_list;
+    }
+
+    public List<Reference> get_ref_to(Address addr) {
+        ReferenceManager ref_manager = program.getReferenceManager();
+        ReferenceIterator ref_itr = ref_manager.getReferencesTo(addr);
+        List<Reference> ret = new LinkedList<>();
+        while (ref_itr.hasNext()) {
+            ret.add(ref_itr.next());
+        }
+        return ret;
     }
 
     public void get_root_func(List<Function> root) {

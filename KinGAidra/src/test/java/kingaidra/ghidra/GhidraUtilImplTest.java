@@ -6,6 +6,7 @@ import ghidra.program.model.address.Address;
 import ghidra.program.model.listing.Data;
 import ghidra.program.model.listing.Function;
 import ghidra.program.model.listing.Program;
+import ghidra.program.model.symbol.Reference;
 import ghidra.program.model.data.DataType;
 import ghidra.util.task.TaskMonitor;
 import kingaidra.decom.DecomDiff;
@@ -36,6 +37,11 @@ class GhidraUtilImplTest {
                 gu.get_decom(util.get_addr(program, 0x401002)).contains("int func_401000(void)"));
         assertEquals(gu.get_asm(util.get_addr(program, 0x401002)),
                 "func_401000:\n    PUSH EBP\n    MOV EBP,ESP\n    POP EBP\n    RET\n");
+
+        List<Reference> refs = gu.get_ref_to(util.get_addr(program, 0x401000));
+        assertEquals(refs.size(), 1);
+        assertEquals(refs.get(0).getFromAddress(), util.get_addr(program, 0x403008));
+        assertEquals(refs.get(0).getToAddress(), util.get_addr(program, 0x401000));
     }
 
     @Test
