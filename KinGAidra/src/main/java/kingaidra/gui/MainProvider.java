@@ -8,12 +8,14 @@ import ghidra.program.model.listing.Program;
 import kingaidra.ai.task.KinGAidraChatTaskService;
 import kingaidra.chat.gui.ChatGUI;
 import kingaidra.decom.gui.DecomGUI;
+import kingaidra.keyfunc.gui.KeyFuncGUI;
 
 public class MainProvider extends ComponentProvider {
 
     private JTabbedPane main_panel;
     private ChatGUI chat_panel;
     private DecomGUI decom_panel;
+    private KeyFuncGUI keyfunc_panel;
 
     public MainProvider(Program program, Plugin plugin, String owner,
             KinGAidraChatTaskService srv) {
@@ -28,6 +30,8 @@ public class MainProvider extends ComponentProvider {
         main_panel.add("Decom", decom_panel);
 
         // Currently considering a feature to identify areas that should be prioritized for analysis in binary analysis
+        keyfunc_panel = new KeyFuncGUI(this, this.dockingTool, program, plugin, owner, srv);
+        main_panel.add("KeyFunc", keyfunc_panel);
 
         setVisible(true);
 
@@ -43,6 +47,9 @@ public class MainProvider extends ComponentProvider {
     }
 
     public void createActions() {
+        if (keyfunc_panel != null) {
+            keyfunc_panel.initActions(this, dockingTool);
+        }
         if (decom_panel != null) {
             decom_panel.initActions(this, dockingTool);
         }
