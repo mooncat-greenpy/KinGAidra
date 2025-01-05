@@ -6,6 +6,7 @@ import java.util.Map;
 import ghidra.app.ExamplesPluginPackage;
 import ghidra.app.plugin.PluginCategoryNames;
 import ghidra.app.plugin.ProgramPlugin;
+import ghidra.app.services.GoToService;
 import ghidra.framework.plugintool.PluginInfo;
 import ghidra.framework.plugintool.PluginTool;
 import ghidra.framework.plugintool.util.PluginStatus;
@@ -27,7 +28,7 @@ import kingaidra.log.Logger;
     description = "KinGAidra is a Ghidra extension that uses AI to enhance reverse engineering by refining decompilation results. " +
                   "It provides tools for refactoring the decompiled code, making it easier to analyze and understand.",
     servicesProvided = { KinGAidraChatTaskService.class },
-    servicesRequired = {}
+    servicesRequired = { GoToService.class }
 )
 //@formatter:on
 public class KinGAidraPlugin extends ProgramPlugin implements KinGAidraChatTaskService {

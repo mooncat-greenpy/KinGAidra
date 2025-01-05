@@ -235,6 +235,8 @@ public class StringTableGUI extends JPanel {
         string_table.setActionsEnabled(true);
         string_table.setName("String Table");
         string_filter_panel = new GhidraTableFilterPanel<>(string_table, string_table_model);
+        GoToService go_to_service = tool.getService(GoToService.class);
+        string_table.installNavigation(go_to_service, go_to_service.getDefaultNavigatable());
 
         add(string_threaded_table_panel, BorderLayout.CENTER);
         JPanel function_bottom_panel = new JPanel(new BorderLayout());
