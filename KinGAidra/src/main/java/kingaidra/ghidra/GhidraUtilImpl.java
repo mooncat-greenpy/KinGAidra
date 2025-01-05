@@ -200,27 +200,26 @@ public class GhidraUtilImpl implements GhidraUtil {
         return parent_funcs;
     }
 
-    public Map<Address, String> get_strings() {
-        Map<Address, String> ret = new TreeMap<>();
+    public Data[] get_strings() {
+        List<Data> ret = new LinkedList<>();
         AddressSetView addr_set = program.getMemory();
         DataIterator data_itr = program_listing.getData(addr_set, true);
         while (data_itr.hasNext() && !monitor.isCancelled()) {
             Data data = data_itr.next();
-            if (data.getValueClass() == String.class) {
-                Address addr = data.getAddress();
-                String value = data.getDefaultValueRepresentation();
-                ret.put(addr, value);
+            if (data.getValueClass() == String.class && !ret.contains(data)) {
+                ret.add(data);
             }
         }
-        return ret;
+        return ret.toArray(new Data[]{});
     }
 
     public String get_strings_str() {
         String ret = "";
-        Map<Address, String> strs = get_strings();
-
-        for (Map.Entry<Address, String> e : strs.entrySet()) {
-            ret += String.format("[%x]=%s\n", e.getKey().getOffset(), e.getValue());
+        Data[] strs = get_strings();
+        for (Data data : strs) {
+            Address addr = data.getAddress();
+            String value = data.getDefaultValueRepresentation();
+            ret += String.format("[%x]=%s\n", addr.getOffset(), value);
         }
         return ret;
     }

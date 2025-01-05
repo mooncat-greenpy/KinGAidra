@@ -2,6 +2,7 @@ package kingaidra.keyfunc;
 
 import org.junit.jupiter.api.Test;
 
+import ghidra.program.model.listing.Data;
 import ghidra.program.model.listing.Function;
 import ghidra.program.model.listing.Program;
 import ghidra.util.task.TaskMonitor;
@@ -142,5 +143,13 @@ public class GuessTest {
         assertEquals(strings[0], "string1");
         assertEquals(strings[1], "string2");
         assertEquals(strings[2], "string3");
+        Data[] data = guess.guess_string_data();
+        assertEquals(data.length, 3);
+        assertEquals(data[0].getAddress(), util.get_addr(program, 0x40f000));
+        assertEquals((String) data[0].getValue(), "string1");
+        assertEquals(data[1].getAddress(), util.get_addr(program, 0x40f100));
+        assertEquals((String) data[1].getValue(), "string2");
+        assertEquals(data[2].getAddress(), util.get_addr(program, 0x40f200));
+        assertEquals((String) data[2].getValue(), "string3");
     }
 }

@@ -5,6 +5,7 @@ import java.util.LinkedList;
 import java.util.List;
 
 import ghidra.program.model.address.Address;
+import ghidra.program.model.listing.Data;
 import ghidra.program.model.listing.Function;
 import kingaidra.ai.Ai;
 import kingaidra.ai.convo.Conversation;
@@ -173,6 +174,21 @@ public class Guess {
             return null;
         }
         return strings.toArray(new String[]{});
+    }
+
+    public Data[] guess_string_data() {
+        String[] strings = guess_by_strings();
+        List<Data> ret = new LinkedList<>();
+        Data[] str_data = ghidra.get_strings();
+        for (String str : strings) {
+            for (Data d : str_data) {
+                if (!d.getDefaultValueRepresentation().contains(str) || ret.contains(d)) {
+                    continue;
+                }
+                ret.add(d);
+            }
+        }
+        return ret.toArray(new Data[]{});
     }
 
     public Conversation guess(Conversation convo, String call_tree, Address addr) {

@@ -85,12 +85,16 @@ public class GhidraTestUtil {
         builder.setBytes("0x40a000", "55 89 e5 e8 f8 ef ff ff 5d c3");
         builder.createEmptyFunction("func_40a000", "0x40a000", 0xf, new IntegerDataType());
 
-        builder.setBytes("0x40f000", "61 62 63 64 65 00");
+        builder.setBytes("0x40f000", "73 74 72 69 6e 67 31 00");
         builder.applyDataType("0x40f000", new StringDataType());
-        builder.setBytes("0x40f100", "61 62 63 64 65 00");
+        builder.setBytes("0x40f100", "73 74 72 69 6e 67 32 00");
         builder.applyDataType("0x40f100", new TerminatedStringDataType());
-        builder.setBytes("0x40f200", "61 62 63 64 65 00");
-        builder.applyDataType("0x40f200", new ArrayDataType(new CharDataType(), 5, 1));
+        builder.setBytes("0x40f200", "73 74 72 69 6e 67 33 33");
+        builder.applyDataType("0x40f200", new ArrayDataType(new CharDataType(), 7, 1));
+        builder.setBytes("0x40f300", "73 74 72 69 6e 67 34 00");
+        builder.applyDataType("0x40f300", new StringDataType());
+        builder.setBytes("0x40f400", "73 74 72 69 6e 67 35 00");
+        builder.applyDataType("0x40f400", new StringDataType());
 
         builder.analyze();
         return builder.getProgram();

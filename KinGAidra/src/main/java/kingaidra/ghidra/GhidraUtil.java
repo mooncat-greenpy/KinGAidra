@@ -5,6 +5,7 @@ import java.util.Map;
 
 import ghidra.program.model.address.Address;
 import ghidra.program.model.data.DataType;
+import ghidra.program.model.listing.Data;
 import ghidra.program.model.listing.Function;
 import kingaidra.decom.DecomDiff;
 
@@ -27,7 +28,7 @@ public interface GhidraUtil {
 
     public List<String> get_call_tree_parent(String call_tree, int depth, String target);
 
-    public Map<Address, String> get_strings();
+    public Data[] get_strings();
 
     public String get_strings_str();
 

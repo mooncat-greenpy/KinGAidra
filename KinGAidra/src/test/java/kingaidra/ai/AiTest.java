@@ -217,9 +217,11 @@ public class AiTest {
         Conversation convo1 = new Conversation(new ChatModelDummy("Dummy", "dummy.py", true));
         String ret1 = ai.resolve_strings(convo1, "Explain\n<strings>\nend");
         assertTrue(ret1.startsWith("Explain\n"));
-        assertTrue(ret1.contains("[40f000]=\"abcde\"\n" +
-                                "[40f100]=\"abcde\"\n" +
-                                "[40f200]=\"abcde\"\n"));
+        assertTrue(ret1.contains("[40f000]=\"string1\"\n" +
+                                "[40f100]=\"string2\"\n" +
+                                "[40f200]=\"string3\"\n" +
+                                "[40f300]=\"string4\"\n" +
+                                "[40f400]=\"string5\"\n"));
         assertTrue(ret1.endsWith("\nend"));
         assertEquals(convo1.get_addrs().length, 0);
     }
@@ -276,9 +278,11 @@ public class AiTest {
         assertEquals(convo4.get_msgs_len(), 4);
         assertEquals(convo4.get_msg(0), "msg");
         assertEquals(convo4.get_msg(1), "msgDummy1");
-        assertTrue(convo4.get_msg(2).contains("[40f000]=\"abcde\"\n" +
-                                "[40f100]=\"abcde\"\n" +
-                                "[40f200]=\"abcde\"\n"));
+        assertTrue(convo4.get_msg(2).contains("[40f000]=\"string1\"\n" +
+                                "[40f100]=\"string2\"\n" +
+                                "[40f200]=\"string3\"\n" +
+                                "[40f300]=\"string4\"\n" +
+                                "[40f400]=\"string5\"\n"));
         assertTrue(convo4.get_msg(3).endsWith("Dummy1"));
         assertEquals(convo4.get_addrs().length, 0);
     }
