@@ -5,6 +5,7 @@ import java.util.Arrays;
 import ghidra.program.model.address.Address;
 import kingaidra.ai.Ai;
 import kingaidra.ai.convo.Conversation;
+import kingaidra.ai.convo.ConversationType;
 import kingaidra.ai.model.Model;
 import kingaidra.ai.model.ModelByScript;
 import kingaidra.ai.task.TaskType;
@@ -137,7 +138,7 @@ public class Guess {
         if (m == null) {
             return null;
         }
-        Conversation convo = new Conversation(m);
+        Conversation convo = new Conversation(ConversationType.USER, m);
         convo.set_model(m);
         return guess(convo, msg, addr);
     }

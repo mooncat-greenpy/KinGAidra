@@ -9,6 +9,7 @@ import ghidra.program.model.listing.Data;
 import ghidra.program.model.listing.Function;
 import kingaidra.ai.Ai;
 import kingaidra.ai.convo.Conversation;
+import kingaidra.ai.convo.ConversationType;
 import kingaidra.ai.model.Model;
 import kingaidra.ai.model.ModelByScript;
 import kingaidra.ai.task.TaskType;
@@ -161,7 +162,7 @@ public class Guess {
         if (m == null) {
             return null;
         }
-        Conversation convo = new Conversation(m);
+        Conversation convo = new Conversation(ConversationType.SYSTEM, m);
         convo.set_model(m);
         convo = guess_by_strings(convo);
         if (convo == null) {
@@ -241,7 +242,7 @@ public class Guess {
         if (m == null) {
             return null;
         }
-        Conversation convo = new Conversation(m);
+        Conversation convo = new Conversation(ConversationType.SYSTEM, m);
         convo.set_model(m);
         convo = guess(convo, call_tree, addr);
         if (convo == null) {

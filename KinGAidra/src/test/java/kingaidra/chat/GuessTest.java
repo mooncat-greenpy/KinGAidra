@@ -8,6 +8,7 @@ import kingaidra.ai.Ai;
 import kingaidra.ai.convo.Conversation;
 import kingaidra.ai.convo.ConversationContainer;
 import kingaidra.ai.convo.ConversationContainerDummy;
+import kingaidra.ai.convo.ConversationType;
 import kingaidra.ai.model.Model;
 import kingaidra.ghidra.GhidraPreferences;
 import kingaidra.ghidra.GhidraUtil;
@@ -106,11 +107,13 @@ public class GuessTest {
         pref.store("Dummy3", new ChatModelDummy("Dummy3", "dummy.py", false));
         Guess guess = new Guess(ai, pref);
         Conversation convo1 = guess.guess("msg", util.get_addr(program, 0x402000));
+        assertEquals(convo1.get_type(), ConversationType.USER);
         assertEquals(convo1.get_msgs_len(), 2);
         assertEquals(convo1.get_msg(0), "msg");
         assertEquals(convo1.get_msg(1), "msgDummy2");
         assertEquals(convo1.get_addrs().length, 0);
         guess.guess(convo1, "Explain\n<code>", util.get_addr(program, 0x402000));
+        assertEquals(convo1.get_type(), ConversationType.USER);
         assertEquals(convo1.get_msgs_len(), 4);
         assertEquals(convo1.get_msg(0), "msg");
         assertEquals(convo1.get_msg(1), "msgDummy2");
@@ -121,6 +124,7 @@ public class GuessTest {
 
         Conversation convo2 = guess.guess("msg", util.get_addr(program, 0x401000));
         guess.guess(convo2, "Explain\n<asm>", util.get_addr(program, 0x401000));
+        assertEquals(convo2.get_type(), ConversationType.USER);
         assertEquals(convo2.get_msgs_len(), 4);
         assertEquals(convo2.get_msg(0), "msg");
         assertEquals(convo2.get_msg(1), "msgDummy2");
@@ -132,6 +136,7 @@ public class GuessTest {
 
         Conversation convo3 = guess.guess("msg", util.get_addr(program, 0x408000));
         guess.guess(convo3, "Explain\n<calltree>", util.get_addr(program, 0x408000));
+        assertEquals(convo3.get_type(), ConversationType.USER);
         assertEquals(convo3.get_msgs_len(), 4);
         assertEquals(convo3.get_msg(0), "msg");
         assertEquals(convo3.get_msg(1), "msgDummy2");

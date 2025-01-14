@@ -13,6 +13,7 @@ import java.util.function.Function;
 import ghidra.program.model.data.DataType;
 import kingaidra.ai.Ai;
 import kingaidra.ai.convo.Conversation;
+import kingaidra.ai.convo.ConversationType;
 import kingaidra.ai.model.Model;
 import kingaidra.ai.task.TaskType;
 import kingaidra.decom.extractor.ClangExtractor;
@@ -30,7 +31,7 @@ public class Refactor {
     }
 
     public DataType resolve_datatype(String datatype_name, Model model) {
-        Conversation convo = new Conversation(model);
+        Conversation convo = new Conversation(ConversationType.SYSTEM, model);
         String msg = String.format("Please write the %s structure in C language. " +
                         "Include any dependent data types and structures. " +
                         "Do not use typedef, #include and #define. " +

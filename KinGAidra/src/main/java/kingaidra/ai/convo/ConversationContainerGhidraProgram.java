@@ -106,14 +106,15 @@ public class ConversationContainerGhidraProgram {
     }
 
     private static final int RECORD_UUID_INDEX_V1 = 0;
-    private static final int RECORD_MODEL_INDEX_V1 = 1;
-    private static final int RECORD_MESSAGES_INDEX_V1 = 2;
-    private static final int RECORD_ADDRESSES_INDEX_V1 = 3;
+    private static final int RECORD_TYPE_INDEX_V1 = 1;
+    private static final int RECORD_MODEL_INDEX_V1 = 2;
+    private static final int RECORD_MESSAGES_INDEX_V1 = 3;
+    private static final int RECORD_ADDRESSES_INDEX_V1 = 4;
     private static final Schema CONVERSATION_SCHEMA_V1 =
             new Schema(1, StringField.INSTANCE, "Conversation",
-                    new Field[] {StringField.INSTANCE, BinaryField.INSTANCE, BinaryField.INSTANCE,
-                            BinaryField.INSTANCE,},
-                    new String[] {"UUID", "Model", "Messages", "Addresses"});
+                    new Field[] {StringField.INSTANCE, StringField.INSTANCE, BinaryField.INSTANCE,
+                            BinaryField.INSTANCE, BinaryField.INSTANCE,},
+                    new String[] {"UUID", "Type", "Model", "Messages", "Addresses"});
 
     public UUID[] get_ids() {
         Table table = get_table(CONVO_TABLE_NAME);
@@ -154,6 +155,7 @@ public class ConversationContainerGhidraProgram {
         }
 
         String uuid = record.getString(RECORD_UUID_INDEX_V1);
+        ConversationType type = ConversationType.valueOf(record.getString(RECORD_TYPE_INDEX_V1));
         Model model = (Model) bytes_to_obj(record.getBinaryData(RECORD_MODEL_INDEX_V1));
         if (model == null) {
             return null;
@@ -167,7 +169,7 @@ public class ConversationContainerGhidraProgram {
             return null;
         }
 
-        Conversation convo = new Conversation(model, uuid);
+        Conversation convo = new Conversation(uuid, type, model);
         for (Message msg : msgs) {
             convo.add_msg(msg.get_role(), msg.get_content());
         }
@@ -188,6 +190,7 @@ public class ConversationContainerGhidraProgram {
             DBRecord record = CONVERSATION_SCHEMA_V1
                     .createRecord(new StringField(convo.get_uuid().toString()));
             record.setString(RECORD_UUID_INDEX_V1, convo.get_uuid().toString());
+            record.setString(RECORD_TYPE_INDEX_V1, convo.get_type().toString());
             byte[] model_byte = obj_to_bytes(convo.get_model());
             if (model_byte == null) {
                 return;

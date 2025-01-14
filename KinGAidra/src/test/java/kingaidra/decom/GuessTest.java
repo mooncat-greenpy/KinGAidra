@@ -5,8 +5,10 @@ import org.junit.jupiter.api.Test;
 import ghidra.program.model.listing.Program;
 import ghidra.util.task.TaskMonitor;
 import kingaidra.ai.Ai;
+import kingaidra.ai.convo.Conversation;
 import kingaidra.ai.convo.ConversationContainer;
 import kingaidra.ai.convo.ConversationContainerDummy;
+import kingaidra.ai.convo.ConversationType;
 import kingaidra.ai.model.Model;
 import kingaidra.ghidra.GhidraPreferences;
 import kingaidra.ghidra.GhidraUtil;
@@ -94,6 +96,9 @@ public class GuessTest {
         for (DiffPair pair : diff.get_datatypes()) {
             assertEquals(pair.get_new_name().substring(pair.get_new_name().length() - 5), "Dummy");
         }
+
+        Conversation convo = container.get_convo(container.get_ids()[0]);
+        assertEquals(convo.get_type(), ConversationType.SYSTEM);
     }
 
 

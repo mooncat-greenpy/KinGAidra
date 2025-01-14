@@ -19,11 +19,12 @@ public class ConversationContainerGhidraProgramTest {
         Program program = util.create_program();
         ConversationContainerGhidraProgram container =
                 new ConversationContainerGhidraProgram(program);
-        Conversation convo = new Conversation(new ModelDummy("Dummy", "dummy.py", true));
+        Conversation convo = new Conversation(ConversationType.USER, new ModelDummy("Dummy", "dummy.py", true));
         container.add_convo(convo);
 
         Conversation result = container.get_convo(convo.get_uuid());
         assertEquals(convo.get_uuid(), result.get_uuid());
+        assertEquals(convo.get_type(), result.get_type());
         assertEquals(convo.get_model().get_name(), result.get_model().get_name());
         assertEquals(convo.get_msgs_len(), result.get_msgs_len());
         assertEquals(convo.get_role(0), result.get_role(0));
@@ -37,7 +38,7 @@ public class ConversationContainerGhidraProgramTest {
         Program program = util.create_program();
         ConversationContainerGhidraProgram container =
                 new ConversationContainerGhidraProgram(program);
-        Conversation convo = new Conversation(new ModelDummy("Dummy", "dummy.py", true));
+        Conversation convo = new Conversation(ConversationType.SYSTEM, new ModelDummy("Dummy", "dummy.py", true));
         convo.add_user_msg("user_msg");
         convo.add_assistant_msg("assistant_msg");
         convo.add_addr(util.get_addr(program, 0x401000));
@@ -49,6 +50,7 @@ public class ConversationContainerGhidraProgramTest {
 
         Conversation result = container.get_convo(convo.get_uuid());
         assertEquals(convo.get_uuid(), result.get_uuid());
+        assertEquals(convo.get_type(), result.get_type());
         assertEquals(convo.get_model().get_name(), result.get_model().get_name());
         assertEquals(convo.get_msgs_len(), result.get_msgs_len());
         for (int i = 0; i < convo.get_msgs_len(); i++) {
@@ -68,7 +70,7 @@ public class ConversationContainerGhidraProgramTest {
         ConversationContainerGhidraProgram container =
                 new ConversationContainerGhidraProgram(program);
 
-        Conversation convo1 = new Conversation(new ModelDummy("Dummy", "dummy.py", true));
+        Conversation convo1 = new Conversation(ConversationType.SYSTEM, new ModelDummy("Dummy", "dummy.py", true));
         convo1.add_user_msg("user_msg");
         convo1.add_assistant_msg("assistant_msg");
         convo1.add_addr(util.get_addr(program, 0x401000));
@@ -77,7 +79,7 @@ public class ConversationContainerGhidraProgramTest {
         UUID[] uuids1 = container.get_ids();
         assertEquals(uuids1.length, 1);
 
-        Conversation convo2 = new Conversation(new ModelDummy("Dummy", "dummy.py", true));
+        Conversation convo2 = new Conversation(ConversationType.USER, new ModelDummy("Dummy", "dummy.py", true));
         convo2.add_system_msg("system_msg");
         convo2.add_user_msg("user_msg");
         convo2.add_assistant_msg("assistant_msg");
@@ -92,6 +94,7 @@ public class ConversationContainerGhidraProgramTest {
 
         Conversation result1 = container.get_convo(convo1.get_uuid());
         assertEquals(convo1.get_uuid(), result1.get_uuid());
+        assertEquals(convo1.get_type(), result1.get_type());
         assertEquals(convo1.get_model().get_name(), result1.get_model().get_name());
         assertEquals(convo1.get_msgs_len(), result1.get_msgs_len());
         for (int i = 0; i < convo1.get_msgs_len(); i++) {
@@ -104,6 +107,8 @@ public class ConversationContainerGhidraProgramTest {
         }
 
         Conversation result2 = container.get_convo(convo2.get_uuid());
+        assertEquals(convo2.get_uuid(), result2.get_uuid());
+        assertEquals(convo2.get_type(), result2.get_type());
         assertEquals(convo2.get_model().get_name(), result2.get_model().get_name());
         assertEquals(convo2.get_msgs_len(), result2.get_msgs_len());
         for (int i = 0; i < convo2.get_msgs_len(); i++) {

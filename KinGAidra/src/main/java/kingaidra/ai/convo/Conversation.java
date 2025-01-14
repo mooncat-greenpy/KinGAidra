@@ -38,26 +38,33 @@ public class Conversation implements Serializable {
     public static final String ASSISTANT_ROLE = "assistant";
 
     private final UUID uuid;
+    private ConversationType type;
     private Model model;
     private List<Message> msgs;
     private Set<Address> addrs;
 
-    public Conversation(Model model) {
+    public Conversation(ConversationType type, Model model) {
         uuid = UUID.randomUUID();
         msgs = new LinkedList<>();
         addrs = new HashSet<>();
+        this.type = type;
         this.model = model;
     }
 
-    public Conversation(Model model, String uuid) {
+    public Conversation(String uuid, ConversationType type, Model model) {
         this.uuid = UUID.fromString(uuid);
         msgs = new LinkedList<>();
         addrs = new HashSet<>();
+        this.type = type;
         this.model = model;
     }
 
     public UUID get_uuid() {
         return uuid;
+    }
+
+    public ConversationType get_type() {
+        return type;
     }
 
     public Model get_model() {

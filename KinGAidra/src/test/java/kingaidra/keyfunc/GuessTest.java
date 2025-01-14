@@ -10,6 +10,7 @@ import kingaidra.ai.Ai;
 import kingaidra.ai.convo.Conversation;
 import kingaidra.ai.convo.ConversationContainer;
 import kingaidra.ai.convo.ConversationContainerDummy;
+import kingaidra.ai.convo.ConversationType;
 import kingaidra.ai.model.Model;
 import kingaidra.ghidra.GhidraPreferences;
 import kingaidra.ghidra.GhidraUtil;
@@ -124,6 +125,9 @@ public class GuessTest {
         assertEquals(funcs[1].getName(), "func_404000");
         assertEquals(funcs[2].getEntryPoint().getOffset(), 0x406000);
         assertEquals(funcs[2].getName(), "func_406000");
+
+        Conversation convo = container.get_convo(container.get_ids()[0]);
+        assertEquals(convo.get_type(), ConversationType.SYSTEM);
     }
 
     @Test
@@ -152,5 +156,8 @@ public class GuessTest {
         assertEquals((String) data[1].getValue(), "string2");
         assertEquals(data[2].getAddress(), util.get_addr(program, 0x40f200));
         assertEquals((String) data[2].getValue(), "string3");
+
+        Conversation convo = container.get_convo(container.get_ids()[0]);
+        assertEquals(convo.get_type(), ConversationType.SYSTEM);
     }
 }
