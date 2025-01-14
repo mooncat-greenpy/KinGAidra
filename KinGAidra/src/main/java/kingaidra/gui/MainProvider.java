@@ -5,6 +5,8 @@ import javax.swing.*;
 import docking.ComponentProvider;
 import ghidra.framework.plugintool.Plugin;
 import ghidra.program.model.listing.Program;
+import kingaidra.ai.convo.ConversationContainer;
+import kingaidra.ai.convo.ConversationContainerDummy;
 import kingaidra.ai.task.KinGAidraChatTaskService;
 import kingaidra.chat.gui.ChatGUI;
 import kingaidra.decom.gui.DecomGUI;
@@ -20,17 +22,18 @@ public class MainProvider extends ComponentProvider {
     public MainProvider(Program program, Plugin plugin, String owner,
             KinGAidraChatTaskService srv) {
         super(plugin.getTool(), owner, owner);
+        ConversationContainer container = new ConversationContainerDummy();
 
         main_panel = new JTabbedPane();
 
-        chat_panel = new ChatGUI(this, this.dockingTool, program, plugin, owner, srv);
+        chat_panel = new ChatGUI(this, this.dockingTool, program, plugin, owner, srv, container);
         main_panel.add("Chat", chat_panel);
 
-        decom_panel = new DecomGUI(this, this.dockingTool, program, plugin, owner, srv);
+        decom_panel = new DecomGUI(this, this.dockingTool, program, plugin, owner, srv, container);
         main_panel.add("Decom", decom_panel);
 
         // Currently considering a feature to identify areas that should be prioritized for analysis in binary analysis
-        keyfunc_panel = new KeyFuncGUI(this, this.dockingTool, program, plugin, owner, srv);
+        keyfunc_panel = new KeyFuncGUI(this, this.dockingTool, program, plugin, owner, srv, container);
         main_panel.add("KeyFunc", keyfunc_panel);
 
         setVisible(true);

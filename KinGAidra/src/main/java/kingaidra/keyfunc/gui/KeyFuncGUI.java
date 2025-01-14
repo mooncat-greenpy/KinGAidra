@@ -32,7 +32,6 @@ import ghidra.program.model.listing.Program;
 import ghidra.util.task.TaskMonitor;
 import kingaidra.ai.Ai;
 import kingaidra.ai.convo.ConversationContainer;
-import kingaidra.ai.convo.ConversationContainerDummy;
 import kingaidra.ai.model.Model;
 import kingaidra.ai.model.ModelByScript;
 import kingaidra.ai.task.KinGAidraChatTaskService;
@@ -49,6 +48,7 @@ public class KeyFuncGUI extends JPanel {
     private Program program;
     private PluginTool plugin;
     private KinGAidraChatTaskService srv;
+    private ConversationContainer container;
     private GhidraUtil ghidra;
 
     private DockingAction conf_action;
@@ -58,11 +58,12 @@ public class KeyFuncGUI extends JPanel {
     private StringTableGUI string_table;
 
     public KeyFuncGUI(MainProvider provider, Tool dockingTool, Program program, Plugin plugin,
-            String owner, KinGAidraChatTaskService srv) {
+            String owner, KinGAidraChatTaskService srv, ConversationContainer container) {
         super();
         this.program = program;
         this.plugin = plugin.getTool();
         this.srv = srv;
+        this.container = container;
         setLayout(new BorderLayout());
 
         init_panel();
@@ -73,7 +74,6 @@ public class KeyFuncGUI extends JPanel {
     private void init_panel() {
         GhidraPreferences<Model> pref = new ChatModelPreferences("keyfunc");
         ghidra = new GhidraUtilImpl(program, TaskMonitor.DUMMY);
-        ConversationContainer container = new ConversationContainerDummy();
         Ai ai = new Ai(plugin, program, ghidra, container, srv);
 
         Guess guess = new Guess(ghidra, ai, pref);
