@@ -41,7 +41,7 @@ import kingaidra.ghidra.GhidraPreferences;
 import kingaidra.ghidra.GhidraUtil;
 import kingaidra.ghidra.GhidraUtilImpl;
 import kingaidra.gui.MainProvider;
-import resources.Icons;
+import resources.ResourceManager;
 
 public class KeyFuncGUI extends JPanel {
 
@@ -111,7 +111,7 @@ public class KeyFuncGUI extends JPanel {
             }
         };
 
-        conf_action.setToolBarData(new ToolBarData(Icons.CONFIGURE_FILTER_ICON, null));
+        conf_action.setToolBarData(new ToolBarData(ResourceManager.loadImage("images/keyfunc_conf.png"), null));
         conf_action.setEnabled(true);
         conf_action.markHelpUnnecessary();
         dockingTool.addLocalAction(provider, conf_action);

@@ -38,7 +38,6 @@ import kingaidra.ghidra.GhidraUtil;
 import kingaidra.ghidra.GhidraUtilImpl;
 import kingaidra.gui.MainProvider;
 import kingaidra.log.Logger;
-import resources.Icons;
 import resources.ResourceManager;
 
 public class DecomGUI extends JPanel {
