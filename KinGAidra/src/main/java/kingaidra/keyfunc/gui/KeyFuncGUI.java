@@ -57,6 +57,8 @@ public class KeyFuncGUI extends JPanel {
     private GuessGUI ggui;
     private StringTableGUI string_table;
 
+    private boolean busy;
+
     public KeyFuncGUI(MainProvider provider, Tool dockingTool, Program program, Plugin plugin,
             String owner, KinGAidraChatTaskService srv, ConversationContainer container) {
         super();
@@ -85,8 +87,24 @@ public class KeyFuncGUI extends JPanel {
         guess_btn.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
-                Data[] data = guess.guess_string_data();
-                string_table.update(program, data, ghidra);
+                if (!check_and_set_busy(true)) {
+                    return;
+                }
+                guess_btn.setEnabled(false);
+                Thread th = new Thread(() -> {
+                    try {
+                        Data[] data = guess.guess_string_data();
+                        string_table.update(program, data, ghidra);
+                    } finally {
+                        guess_btn.setEnabled(true);
+
+                        check_and_set_busy(false);
+                        validate();
+                    }
+                });
+                th.start();
+
+                validate();
             }
         });
 
@@ -96,6 +114,14 @@ public class KeyFuncGUI extends JPanel {
         add(input_panel, BorderLayout.NORTH);
         string_table = new StringTableGUI(plugin, program, ghidra);
         add(string_table, BorderLayout.CENTER);
+    }
+
+    synchronized private boolean check_and_set_busy(boolean v) {
+        if (v && busy) {
+            return false;
+        }
+        busy = v;
+        return true;
     }
 
     public void initActions(MainProvider provider, Tool dockingTool) {

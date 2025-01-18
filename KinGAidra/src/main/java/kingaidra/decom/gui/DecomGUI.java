@@ -156,20 +156,29 @@ public class DecomGUI extends JPanel {
                 info_label.setText("Working ...");
                 // TODO: Need to be fixed
                 Thread th = new Thread(() -> {
+                    Address addr = null;
+                    DecomDiff[] diffs = null;
                     try {
-                        Address addr = ghidra.get_current_addr();
+                        addr = ghidra.get_current_addr();
                         if (addr != null) {
-                            DecomDiff[] diffs = ggui.run_guess(addr);
+                            diffs = ggui.run_guess(addr);
 
                             for (DecomDiff d : diffs) {
                                 rgui.add_tab(d.get_model().get_name(), d);
                             }
                         }
                     } finally {
-                        info_label.setText("Finished!");
-                        restart_btn.setEnabled(true);
-                        guess_btn.setEnabled(true);
-                        refact_btn.setEnabled(true);
+                        if (diffs == null || diffs.length == 0) {
+                            info_label.setText("Failed!");
+                            restart_btn.setEnabled(true);
+                            guess_btn.setEnabled(true);
+                            refact_btn.setEnabled(false);
+                        } else {
+                            info_label.setText("Finished!");
+                            restart_btn.setEnabled(true);
+                            guess_btn.setEnabled(true);
+                            refact_btn.setEnabled(true);
+                        }
                         check_and_set_busy(false);
                         validate();
                     }
@@ -234,7 +243,7 @@ public class DecomGUI extends JPanel {
                 }).popupMenuPath(new String[] {"Refactoring using AI"}).popupMenuGroup("KinGAidra")
                 .buildAndInstall(plugin);
 
-        conf_action = new DockingAction("Configure", provider.getName()) {
+        conf_action = new DockingAction("DecomConfigure", provider.getName()) {
             @Override
             public void actionPerformed(ActionContext context) {
                 JPanel p = new JPanel();
@@ -242,7 +251,7 @@ public class DecomGUI extends JPanel {
                     p.add(ggui);
                 }
 
-                JOptionPane.showMessageDialog(null, p, "Configure", JOptionPane.PLAIN_MESSAGE);
+                JOptionPane.showMessageDialog(null, p, "DecomConfigure", JOptionPane.PLAIN_MESSAGE);
             }
         };
 

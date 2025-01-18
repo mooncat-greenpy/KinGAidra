@@ -358,7 +358,11 @@ public class ChatGUI extends JPanel {
                     build_panel();
                 }
             } finally {
-                info_label.setText("Finished!");
+                if (cur_convo == null) {
+                    info_label.setText("Failed!");
+                } else {
+                    info_label.setText("Finished!");
+                }
                 restart_btn.setEnabled(true);
                 submit_btn.setEnabled(true);
                 check_and_set_busy(false);
