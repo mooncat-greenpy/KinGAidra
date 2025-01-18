@@ -17,7 +17,7 @@ import kingaidra.decom.extractor.JsonExtractor;
 import kingaidra.ghidra.GhidraPreferences;
 import kingaidra.ghidra.GhidraUtil;
 import kingaidra.keyfunc.extractor.FunctionJson;
-import kingaidra.keyfunc.extractor.QuoteExtractor;
+import kingaidra.keyfunc.extractor.MarkupExtractor;
 
 public class Guess {
     private GhidraUtil ghidra;
@@ -160,19 +160,19 @@ public class Guess {
             }
         }
         if (m == null) {
-            return null;
+            return new String[]{};
         }
         Conversation convo = new Conversation(ConversationType.SYSTEM, m);
         convo.set_model(m);
         convo = guess_by_strings(convo);
         if (convo == null) {
-            return null;
+            return new String[]{};
         }
 
-        QuoteExtractor extractor = new QuoteExtractor(convo.get_msg(convo.get_msgs_len() - 1));
+        MarkupExtractor extractor = new MarkupExtractor(convo.get_msg(convo.get_msgs_len() - 1));
         List<String> strings = extractor.get_strings();
         if (strings == null) {
-            return null;
+            return new String[]{};
         }
         return strings.toArray(new String[]{});
     }
