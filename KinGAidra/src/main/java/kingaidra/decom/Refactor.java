@@ -67,8 +67,13 @@ public class Refactor {
             }
 
             for (String datatype_name : datatype_names) {
-                String name = datatype_name.replaceAll("\\[\\d+\\]", "");
                 List<DataType> dt_list = new LinkedList<>();
+                ghidra.find_datatypes(datatype_name, dt_list);
+                if (dt_list.size() > 0) {
+                    continue;
+                }
+                String name = datatype_name.replaceAll("\\[\\d+\\]", "");
+                dt_list = new LinkedList<>();
                 ghidra.find_datatypes(name, dt_list);
                 if (dt_list.size() > 0) {
                     continue;

@@ -124,7 +124,8 @@ public class RefactorGUI extends JPanel {
         panel.add(info_label);
         panel.add(rename_chkbox);
         panel.add(retype_chkbox);
-        panel.add(datatype_checkbox);
+        // A lot of noise
+        // panel.add(datatype_checkbox);
 
         tabbed_panel = new JTabbedPane();
         add(panel, BorderLayout.NORTH);
