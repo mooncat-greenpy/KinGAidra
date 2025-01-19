@@ -127,7 +127,7 @@ public class GuessTest {
         assertEquals(funcs[2].getName(), "func_406000");
 
         Conversation convo = container.get_convo(container.get_ids()[0]);
-        assertEquals(convo.get_type(), ConversationType.SYSTEM);
+        assertEquals(convo.get_type(), ConversationType.SYSTEM_KEYFUNC);
     }
 
     @Test
@@ -158,6 +158,6 @@ public class GuessTest {
         assertEquals((String) data[2].getValue(), "string3");
 
         Conversation convo = container.get_convo(container.get_ids()[0]);
-        assertEquals(convo.get_type(), ConversationType.SYSTEM);
+        assertEquals(convo.get_type(), ConversationType.SYSTEM_KEYFUNC);
     }
 }

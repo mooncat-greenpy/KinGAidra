@@ -28,7 +28,7 @@ public class AiTest {
         GhidraUtil gu = new GhidraUtilImpl(program, TaskMonitor.DUMMY);
         ConversationContainer container = new ConversationContainerDummy();
         Ai ai = new Ai(null, program, gu, container, null);
-        Conversation convo1 = new Conversation(ConversationType.SYSTEM, new ChatModelDummy("Dummy", "dummy.py", true));
+        Conversation convo1 = new Conversation(ConversationType.SYSTEM_DECOM, new ChatModelDummy("Dummy", "dummy.py", true));
         String ret1 = ai.resolve_src_code(convo1, "Explain\n<code:401000>\nend",
                 util.get_addr(program, 0x402000));
         assertFalse(ret1.contains("int __fastcall func_402000(undefined *param_1)"));
@@ -38,7 +38,7 @@ public class AiTest {
         assertEquals(convo1.get_addrs().length, 1);
         assertEquals(convo1.get_addrs()[0].getOffset(), 0x401000);
 
-        Conversation convo2 = new Conversation(ConversationType.SYSTEM, new ChatModelDummy("Dummy", "dummy.py", true));
+        Conversation convo2 = new Conversation(ConversationType.SYSTEM_DECOM, new ChatModelDummy("Dummy", "dummy.py", true));
         String ret2 =
                 ai.resolve_src_code(convo2, "Explain\n<code:401000>\nand\n<code:402000>\nend",
                         null);
@@ -51,7 +51,7 @@ public class AiTest {
         assertEquals(convo2.get_addrs()[0].getOffset(), 0x401000);
         assertEquals(convo2.get_addrs()[1].getOffset(), 0x402000);
 
-        Conversation convo3 = new Conversation(ConversationType.SYSTEM, new ChatModelDummy("Dummy", "dummy.py", true));
+        Conversation convo3 = new Conversation(ConversationType.SYSTEM_DECOM, new ChatModelDummy("Dummy", "dummy.py", true));
         String ret3 = ai.resolve_src_code(convo3, "Explain\n<code:401000>\nand\n<code>\nend",
                 util.get_addr(program, 0x402000));
         assertTrue(ret3.startsWith("Explain\n"));
@@ -63,7 +63,7 @@ public class AiTest {
         assertEquals(convo3.get_addrs()[0].getOffset(), 0x402000);
         assertEquals(convo3.get_addrs()[1].getOffset(), 0x401000);
 
-        Conversation convo4 = new Conversation(ConversationType.SYSTEM, new ChatModelDummy("Dummy", "dummy.py", true));
+        Conversation convo4 = new Conversation(ConversationType.SYSTEM_DECOM, new ChatModelDummy("Dummy", "dummy.py", true));
         String ret4 = ai.resolve_src_code(convo4, "Explain\n<code:401000>\nand\n<code>\nend", null);
         assertTrue(ret4.startsWith("Explain\n"));
         assertTrue(ret3.contains("int func_401000(void)"));
@@ -81,7 +81,7 @@ public class AiTest {
         GhidraUtil gu = new GhidraUtilImpl(program, TaskMonitor.DUMMY);
         ConversationContainer container = new ConversationContainerDummy();
         Ai ai = new Ai(null, program, gu, container, null);
-        Conversation convo1 = new Conversation(ConversationType.SYSTEM, new ChatModelDummy("Dummy", "dummy.py", true));
+        Conversation convo1 = new Conversation(ConversationType.SYSTEM_DECOM, new ChatModelDummy("Dummy", "dummy.py", true));
         String ret1 = ai.resolve_asm_code(convo1, "Explain\n<asm:401000>\nend",
                 util.get_addr(program, 0x402000));
         assertFalse(ret1.contains("MOV ECX,dword ptr [ESP + 0x4]"));
@@ -92,7 +92,7 @@ public class AiTest {
         assertEquals(convo1.get_addrs().length, 1);
         assertEquals(convo1.get_addrs()[0].getOffset(), 0x401000);
 
-        Conversation convo2 = new Conversation(ConversationType.SYSTEM, new ChatModelDummy("Dummy", "dummy.py", true));
+        Conversation convo2 = new Conversation(ConversationType.SYSTEM_DECOM, new ChatModelDummy("Dummy", "dummy.py", true));
         String ret2 = ai.resolve_asm_code(convo2,
                 "Explain\n<asm:401000>\nand\n<asm:402000>\nend", null);
         assertTrue(ret2.startsWith("Explain\n"));
@@ -105,7 +105,7 @@ public class AiTest {
         assertEquals(convo2.get_addrs()[0].getOffset(), 0x401000);
         assertEquals(convo2.get_addrs()[1].getOffset(), 0x402000);
 
-        Conversation convo3 = new Conversation(ConversationType.SYSTEM, new ChatModelDummy("Dummy", "dummy.py", true));
+        Conversation convo3 = new Conversation(ConversationType.SYSTEM_DECOM, new ChatModelDummy("Dummy", "dummy.py", true));
         String ret3 = ai.resolve_asm_code(convo3, "Explain\n<asm:401000>\nand\n<asm>\nend",
                 util.get_addr(program, 0x402000));
         assertTrue(ret3.startsWith("Explain\n"));
@@ -118,7 +118,7 @@ public class AiTest {
         assertEquals(convo3.get_addrs()[0].getOffset(), 0x402000);
         assertEquals(convo3.get_addrs()[1].getOffset(), 0x401000);
 
-        Conversation convo4 = new Conversation(ConversationType.SYSTEM, new ChatModelDummy("Dummy", "dummy.py", true));
+        Conversation convo4 = new Conversation(ConversationType.SYSTEM_DECOM, new ChatModelDummy("Dummy", "dummy.py", true));
         String ret4 = ai.resolve_asm_code(convo4, "Explain\n<asm:401000>\nand\n<asm>\nend", null);
         assertTrue(ret4.startsWith("Explain\n"));
         assertTrue(ret4
@@ -137,7 +137,7 @@ public class AiTest {
         GhidraUtil gu = new GhidraUtilImpl(program, TaskMonitor.DUMMY);
         ConversationContainer container = new ConversationContainerDummy();
         Ai ai = new Ai(null, program, gu, container, null);
-        Conversation convo1 = new Conversation(ConversationType.SYSTEM, new ChatModelDummy("Dummy", "dummy.py", true));
+        Conversation convo1 = new Conversation(ConversationType.SYSTEM_DECOM, new ChatModelDummy("Dummy", "dummy.py", true));
         String ret1 = ai.resolve_calltree(convo1, "Explain\n<calltree:404000>\nend",
                 util.get_addr(program, 0x408000));
         assertFalse(ret1.contains("- func_408000\n" +
@@ -152,7 +152,7 @@ public class AiTest {
         assertEquals(convo1.get_addrs().length, 1);
         assertEquals(convo1.get_addrs()[0].getOffset(), 0x404000);
 
-        Conversation convo2 = new Conversation(ConversationType.SYSTEM, new ChatModelDummy("Dummy", "dummy.py", true));
+        Conversation convo2 = new Conversation(ConversationType.SYSTEM_DECOM, new ChatModelDummy("Dummy", "dummy.py", true));
         String ret2 = ai.resolve_calltree(convo2,
                 "Explain\n<calltree:404000>\nand\n<calltree:408000>\nend", null);
         assertTrue(ret2.startsWith("Explain\n"));
@@ -169,7 +169,7 @@ public class AiTest {
         assertEquals(convo2.get_addrs()[0].getOffset(), 0x404000);
         assertEquals(convo2.get_addrs()[1].getOffset(), 0x408000);
 
-        Conversation convo3 = new Conversation(ConversationType.SYSTEM, new ChatModelDummy("Dummy", "dummy.py", true));
+        Conversation convo3 = new Conversation(ConversationType.SYSTEM_DECOM, new ChatModelDummy("Dummy", "dummy.py", true));
         String ret3 = ai.resolve_calltree(convo3, "Explain\n<calltree:404000>\nand\n<calltree>\nend",
                 util.get_addr(program, 0x408000));
         assertTrue(ret3.startsWith("Explain\n"));
@@ -186,7 +186,7 @@ public class AiTest {
         assertEquals(convo3.get_addrs()[0].getOffset(), 0x408000);
         assertEquals(convo3.get_addrs()[1].getOffset(), 0x404000);
 
-        Conversation convo4 = new Conversation(ConversationType.SYSTEM, new ChatModelDummy("Dummy", "dummy.py", true));
+        Conversation convo4 = new Conversation(ConversationType.SYSTEM_DECOM, new ChatModelDummy("Dummy", "dummy.py", true));
         String ret4 = ai.resolve_calltree(convo4, "Explain\n<calltree:403000>\nand\n<calltree>\nend", null);
         assertTrue(ret4.startsWith("Explain\n"));
         assertTrue(ret4.contains("- func_403000\n" +
@@ -215,7 +215,7 @@ public class AiTest {
         GhidraUtil gu = new GhidraUtilImpl(program, TaskMonitor.DUMMY);
         ConversationContainer container = new ConversationContainerDummy();
         Ai ai = new Ai(null, program, gu, container, null);
-        Conversation convo1 = new Conversation(ConversationType.SYSTEM, new ChatModelDummy("Dummy", "dummy.py", true));
+        Conversation convo1 = new Conversation(ConversationType.SYSTEM_DECOM, new ChatModelDummy("Dummy", "dummy.py", true));
         String ret1 = ai.resolve_strings(convo1, "Explain\n<strings>\nend");
         assertTrue(ret1.startsWith("Explain\n"));
         assertTrue(ret1.contains("[40f000]=\"string1\"\n" +
@@ -234,7 +234,7 @@ public class AiTest {
         GhidraUtil gu = new GhidraUtilImpl(program, TaskMonitor.DUMMY);
         ConversationContainer container = new ConversationContainerDummy();
         Ai ai = new Ai(null, program, gu, container, null);
-        Conversation convo1 = new Conversation(ConversationType.SYSTEM, new ChatModelDummy("Dummy1", "dummy.py", true));
+        Conversation convo1 = new Conversation(ConversationType.SYSTEM_DECOM, new ChatModelDummy("Dummy1", "dummy.py", true));
         convo1 = ai.guess(TaskType.CHAT, convo1, "msg", util.get_addr(program, 0x402000));
         assertEquals(convo1.get_msgs_len(), 2);
         assertEquals(convo1.get_msg(0), "msg");
@@ -249,7 +249,7 @@ public class AiTest {
         assertEquals(convo1.get_addrs().length, 1);
         assertEquals(convo1.get_addrs()[0].getOffset(), 0x402000);
 
-        Conversation convo2 = new Conversation(ConversationType.SYSTEM, new ChatModelDummy("Dummy1", "dummy.py", true));
+        Conversation convo2 = new Conversation(ConversationType.SYSTEM_DECOM, new ChatModelDummy("Dummy1", "dummy.py", true));
         convo2 = ai.guess(TaskType.CHAT, convo2, "msg", util.get_addr(program, 0x401000));
         ai.guess(TaskType.CHAT, convo2, "Explain\n<asm>", util.get_addr(program, 0x401000));
         assertEquals(convo2.get_msgs_len(), 4);
@@ -261,7 +261,7 @@ public class AiTest {
         assertEquals(convo2.get_addrs().length, 1);
         assertEquals(convo2.get_addrs()[0].getOffset(), 0x401000);
 
-        Conversation convo3 = new Conversation(ConversationType.SYSTEM, new ChatModelDummy("Dummy1", "dummy.py", true));
+        Conversation convo3 = new Conversation(ConversationType.SYSTEM_DECOM, new ChatModelDummy("Dummy1", "dummy.py", true));
         convo3 = ai.guess(TaskType.CHAT, convo3, "msg", util.get_addr(program, 0x408000));
         ai.guess(TaskType.CHAT, convo3, "Explain\n<calltree>", util.get_addr(program, 0x408000));
         assertEquals(convo3.get_msgs_len(), 4);
@@ -273,7 +273,7 @@ public class AiTest {
         assertEquals(convo3.get_addrs().length, 1);
         assertEquals(convo3.get_addrs()[0].getOffset(), 0x408000);
 
-        Conversation convo4 = new Conversation(ConversationType.SYSTEM, new ChatModelDummy("Dummy1", "dummy.py", true));
+        Conversation convo4 = new Conversation(ConversationType.SYSTEM_DECOM, new ChatModelDummy("Dummy1", "dummy.py", true));
         convo4 = ai.guess(TaskType.CHAT, convo4, "msg", util.get_addr(program, 0x408000));
         ai.guess(TaskType.CHAT, convo4, "Explain\n<strings>", util.get_addr(program, 0x408000));
         assertEquals(convo4.get_msgs_len(), 4);

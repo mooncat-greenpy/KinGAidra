@@ -120,7 +120,7 @@ public class Guess {
     }
 
     private boolean guess_func_param_var(DecomDiff diff) {
-        Conversation convo = new Conversation(ConversationType.SYSTEM, diff.get_model());
+        Conversation convo = new Conversation(ConversationType.SYSTEM_DECOM, diff.get_model());
         String msg = String.format("Please improve the readability of the following code by renaming the functions, parameters, and variables with more descriptive and meaningful names. The new names should better reflect the purpose of the functions and the role of each variable in the code.\n" +
                         "```\n" +
                         "<code>\n" +
@@ -167,7 +167,7 @@ public class Guess {
     }
 
     private boolean guess_datatype(DecomDiff diff) {
-        Conversation convo = new Conversation(ConversationType.SYSTEM, diff.get_model());
+        Conversation convo = new Conversation(ConversationType.SYSTEM_DECOM, diff.get_model());
         String msg = String.format("I have decompiled C code that contains various data type issues due to the decompilation process. I need your help to review the code and make the necessary corrections to the data types. Please go over the code and make these adjustments to improve the accuracy of the data types.\n" +
                         "```cpp\n" +
                         "<code>\n" +

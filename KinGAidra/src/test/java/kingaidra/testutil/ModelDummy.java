@@ -164,7 +164,7 @@ public class ModelDummy implements Model, Serializable {
                                 "        \"var_name\": \"in_stack_00000004\"\n" +
                                 "    }\n" +
                                 "]");
-        } else if (type == TaskType.RESOLVE_DATATYPE && convo.get_msg(convo.get_msgs_len() - 1).contains(" PROCESSENTRY32W ")) {
+        } else if (type == TaskType.DECOM_RESOLVE_DATATYPE && convo.get_msg(convo.get_msgs_len() - 1).contains(" PROCESSENTRY32W ")) {
             convo.add_assistant_msg("Here is the PROCESSENTRY32W structure in C language, along with its dependent data types and structures, for 32-bit systems:\n" +
                                 "```\n" +
                                 "typedef wchar_t WCHAR;\n" +
@@ -197,7 +197,7 @@ public class ModelDummy implements Model, Serializable {
                                 "\n" +
                                 "Also, `WCHAR` is a wide character type, which is a 16-bit Unicode character on Windows.\n" +
                                 "");
-        } else if (type == TaskType.RESOLVE_DATATYPE && convo.get_msg(convo.get_msgs_len() - 1).contains(" PROCESSENTRY32 ")) {
+        } else if (type == TaskType.DECOM_RESOLVE_DATATYPE && convo.get_msg(convo.get_msgs_len() - 1).contains(" PROCESSENTRY32 ")) {
             convo.add_assistant_msg("Here is the `PROCESSENTRY32` structure written in C for a 32-bit environment, including any necessary dependent data types and structures:\n" +
                                 "\n" +
                                 "```c\n" +
@@ -237,7 +237,7 @@ public class ModelDummy implements Model, Serializable {
                                 "10. **`szExeFile`**: The executable file's full path.\n" +
                                 "\n" +
                                 "Additionally, I defined **`MAX_PATH`** as `260`, which is the typical maximum length of file paths in Windows.");
-        } else if (type == TaskType.KEY_FUNC && convo.get_msg(convo.get_msgs_len() - 1).contains("please list which functions")) {
+        } else if (type == TaskType.KEYFUNC_CALLTREE && convo.get_msg(convo.get_msgs_len() - 1).contains("please list which functions")) {
             convo.add_assistant_msg("```json\n" +
                         "{\n" +
                         "    \"func\": [\n" +
@@ -247,7 +247,7 @@ public class ModelDummy implements Model, Serializable {
                         "    ]\n" +
                         "}\n" +
                         "```");
-        } else if (type == TaskType.KEY_FUNC && convo.get_msg(convo.get_msgs_len() - 1).contains("strings")) {
+        } else if (type == TaskType.KEYFUNC_STRING && convo.get_msg(convo.get_msgs_len() - 1).contains("strings")) {
             convo.add_assistant_msg("```json\n" +
                         "{\n" +
                         "    \"func\": [\n" +

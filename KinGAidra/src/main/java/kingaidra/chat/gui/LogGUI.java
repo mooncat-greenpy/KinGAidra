@@ -141,7 +141,8 @@ public class LogGUI extends JPanel {
             @Override
             public String getValue(Conversation rowObject, Settings settings, Program program,
                     ServiceProvider services) throws IllegalArgumentException {
-                return rowObject.get_type().toString();
+                String type = rowObject.get_type().toString();
+                return type.split("_")[0];
             }
 
             @Override

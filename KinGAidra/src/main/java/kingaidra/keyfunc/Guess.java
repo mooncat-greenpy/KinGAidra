@@ -146,7 +146,7 @@ public class Guess {
                                                 "\n" +
                                                 "Strings:\n" +
                                                 "<strings>";
-        convo = ai.guess(TaskType.KEY_FUNC, convo, msg, null);
+        convo = ai.guess(TaskType.KEYFUNC_STRING, convo, msg, null);
         return convo;
     }
 
@@ -162,7 +162,7 @@ public class Guess {
         if (m == null) {
             return new String[]{};
         }
-        Conversation convo = new Conversation(ConversationType.SYSTEM, m);
+        Conversation convo = new Conversation(ConversationType.SYSTEM_KEYFUNC, m);
         convo.set_model(m);
         convo = guess_by_strings(convo);
         if (convo == null) {
@@ -226,7 +226,7 @@ public class Guess {
                         "    ]\n" +
                         "}\n" +
                         "```";
-        convo = ai.guess(TaskType.KEY_FUNC, convo, ask_msg, addr);
+        convo = ai.guess(TaskType.KEYFUNC_CALLTREE, convo, ask_msg, addr);
         return convo;
     }
 
@@ -242,7 +242,7 @@ public class Guess {
         if (m == null) {
             return null;
         }
-        Conversation convo = new Conversation(ConversationType.SYSTEM, m);
+        Conversation convo = new Conversation(ConversationType.SYSTEM_KEYFUNC, m);
         convo.set_model(m);
         convo = guess(convo, call_tree, addr);
         if (convo == null) {

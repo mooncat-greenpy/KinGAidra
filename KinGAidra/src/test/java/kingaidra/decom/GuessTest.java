@@ -98,7 +98,7 @@ public class GuessTest {
         }
 
         Conversation convo = container.get_convo(container.get_ids()[0]);
-        assertEquals(convo.get_type(), ConversationType.SYSTEM);
+        assertEquals(convo.get_type(), ConversationType.SYSTEM_DECOM);
     }
 
 

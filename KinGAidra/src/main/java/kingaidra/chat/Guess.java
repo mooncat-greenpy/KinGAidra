@@ -138,7 +138,7 @@ public class Guess {
         if (m == null) {
             return null;
         }
-        Conversation convo = new Conversation(ConversationType.USER, m);
+        Conversation convo = new Conversation(ConversationType.USER_CHAT, m);
         convo.set_model(m);
         return guess(convo, msg, addr);
     }

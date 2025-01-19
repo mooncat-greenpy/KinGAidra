@@ -19,7 +19,7 @@ public class ConversationContainerGhidraProgramTest {
         Program program = util.create_program();
         ConversationContainerGhidraProgram container =
                 new ConversationContainerGhidraProgram(program);
-        Conversation convo = new Conversation(ConversationType.USER, new ModelDummy("Dummy", "dummy.py", true));
+        Conversation convo = new Conversation(ConversationType.USER_CHAT, new ModelDummy("Dummy", "dummy.py", true));
         container.add_convo(convo);
 
         Conversation result = container.get_convo(convo.get_uuid());
@@ -38,7 +38,7 @@ public class ConversationContainerGhidraProgramTest {
         Program program = util.create_program();
         ConversationContainerGhidraProgram container =
                 new ConversationContainerGhidraProgram(program);
-        Conversation convo = new Conversation(ConversationType.SYSTEM, new ModelDummy("Dummy", "dummy.py", true));
+        Conversation convo = new Conversation(ConversationType.SYSTEM_DECOM, new ModelDummy("Dummy", "dummy.py", true));
         convo.add_user_msg("user_msg");
         convo.add_assistant_msg("assistant_msg");
         convo.add_addr(util.get_addr(program, 0x401000));
@@ -70,7 +70,7 @@ public class ConversationContainerGhidraProgramTest {
         ConversationContainerGhidraProgram container =
                 new ConversationContainerGhidraProgram(program);
 
-        Conversation convo1 = new Conversation(ConversationType.SYSTEM, new ModelDummy("Dummy", "dummy.py", true));
+        Conversation convo1 = new Conversation(ConversationType.SYSTEM_DECOM, new ModelDummy("Dummy", "dummy.py", true));
         convo1.add_user_msg("user_msg");
         convo1.add_assistant_msg("assistant_msg");
         convo1.add_addr(util.get_addr(program, 0x401000));
@@ -79,7 +79,7 @@ public class ConversationContainerGhidraProgramTest {
         UUID[] uuids1 = container.get_ids();
         assertEquals(uuids1.length, 1);
 
-        Conversation convo2 = new Conversation(ConversationType.USER, new ModelDummy("Dummy", "dummy.py", true));
+        Conversation convo2 = new Conversation(ConversationType.USER_CHAT, new ModelDummy("Dummy", "dummy.py", true));
         convo2.add_system_msg("system_msg");
         convo2.add_user_msg("user_msg");
         convo2.add_assistant_msg("assistant_msg");

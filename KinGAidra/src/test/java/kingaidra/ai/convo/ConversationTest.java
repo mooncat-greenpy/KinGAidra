@@ -11,19 +11,19 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 public class ConversationTest {
     @Test
     void test_constructor() {
-        Conversation conv = new Conversation(ConversationType.SYSTEM, new ModelDummy("Dummy", "dummy.py", true));
-        assertEquals(conv.get_type(), ConversationType.SYSTEM);
+        Conversation conv = new Conversation(ConversationType.SYSTEM_DECOM, new ModelDummy("Dummy", "dummy.py", true));
+        assertEquals(conv.get_type(), ConversationType.SYSTEM_DECOM);
         assertEquals(conv.get_model().get_name(), "Dummy");
         assertEquals(conv.get_msg(0), null);
         assertEquals(conv.get_msgs_len(), 0);
         assertEquals(conv.get_created(), conv.get_updated());
 
-        assertEquals(new Conversation(ConversationType.USER, null).get_type(), ConversationType.USER);
+        assertEquals(new Conversation(ConversationType.USER_CHAT, null).get_type(), ConversationType.USER_CHAT);
     }
 
     @Test
     void test_add_msg() {
-        Conversation conv = new Conversation(ConversationType.SYSTEM, null);
+        Conversation conv = new Conversation(ConversationType.SYSTEM_DECOM, null);
         assertFalse(conv.add_assistant_msg("assistant_test1"));
         assertEquals(conv.get_msgs_len(), 0);
         String created = conv.get_created();
@@ -80,7 +80,7 @@ public class ConversationTest {
         assertEquals(conv.get_created(), created);
         assertFalse(conv.get_updated().equals(updated));
 
-        Conversation conv2 = new Conversation(ConversationType.SYSTEM, null);
+        Conversation conv2 = new Conversation(ConversationType.SYSTEM_DECOM, null);
         assertTrue(conv2.add_system_msg("system_test1"));
         assertEquals(conv2.get_role(0), "system");
         assertEquals(conv2.get_msg(0), "system_test1");

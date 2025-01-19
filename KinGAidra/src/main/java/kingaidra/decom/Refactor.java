@@ -31,13 +31,13 @@ public class Refactor {
     }
 
     public DataType resolve_datatype(String datatype_name, Model model) {
-        Conversation convo = new Conversation(ConversationType.SYSTEM, model);
+        Conversation convo = new Conversation(ConversationType.SYSTEM_DECOM, model);
         String msg = String.format("Please write the %s structure in C language. " +
                         "Include any dependent data types and structures. " +
                         "Do not use typedef, #include and #define. " +
                         "It is for %d-bit. ", datatype_name, ghidra.get_addr(0).getSize());
 
-        convo = ai.guess(TaskType.RESOLVE_DATATYPE, convo, msg, null);
+        convo = ai.guess(TaskType.DECOM_RESOLVE_DATATYPE, convo, msg, null);
         if (convo == null) {
             return null;
         }
