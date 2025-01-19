@@ -6,7 +6,7 @@ import docking.ComponentProvider;
 import ghidra.framework.plugintool.Plugin;
 import ghidra.program.model.listing.Program;
 import kingaidra.ai.convo.ConversationContainer;
-import kingaidra.ai.convo.ConversationContainerDummy;
+import kingaidra.ai.convo.ConversationContainerGhidraProgram;
 import kingaidra.ai.task.KinGAidraChatTaskService;
 import kingaidra.chat.gui.ChatGUI;
 import kingaidra.decom.gui.DecomGUI;
@@ -22,7 +22,7 @@ public class MainProvider extends ComponentProvider {
     public MainProvider(Program program, Plugin plugin, String owner,
             KinGAidraChatTaskService srv) {
         super(plugin.getTool(), owner, owner);
-        ConversationContainer container = new ConversationContainerDummy();
+        ConversationContainer container = new ConversationContainerGhidraProgram(program);
 
         main_panel = new JTabbedPane();
 
