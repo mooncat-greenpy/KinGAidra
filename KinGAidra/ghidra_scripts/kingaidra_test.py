@@ -348,6 +348,81 @@ struct PROCESSENTRY32W {
 10. **szExeFile**: A wide-character array holding the full path of the executable file associated with the process. The length of the array (260) is large enough to accommodate the maximum path length (commonly 260 characters in Windows).
 
 This structure corresponds to the 32-bit version, and the use of wide-character strings (`szExeFile`) suggests the use of Unicode. The `PROCESSENTRY32W` structure is used in the Windows API to retrieve information about a process in the system, typically via `CreateToolhelp32Snapshot`, `Process32First`, and `Process32Next`."""
+    elif type == kingaidra.ai.task.TaskType.KEY_FUNC and "Given a list of strings found within a malware sample" in msg:
+        data = """Here are the strings from the list that could potentially be useful for further analysis:
+
+### 1. **URLs or IP addresses**
+- `CONNECT %s:%d HTTP/1.1 \r\nUser-Agent: Mozilla/v5.0\r\nHost: %s:%d\r\nProxy-Connection: Keep-Alive\r\nPragma: no-cache\r\nContent-Length: 0\r\n\r\n`
+- `Proxy-Authenticate`
+- `Proxy-Connection`
+- `ProxyUser`
+- `ProxyPW`
+- `Proxy-Connection`
+
+These strings suggest communication with a remote server or C2 (Command-and-Control) infrastructure, possibly via HTTP or through a proxy, indicating potential network activity associated with the malware.
+
+### 2. **File paths or registry keys**
+- `Software\\Microsoft\\Windows\\CurrentVersion\\Internet Settings\\ZoneMap`
+- `SYSTEM\\CurrentControlSet\\Control\\ProductOptions`
+- `HARDWARE\\DESCRIPTION\\System\\CentralProcessor\\%x`
+- `SOFTWARE\\Microsoft\\Windows NT\\CurrentVersion\\`
+
+These registry keys indicate potential persistence mechanisms and system configuration information, which could be useful in tracking how the malware interacts with the system or establishes persistence.
+
+### 3. **Function names or API calls**
+- `CreateThread`
+- `CreateProcessW`
+- `GetModuleHandleA`
+- `LoadLibraryA`
+- `FindFirstFileW`
+- `CreateFileW`
+- `GetProcAddress`
+- `WriteFile`
+- `DeleteFileW`
+- `Sleep`
+- `TerminateThread`
+- `VirtualAlloc`
+- `VirtualFree`
+- `CryptAcquireContextW`
+- `CryptCreateHash`
+- `RegOpenKeyA`
+- `InternetQueryOptionW`
+
+These are indicative of various common actions such as thread creation, file system access, process manipulation, and cryptographic operations. Some suggest actions that may be used for file manipulation or evading detection.
+
+### 4. **Encryption keys or sensitive data**
+- `Proxy-Authorization: Basic %s`
+- `CryptAcquireContextW`
+- `CryptCreateHash`
+- `CryptHashData`
+- `CryptReleaseContext`
+
+The presence of cryptographic functions suggests the possibility of encrypted communication or payloads. The `Basic` authorization method also hints at potential hardcoded credentials used for remote communication.
+
+### 5. **Error messages or logs**
+- `"Error2:\r\nOpen [%s] error! %d"`
+- `"Error2:\r\nCan't find [%s]!Check the file name and try again!"`
+- `"Error2:\r\nCreateThread DownloadFile[%s] Error!"`
+- `"Error2:\r\nUploadFile [%s] Error:Connect Server Failed!"`
+- `"Error2:\r\nThe Size of [%s] is zero!"`
+- `"Error2:\r\nCreateThread UploadFile[%s] Error!"`
+
+These error strings may indicate how the malware handles issues related to file downloading, uploading, and thread creation, potentially helping in the identification of failure points or abnormal behaviors.
+
+### 6. **Hardcoded credentials or authentication tokens**
+- `ProxyUser`
+- `ProxyPW`
+- `Proxy-Authenticate`
+- `Proxy-Authorization: Basic %s`
+
+These are potentially hardcoded credentials used for authentication when communicating with a remote server, which could provide insight into how the malware authenticates to its C2 server.
+
+### 7. **Strings associated with known malware families or threat actor tactics**
+- `BMSDLIGRADAF`
+
+This string could be associated with a known malware family or an identifier that can link the sample to previous campaigns or actor groups, making it relevant for attribution or identifying shared techniques.
+
+By focusing on these strings, you can gather valuable information regarding the malware's functionality, persistence, and communication methods, as well as any cryptographic or authentication mechanisms it might use."""
     else:
         data = ""
 
