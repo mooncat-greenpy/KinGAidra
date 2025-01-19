@@ -1,6 +1,8 @@
 package kingaidra.ai.convo;
 
 import java.io.Serializable;
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
 import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.List;
@@ -40,23 +42,37 @@ public class Conversation implements Serializable {
     private final UUID uuid;
     private ConversationType type;
     private Model model;
+    private String created;
+    private String updated;
     private List<Message> msgs;
     private Set<Address> addrs;
 
     public Conversation(ConversationType type, Model model) {
         uuid = UUID.randomUUID();
-        msgs = new LinkedList<>();
-        addrs = new HashSet<>();
         this.type = type;
         this.model = model;
+        created = LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss"));
+        updated = created;
+        msgs = new LinkedList<>();
+        addrs = new HashSet<>();
     }
 
-    public Conversation(String uuid, ConversationType type, Model model) {
+    public Conversation(String uuid, ConversationType type, Model model, String created, String updated, Message[] msgs, Address[] addrs) {
         this.uuid = UUID.fromString(uuid);
-        msgs = new LinkedList<>();
-        addrs = new HashSet<>();
         this.type = type;
         this.model = model;
+        this.created = created;
+        this.msgs = new LinkedList<>();
+        this.addrs = new HashSet<>();
+
+        for (Message msg : msgs) {
+            this.add_msg(msg.get_role(), msg.get_content());
+        }
+        for (Address addr : addrs) {
+            this.add_addr(addr);
+        }
+
+        this.updated = updated;
     }
 
     public UUID get_uuid() {
@@ -73,6 +89,22 @@ public class Conversation implements Serializable {
 
     public void set_model(Model model) {
         this.model = model;
+    }
+
+    public String get_created() {
+        return created;
+    }
+
+    public String get_updated() {
+        return updated;
+    }
+
+    public void set_updated(String updated) {
+        this.updated = updated;
+    }
+
+    private void update_time() {
+        set_updated(LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss")));
     }
 
     public String get_role(int idx) {
@@ -97,6 +129,7 @@ public class Conversation implements Serializable {
         if (!msgs.isEmpty()) {
             return false;
         }
+        update_time();
         msgs.add(new Message(SYSTEM_ROLE, content));
         return true;
     }
@@ -116,6 +149,7 @@ public class Conversation implements Serializable {
         if (!msgs.isEmpty() && msgs.get(get_msgs_len() - 1).get_role().equals(USER_ROLE)) {
             return false;
         }
+        update_time();
         msgs.add(new Message(USER_ROLE, content));
         return true;
     }
@@ -124,6 +158,7 @@ public class Conversation implements Serializable {
         if (msgs.isEmpty() || !msgs.get(get_msgs_len() - 1).get_role().equals(USER_ROLE)) {
             return false;
         }
+        update_time();
         msgs.add(new Message(ASSISTANT_ROLE, content));
         return true;
     }

@@ -6,6 +6,7 @@ import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import java.util.ArrayList;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.UUID;
 
@@ -25,7 +26,7 @@ import kingaidra.ai.model.Model;
 import kingaidra.ghidra.GhidraUtil;
 import kingaidra.ghidra.GhidraUtilImpl;
 
-public class ConversationContainerGhidraProgram {
+public class ConversationContainerGhidraProgram implements ConversationContainer {
 
     private static final String CONVO_TABLE_NAME = "KinGAidra_Conversation";
     private Program program;
@@ -108,13 +109,17 @@ public class ConversationContainerGhidraProgram {
     private static final int RECORD_UUID_INDEX_V1 = 0;
     private static final int RECORD_TYPE_INDEX_V1 = 1;
     private static final int RECORD_MODEL_INDEX_V1 = 2;
-    private static final int RECORD_MESSAGES_INDEX_V1 = 3;
-    private static final int RECORD_ADDRESSES_INDEX_V1 = 4;
+    private static final int RECORD_CREATED_INDEX_V1 = 3;
+    private static final int RECORD_UPDATED_INDEX_V1 = 4;
+    private static final int RECORD_MESSAGES_INDEX_V1 = 5;
+    private static final int RECORD_ADDRESSES_INDEX_V1 = 6;
     private static final Schema CONVERSATION_SCHEMA_V1 =
             new Schema(1, StringField.INSTANCE, "Conversation",
                     new Field[] {StringField.INSTANCE, StringField.INSTANCE, BinaryField.INSTANCE,
+                            StringField.INSTANCE, StringField.INSTANCE,
                             BinaryField.INSTANCE, BinaryField.INSTANCE,},
-                    new String[] {"UUID", "Type", "Model", "Messages", "Addresses"});
+                    new String[] {"UUID", "Type", "Model", "Created", "Updated",
+                            "Messages", "Addresses"});
 
     public UUID[] get_ids() {
         Table table = get_table(CONVO_TABLE_NAME);
@@ -160,22 +165,22 @@ public class ConversationContainerGhidraProgram {
         if (model == null) {
             return null;
         }
+        String created = record.getString(RECORD_CREATED_INDEX_V1);
+        String updated = record.getString(RECORD_UPDATED_INDEX_V1);
         Message[] msgs = (Message[]) bytes_to_obj(record.getBinaryData(RECORD_MESSAGES_INDEX_V1));
         if (msgs == null) {
             return null;
         }
-        Long[] addrs = (Long[]) bytes_to_obj(record.getBinaryData(RECORD_ADDRESSES_INDEX_V1));
-        if (addrs == null) {
+        Long[] addrs_value = (Long[]) bytes_to_obj(record.getBinaryData(RECORD_ADDRESSES_INDEX_V1));
+        if (addrs_value == null) {
             return null;
         }
 
-        Conversation convo = new Conversation(uuid, type, model);
-        for (Message msg : msgs) {
-            convo.add_msg(msg.get_role(), msg.get_content());
+        List<Address> addrs = new LinkedList<>();
+        for (long addr_value : addrs_value) {
+            addrs.add(ghidra.get_addr(addr_value));
         }
-        for (long addr : addrs) {
-            convo.add_addr(ghidra.get_addr(addr));
-        }
+        Conversation convo = new Conversation(uuid, type, model, created, updated, msgs, addrs.toArray(new Address[]{}));
 
         return convo;
     }
@@ -196,6 +201,8 @@ public class ConversationContainerGhidraProgram {
                 return;
             }
             record.setBinaryData(RECORD_MODEL_INDEX_V1, model_byte);
+            record.setString(RECORD_CREATED_INDEX_V1, convo.get_created());
+            record.setString(RECORD_UPDATED_INDEX_V1, convo.get_updated());
             List<Message> msgs = new ArrayList<>(convo.get_msgs_len());
             for (int i = 0; i < convo.get_msgs_len(); i++) {
                 msgs.add(new Message(convo.get_role(i), convo.get_msg(i)));
