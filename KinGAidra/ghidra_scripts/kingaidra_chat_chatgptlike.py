@@ -13,6 +13,7 @@ import json
 URL = "" # "https://api.openai.com/v1/chat/completions"
 MODEL = "" # "gpt-4o-mini"
 API_KEY = ""
+POST_MSG = "" # "Please respond in XXXX."
 
 
 def main():
@@ -20,6 +21,7 @@ def main():
     service = consumer_list[0].getService(kingaidra.ai.task.KinGAidraChatTaskService)
 
     convo = service.get_task(state.getEnvironmentVar("KEY"))
+    type = service.get_task_type(state.getEnvironmentVar("KEY"))
 
     data = {
         "model": MODEL,
@@ -31,6 +33,8 @@ def main():
             "role": convo.get_role(i),
             "content": convo.get_msg(i),
         })
+    if type == kingaidra.ai.task.TaskType.CHAT:
+        data["messages"][-1]["content"] += POST_MSG
 
     req = urllib2.Request(
         URL,
