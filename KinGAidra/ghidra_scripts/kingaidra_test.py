@@ -308,7 +308,7 @@ void FUN_01222300(void) {
 2. **local_230**: Since it is initialized as a buffer using `_memset`, this is likely intended to be a byte buffer (array of `unsigned char`).
 3. **local_22c**: This is used in the `OpenProcess` call, which expects a `DWORD` as one of its arguments. Therefore, the type should be `DWORD`.
 4. **local_210**: It is used with `Process32FirstW` and `Process32NextW`, which expect a `wchar_t` (wide character type) string for process names. Thus, `local_210` should be of type `wchar_t[260]` instead of `ushort[260]`."""
-    elif type == kingaidra.ai.task.TaskType.RESOLVE_DATATYPE and "PROCESSENTRY32W" in msg:
+    elif type == kingaidra.ai.task.TaskType.DECOM_RESOLVE_DATATYPE and "PROCESSENTRY32W" in msg:
         data = """Sure! Below is the `PROCESSENTRY32W` structure in C for a 32-bit system, written without using `typedef`, `#include`, or `#define`. This includes all the dependent data types and structures:
 
 ```c
