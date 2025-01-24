@@ -150,7 +150,7 @@ public class ChatGUI extends JPanel {
 
         Model test_model = new ModelByScript("Test", "kingaidra_test.py", false);
         Model chatgptlike_model =
-                new ModelByScript("ChatChatGPTLike", "kingaidra_chat_chatgptlike.py", true);
+                new ModelByScript("ChatGPTLike", "kingaidra_chat.py", true);
         if (!guess.exist_model(test_model.get_name())) {
             guess.add_model(test_model.get_name(), test_model.get_script());
             guess.set_model_status(test_model.get_name(), test_model.get_active());
