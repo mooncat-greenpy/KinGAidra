@@ -21,6 +21,7 @@ import ghidra.util.table.GhidraTable;
 import ghidra.util.table.GhidraTableFilterPanel;
 import ghidra.util.table.GhidraThreadedTablePanel;
 import ghidra.util.table.field.AbstractProgramBasedDynamicTableColumn;
+import ghidra.util.table.field.AddressBasedLocation;
 import ghidra.util.task.TaskMonitor;
 import kingaidra.ai.convo.Conversation;
 import kingaidra.ai.convo.ConversationContainer;
@@ -108,21 +109,21 @@ public class LogGUI extends JPanel {
         // ==================================================================================================
 
         private static class ConversationAddressTableColumn
-                extends AbstractProgramBasedDynamicTableColumn<Conversation, String> {
+                extends AbstractProgramBasedDynamicTableColumn<Conversation, AddressBasedLocation> {
             @Override
             public String getColumnName() {
                 return "Location";
             }
 
             @Override
-            public String getValue(Conversation rowObject, Settings settings, Program pgm,
+            public AddressBasedLocation getValue(Conversation rowObject, Settings settings, Program pgm,
                     ServiceProvider serviceProvider) throws IllegalArgumentException {
                 String s = "";
                 Address[] addrs = rowObject.get_addrs();
-                for (Address addr : addrs) {
-                    s += String.format("%x ", addr.getOffset());
+                if (addrs.length > 0) {
+                    return new AddressBasedLocation(pgm, addrs[0]);
                 }
-                return s;
+                return null;
             }
 
             @Override
