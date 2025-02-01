@@ -14,6 +14,7 @@ import kingaidra.testutil.GhidraTestUtil;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
+import java.util.AbstractMap;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
@@ -191,6 +192,25 @@ class GhidraUtilImplTest {
         assertEquals(gu.get_func(util.get_addr(program, 0x402000)).getName(), "new_func");
         assertTrue(gu.get_decom(util.get_addr(program, 0x402000))
                 .contains("int __fastcall new_func(int new_param_1)"));
+    }
+
+    @Test
+    void test_add_comments() throws Exception {
+        GhidraTestUtil util = new GhidraTestUtil();
+        Program program = util.create_program();
+        GhidraUtil gu = new GhidraUtilImpl(program, TaskMonitor.DUMMY);
+        List<Map.Entry<String, String>> comments = new LinkedList<>();
+        comments.add(new AbstractMap.SimpleEntry<>("piVar1 = (int *)(unaff_EBX + -0x3f7bfe3f);", "comment1"));
+        comments.add(new AbstractMap.SimpleEntry<>("do {", "comment2"));
+        comments.add(new AbstractMap.SimpleEntry<>("return ((uint)in_EAX & 0xffffff04) - (int)in_stack_00000004;", "comment3"));
+        comments.add(new AbstractMap.SimpleEntry<>("return (int)in_EAX - (int)in_stack_00000004;", "comment4"));
+        gu.add_comments(util.get_addr(program, 0x402000), comments);
+
+        String decom_result = gu.get_decom(util.get_addr(program, 0x402000));
+        assertTrue(decom_result.replace(" ", "").contains("/*comment1*/\r\npiVar1=(int*)(unaff_EBX+-0x3f7bfe3f);\r\n"));
+        assertTrue(decom_result.replace(" ", "").contains("do{\r\n/*comment2*/\r\n"));
+        assertTrue(decom_result.replace(" ", "").contains("/*comment3*/\r\nreturn((uint)in_EAX&0xffffff04)-(int)in_stack_00000004;\r\n"));
+        assertTrue(decom_result.replace(" ", "").contains("/*comment4*/\r\nreturn(int)in_EAX-(int)in_stack_00000004;\r\n"));
     }
 
     @Test

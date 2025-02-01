@@ -14,6 +14,10 @@ import java.util.TreeMap;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+import ghidra.app.decompiler.component.DecompilerUtils;
+import ghidra.app.decompiler.ClangLine;
+import ghidra.app.decompiler.ClangToken;
+import ghidra.app.decompiler.ClangTokenGroup;
 import ghidra.app.decompiler.DecompInterface;
 import ghidra.app.decompiler.DecompileResults;
 import ghidra.app.decompiler.DecompiledFunction;
@@ -495,6 +499,62 @@ public class GhidraUtilImpl implements GhidraUtil {
         } finally {
             program.endTransaction(tid, true);
         }
+        return true;
+    }
+
+    public boolean add_comments(Address addr, List<Map.Entry<String, String>> comments) {
+        Function func = get_func(addr);
+        if (func == null) {
+            return false;
+        }
+        DecompileResults decom_result = get_decom_results(func);
+        if (decom_result == null) {
+            Logger.append_message("Failed to get decompiled result");
+            return false;
+        }
+        ClangTokenGroup token_grp = decom_result.getCCodeMarkup();
+        List<ClangLine> lines = DecompilerUtils.toLines(token_grp);
+        int line_idx = 0;
+        int tid = program.startTransaction("KinGAidra comments");
+        try {
+
+            String comment = "";
+            for (Map.Entry<String, String> pair : comments) {
+                String src_code = pair.getKey();
+                comment += (comment.isEmpty() ? "" : "\n") + pair.getValue();
+                for (; line_idx < lines.size(); line_idx++) {
+                    ClangLine line = lines.get(line_idx);
+                    String line_str = line.toString();
+                    if (line_str.contains(src_code)) {
+                        Address min_addr = null;
+                        for (int i = line_idx; i < lines.size(); i++) {
+                            ClangLine line_tmp = lines.get(i);
+                            for (ClangToken token : line_tmp.getAllTokens()) {
+                                Address tmp = token.getMinAddress();
+                                if (min_addr == null) {
+                                    min_addr = tmp;
+                                } else if (tmp != null && tmp.getOffset() < min_addr.getOffset()) {
+                                    min_addr = tmp;
+                                }
+                            }
+                            if (min_addr != null) {
+                                break;
+                            }
+                        }
+                        if (min_addr != null) {
+                            String prev_comment = program_listing.getComment(ghidra.program.model.listing.CodeUnit.PRE_COMMENT, min_addr);
+                            comment = (prev_comment == null || prev_comment.isEmpty() ? "" : prev_comment + "\n") + comment;
+                            program_listing.setComment(min_addr, ghidra.program.model.listing.CodeUnit.PRE_COMMENT, comment);
+                            comment = "";
+                            break;
+                        }
+                    }
+                }
+            }
+        } finally {
+            program.endTransaction(tid, true);
+        }
+
         return true;
     }
 

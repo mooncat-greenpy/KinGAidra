@@ -48,4 +48,6 @@ public interface GhidraUtil {
     public DataType parse_datatypes(String code);
 
     public boolean refact(DecomDiff diff);
+
+    public boolean add_comments(Address addr, List<Map.Entry<String, String>> comments);
 }
