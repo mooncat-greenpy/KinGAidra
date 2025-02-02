@@ -99,6 +99,7 @@ public class LogGUI extends JPanel {
             descriptor.addVisibleColumn(new ConversationAddressTableColumn());
             descriptor.addVisibleColumn(new ConversationTypeTableColumn());
             descriptor.addVisibleColumn(new ConversationModelNameTableColumn());
+            descriptor.addVisibleColumn(new ConversationCreatedTableColumn());
             descriptor.addVisibleColumn(new ConversationDataTableColumn());
 
             return descriptor;
@@ -171,6 +172,25 @@ public class LogGUI extends JPanel {
             }
         }
 
+        private static class ConversationCreatedTableColumn
+                extends AbstractProgramBasedDynamicTableColumn<Conversation, String> {
+            @Override
+            public String getColumnName() {
+                return "Created";
+            }
+
+            @Override
+            public String getValue(Conversation rowObject, Settings settings, Program program,
+                    ServiceProvider services) throws IllegalArgumentException {
+                return rowObject.get_created();
+            }
+
+            @Override
+            public int getColumnPreferredWidth() {
+                return 100;
+            }
+        }
+
         private static class ConversationDataTableColumn
                 extends AbstractProgramBasedDynamicTableColumn<Conversation, Conversation> {
             @Override
@@ -211,7 +231,7 @@ public class LogGUI extends JPanel {
                 if (row_idx < 0) {
                     return;
                 }
-                Conversation convo = (Conversation) convo_table.getValueAt(row_idx, 3);
+                Conversation convo = (Conversation) convo_table.getValueAt(row_idx, 4);
                 chat_gui.reset(convo);
             }
         });
