@@ -116,7 +116,8 @@ public class RefactorGUI extends JPanel {
         rename_chkbox = new JCheckBox("Rename");
         rename_chkbox.setSelected(true);
         retype_chkbox = new JCheckBox("Retype");
-        retype_chkbox.setSelected(true);
+        retype_chkbox.setSelected(false);
+        retype_chkbox.setToolTipText("Enabling this option may cause some variable operations to fail.");
         datatype_checkbox = new JCheckBox("Resolve datatype");
         datatype_checkbox.setSelected(false);
         JPanel panel = new JPanel();
@@ -145,7 +146,7 @@ public class RefactorGUI extends JPanel {
         addr = diff.get_addr();
         name = diff.get_name().get_var_name();
         rename_chkbox.setSelected(true);
-        retype_chkbox.setSelected(true);
+        retype_chkbox.setSelected(false);
         datatype_checkbox.setSelected(false);
         set_info_label();
 
@@ -154,6 +155,8 @@ public class RefactorGUI extends JPanel {
 
         JTable table = new JTable(tableModel);
         table.getColumnModel().getColumn(0).setCellEditor(new DefaultCellEditor(new JCheckBox()));
+        table.getColumnModel().getColumn(1).setMinWidth(0);
+        table.getColumnModel().getColumn(1).setMaxWidth(0);
 
         tabbed_panel.add(tab_name, new JScrollPane(table));
 

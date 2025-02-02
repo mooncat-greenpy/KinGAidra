@@ -215,6 +215,7 @@ public class DecomGUI extends JPanel {
             }
         });
         refact_btn.setPreferredSize(button_size);
+        refact_btn.setToolTipText("Apply the information of the selected tab");
         btn_panel.add(refact_btn);
 
         add(btn_panel);

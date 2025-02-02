@@ -471,7 +471,17 @@ public class GhidraUtilImpl implements GhidraUtil {
                 }
                 HighSymbol sym = high_func.getLocalSymbolMap().getSymbol(pair.get_id());
                 if (sym == null) {
-                    continue;
+                    Iterator<HighSymbol> itr = high_func.getLocalSymbolMap().getSymbols();
+                    while (itr.hasNext()) {
+                        HighSymbol tmp = itr.next();
+                        if (tmp.getName().equals(pair.get_var_name())) {
+                            sym = tmp;
+                            break;
+                        }
+                    }
+                    if (sym == null) {
+                        continue;
+                    }
                 }
 
                 String new_name = pair.get_new_name();
