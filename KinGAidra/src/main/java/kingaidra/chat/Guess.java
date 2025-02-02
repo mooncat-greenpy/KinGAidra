@@ -165,7 +165,7 @@ public class Guess {
             return comments;
         }
 
-        Conversation convo = new Conversation(ConversationType.USER_CHAT, m);
+        Conversation convo = new Conversation(ConversationType.SYSTEM_COMMENT, m);
         String msg = "Please add comments to the following C language function to explain its purpose and logic. The comments should be concise but clear, and should describe the function, parameters, logic, and any important details for each part of the code. Return the results in the following format:\n" +
                         "\n" +
                         "```json\n" +
