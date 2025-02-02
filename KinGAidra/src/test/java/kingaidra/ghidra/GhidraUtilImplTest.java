@@ -200,17 +200,19 @@ class GhidraUtilImplTest {
         Program program = util.create_program();
         GhidraUtil gu = new GhidraUtilImpl(program, TaskMonitor.DUMMY);
         List<Map.Entry<String, String>> comments = new LinkedList<>();
-        comments.add(new AbstractMap.SimpleEntry<>("piVar1 = (int *)(unaff_EBX + -0x3f7bfe3f);", "comment1"));
-        comments.add(new AbstractMap.SimpleEntry<>("do {", "comment2"));
-        comments.add(new AbstractMap.SimpleEntry<>("return ((uint)in_EAX & 0xffffff04) - (int)in_stack_00000004;", "comment3"));
-        comments.add(new AbstractMap.SimpleEntry<>("return (int)in_EAX - (int)in_stack_00000004;", "comment4"));
+        comments.add(new AbstractMap.SimpleEntry<>("Dummy", "comment0"));
+        comments.add(new AbstractMap.SimpleEntry<>("int *piVar1;", "comment1"));
+        comments.add(new AbstractMap.SimpleEntry<>("piVar1 = (int *)(unaff_EBX + -0x3f7bfe3f);", "comment2"));
+        comments.add(new AbstractMap.SimpleEntry<>("do {", "comment3"));
+        comments.add(new AbstractMap.SimpleEntry<>("if ((char)in_EAX == '\\0') {", "comment4"));
+        comments.add(new AbstractMap.SimpleEntry<>("return (int)in_EAX - (int)in_stack_00000004;", "comment5"));
         gu.add_comments(util.get_addr(program, 0x402000), comments);
 
         String decom_result = gu.get_decom(util.get_addr(program, 0x402000));
-        assertTrue(decom_result.replace(" ", "").contains("/*comment1*/\r\npiVar1=(int*)(unaff_EBX+-0x3f7bfe3f);\r\n"));
-        assertTrue(decom_result.replace(" ", "").contains("do{\r\n/*comment2*/\r\n"));
-        assertTrue(decom_result.replace(" ", "").contains("/*comment3*/\r\nreturn((uint)in_EAX&0xffffff04)-(int)in_stack_00000004;\r\n"));
-        assertTrue(decom_result.replace(" ", "").contains("/*comment4*/\r\nreturn(int)in_EAX-(int)in_stack_00000004;\r\n"));
+        assertTrue(decom_result.replace(" ", "").contains("/*comment0\r\ncomment1\r\ncomment2*/\r\npiVar1=(int*)(unaff_EBX+-0x3f7bfe3f);\r\n"));
+        assertTrue(decom_result.replace(" ", "").contains("do{\r\n/*comment3*/\r\n"));
+        assertTrue(decom_result.replace(" ", "").contains("/*comment4*/\r\nif((char)in_EAX=='\\0'){\r\n"));
+        assertTrue(decom_result.replace(" ", "").contains("/*comment5*/\r\nreturn(int)in_EAX-(int)in_stack_00000004;\r\n"));
     }
 
     @Test

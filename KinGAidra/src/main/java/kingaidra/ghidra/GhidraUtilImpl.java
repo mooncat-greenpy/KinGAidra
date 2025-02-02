@@ -517,24 +517,22 @@ public class GhidraUtilImpl implements GhidraUtil {
         int line_idx = 0;
         int tid = program.startTransaction("KinGAidra comments");
         try {
-
             String comment = "";
             for (Map.Entry<String, String> pair : comments) {
                 String src_code = pair.getKey();
                 comment += (comment.isEmpty() ? "" : "\n") + pair.getValue();
-                for (; line_idx < lines.size(); line_idx++) {
-                    ClangLine line = lines.get(line_idx);
+                for (int i = line_idx; i < lines.size(); i++) {
+                    ClangLine line = lines.get(i);
                     String line_str = line.toString();
                     if (line_str.contains(src_code)) {
                         Address min_addr = null;
-                        for (int i = line_idx; i < lines.size(); i++) {
-                            ClangLine line_tmp = lines.get(i);
+                        for (int j = i; j < lines.size(); j++) {
+                            ClangLine line_tmp = lines.get(j);
                             for (ClangToken token : line_tmp.getAllTokens()) {
                                 Address tmp = token.getMinAddress();
                                 if (min_addr == null) {
                                     min_addr = tmp;
-                                } else if (tmp != null && tmp.getOffset() < min_addr.getOffset()) {
-                                    min_addr = tmp;
+                                    break;
                                 }
                             }
                             if (min_addr != null) {
@@ -546,6 +544,7 @@ public class GhidraUtilImpl implements GhidraUtil {
                             comment = (prev_comment == null || prev_comment.isEmpty() ? "" : prev_comment + "\n") + comment;
                             program_listing.setComment(min_addr, ghidra.program.model.listing.CodeUnit.PRE_COMMENT, comment);
                             comment = "";
+                            line_idx = i;
                             break;
                         }
                     }
