@@ -1,6 +1,10 @@
 package kingaidra.chat;
 
+import java.util.AbstractMap;
 import java.util.Arrays;
+import java.util.LinkedList;
+import java.util.List;
+import java.util.Map;
 
 import ghidra.program.model.address.Address;
 import kingaidra.ai.Ai;
@@ -9,6 +13,9 @@ import kingaidra.ai.convo.ConversationType;
 import kingaidra.ai.model.Model;
 import kingaidra.ai.model.ModelByScript;
 import kingaidra.ai.task.TaskType;
+import kingaidra.decom.extractor.CommentJson;
+import kingaidra.decom.extractor.CommentListJson;
+import kingaidra.decom.extractor.JsonExtractor;
 import kingaidra.ghidra.GhidraPreferences;
 
 public class Guess {
@@ -141,5 +148,58 @@ public class Guess {
         Conversation convo = new Conversation(ConversationType.USER_CHAT, m);
         convo.set_model(m);
         return guess(convo, msg, addr);
+    }
+
+    public List<Map.Entry<String, String>> guess_src_code_comments(Address addr) {
+        List<Map.Entry<String, String>> comments = new LinkedList<>();
+
+        Model m = null;
+        for (String name : get_models()) {
+            Model tmp = get_model(name);
+            if (tmp.get_active()) {
+                m = tmp;
+                break;
+            }
+        }
+        if (m == null) {
+            return comments;
+        }
+
+        Conversation convo = new Conversation(ConversationType.USER_CHAT, m);
+        String msg = "Please add comments to the following C language function to explain its purpose and logic. The comments should be concise but clear, and should describe the function, parameters, logic, and any important details for each part of the code. Return the results in the following format:\n" +
+                        "\n" +
+                        "```json\n" +
+                        "[\n" +
+                        "    {\n" +
+                        "        \"source\": \"source code A\",\n" +
+                        "        \"comment\": \"comment A\"\n" +
+                        "    },\n" +
+                        "    {\n" +
+                        "        \"source\": \"source code B\",\n" +
+                        "        \"comment\": \"comment B\"\n" +
+                        "    },\n" +
+                        "    ...\n" +
+                        "]\n" +
+                        "```\n" +
+                        "\n" +
+                        "Here is the C code:\n" +
+                        "\n" +
+                        "```cpp\n" +
+                        "<code>\n" +
+                        "```";
+
+        convo = ai.guess(TaskType.ADD_COMMENTS, convo, msg, addr);
+        if (convo == null) {
+            return comments;
+        }
+        JsonExtractor<CommentListJson> extractor = new JsonExtractor<>(convo.get_msg(convo.get_msgs_len() - 1), CommentListJson.class);
+        CommentListJson comment_list_json = extractor.get_data();
+        if (comment_list_json == null) {
+            return comments;
+        }
+        for (CommentJson comment_json : comment_list_json) {
+            comments.add(new AbstractMap.SimpleEntry<>(comment_json.get_source(), comment_json.get_comment()));
+        }
+        return comments;
     }
 }

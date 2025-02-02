@@ -264,6 +264,27 @@ public class ModelDummy implements Model, Serializable {
                         "```cpp\n" +
                         "test\n" +
                         "```");
+        } else if (type == TaskType.ADD_COMMENTS) {
+            convo.add_assistant_msg("```json\n" +
+                        "[\n" +
+                        "    {\n" +
+                        "        \"source\": \"piVar1 = (int *)(unaff_EBX + -0x3f7bfe3f);\",\n" +
+                        "        \"comment\": \"comment1\"\n" +
+                        "    },\n" +
+                        "    {\n" +
+                        "        \"source\": \"do {\",\n" +
+                        "        \"comment\": \"comment2\"\n" +
+                        "    },\n" +
+                        "    {\n" +
+                        "        \"source\": \"return ((uint)in_EAX & 0xffffff04) - (int)in_stack_00000004;\",\n" +
+                        "        \"comment\": \"comment3\"\n" +
+                        "    },\n" +
+                        "    {\n" +
+                        "        \"source\": \"return (int)in_EAX - (int)in_stack_00000004;\",\n" +
+                        "        \"comment\": \"comment4\"\n" +
+                        "    }\n" +
+                        "]\n" +
+                        "```");
         }
 
         return convo;

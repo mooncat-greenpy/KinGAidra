@@ -14,12 +14,16 @@ import kingaidra.ghidra.GhidraPreferences;
 import kingaidra.ghidra.GhidraUtil;
 import kingaidra.ghidra.GhidraUtilImpl;
 import kingaidra.testutil.GhidraTestUtil;
+import kingaidra.testutil.ModelDummy;
 import kingaidra.testutil.ChatModelDummy;
 import kingaidra.testutil.ChatModelPreferencesDummy;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
+
+import java.util.List;
+import java.util.Map;
 
 public class GuessTest {
     @Test
@@ -145,5 +149,29 @@ public class GuessTest {
         assertTrue(convo3.get_msg(3).endsWith("Dummy2"));
         assertEquals(convo3.get_addrs().length, 1);
         assertEquals(convo3.get_addrs()[0].getOffset(), 0x408000);
+    }
+
+    @Test
+    void test_guess_src_code_comments() throws Exception {
+        GhidraTestUtil util = new GhidraTestUtil();
+        Program program = util.create_program();
+        GhidraUtil gu = new GhidraUtilImpl(program, TaskMonitor.DUMMY);
+        ConversationContainer container = new ConversationContainerDummy();
+        Ai ai = new Ai(null, program, gu, container, null);
+        GhidraPreferences<Model> pref = new ChatModelPreferencesDummy();
+        pref.store("Dummy1", new ModelDummy("Dummy1", "dummy.py", false));
+        pref.store("Dummy2", new ModelDummy("Dummy2", "dummy.py", true));
+        pref.store("Dummy3", new ModelDummy("Dummy3", "dummy.py", false));
+        Guess guess = new Guess(ai, pref);
+        List<Map.Entry<String, String>> comments = guess.guess_src_code_comments(util.get_addr(program, 0x402000));
+        assertEquals(comments.size(), 4);
+        assertEquals(comments.get(0).getKey(), "piVar1 = (int *)(unaff_EBX + -0x3f7bfe3f);");
+        assertEquals(comments.get(0).getValue(), "comment1");
+        assertEquals(comments.get(1).getKey(), "do {");
+        assertEquals(comments.get(1).getValue(), "comment2");
+        assertEquals(comments.get(2).getKey(), "return ((uint)in_EAX & 0xffffff04) - (int)in_stack_00000004;");
+        assertEquals(comments.get(2).getValue(), "comment3");
+        assertEquals(comments.get(3).getKey(), "return (int)in_EAX - (int)in_stack_00000004;");
+        assertEquals(comments.get(3).getValue(), "comment4");
     }
 }
