@@ -111,6 +111,36 @@ public class JsonExtractorTest {
         assertEquals(data4.get(1).get_new_datatype(), "new datatype name2");
         assertEquals(data4.get(1).get_orig_datatype(), "original datatype name2");
         assertEquals(data4.get(1).get_var_name(), "variable name2");
+
+        String s5 = "[\n" +
+                        "    {\n" +
+                        "        \"source\": \"piVar1 = (int *)(unaff_EBX + -0x3f7bfe3f);\",\n" +
+                        "        \"comment\": \"comment1\"\n" +
+                        "    },\n" +
+                        "    {\n" +
+                        "        \"source\": \"do {\",\n" +
+                        "        \"comment\": \"comment2\"\n" +
+                        "    },\n" +
+                        "    {\n" +
+                        "        \"source\": \"return ((uint)in_EAX & 0xffffff04) - (int)in_stack_00000004;\",\n" +
+                        "        \"comment\": \"comment3\"\n" +
+                        "    },\n" +
+                        "    {\n" +
+                        "        \"source\": \"return (int)in_EAX - (int)in_stack_00000004;\",\n" +
+                        "        \"comment\": \"comment4\"\n" +
+                        "    }\n" +
+                        "]";
+        JsonExtractor<CommentListJson> extractor5 = new JsonExtractor(s5, CommentListJson.class);
+        CommentListJson data5 = extractor5.get_data();
+        assertEquals(data5.size(), 4);
+        assertEquals(data5.get(0).get_source(), "piVar1 = (int *)(unaff_EBX + -0x3f7bfe3f);");
+        assertEquals(data5.get(0).get_comment(), "comment1");
+        assertEquals(data5.get(1).get_source(), "do {");
+        assertEquals(data5.get(1).get_comment(), "comment2");
+        assertEquals(data5.get(2).get_source(), "return ((uint)in_EAX & 0xffffff04) - (int)in_stack_00000004;");
+        assertEquals(data5.get(2).get_comment(), "comment3");
+        assertEquals(data5.get(3).get_source(), "return (int)in_EAX - (int)in_stack_00000004;");
+        assertEquals(data5.get(3).get_comment(), "comment4");
     }
 
     @Test
@@ -228,6 +258,38 @@ public class JsonExtractorTest {
         assertEquals(data4.get(1).get_new_datatype(), "new datatype name2");
         assertEquals(data4.get(1).get_orig_datatype(), "original datatype name2");
         assertEquals(data4.get(1).get_var_name(), "variable name2");
+
+        String s5 = "```json\n" +
+                        "[\n" +
+                        "    {\n" +
+                        "        \"source\": \"piVar1 = (int *)(unaff_EBX + -0x3f7bfe3f);\",\n" +
+                        "        \"comment\": \"comment1\"\n" +
+                        "    },\n" +
+                        "    {\n" +
+                        "        \"source\": \"do {\",\n" +
+                        "        \"comment\": \"comment2\"\n" +
+                        "    },\n" +
+                        "    {\n" +
+                        "        \"source\": \"return ((uint)in_EAX & 0xffffff04) - (int)in_stack_00000004;\",\n" +
+                        "        \"comment\": \"comment3\"\n" +
+                        "    },\n" +
+                        "    {\n" +
+                        "        \"source\": \"return (int)in_EAX - (int)in_stack_00000004;\",\n" +
+                        "        \"comment\": \"comment4\"\n" +
+                        "    }\n" +
+                        "]\n" +
+                        "```";
+        JsonExtractor<CommentListJson> extractor5 = new JsonExtractor(s5, CommentListJson.class);
+        CommentListJson data5 = extractor5.get_data();
+        assertEquals(data5.size(), 4);
+        assertEquals(data5.get(0).get_source(), "piVar1 = (int *)(unaff_EBX + -0x3f7bfe3f);");
+        assertEquals(data5.get(0).get_comment(), "comment1");
+        assertEquals(data5.get(1).get_source(), "do {");
+        assertEquals(data5.get(1).get_comment(), "comment2");
+        assertEquals(data5.get(2).get_source(), "return ((uint)in_EAX & 0xffffff04) - (int)in_stack_00000004;");
+        assertEquals(data5.get(2).get_comment(), "comment3");
+        assertEquals(data5.get(3).get_source(), "return (int)in_EAX - (int)in_stack_00000004;");
+        assertEquals(data5.get(3).get_comment(), "comment4");
     }
 
     @Test
@@ -343,5 +405,37 @@ public class JsonExtractorTest {
         assertEquals(data4.get(1).get_new_datatype(), "new datatype name2");
         assertEquals(data4.get(1).get_orig_datatype(), "original datatype name2");
         assertEquals(data4.get(1).get_var_name(), "variable name2");
+
+        String s5 = "Result\n" +
+                        "[\n" +
+                        "    {\n" +
+                        "        \"source\": \"piVar1 = (int *)(unaff_EBX + -0x3f7bfe3f);\",\n" +
+                        "        \"comment\": \"comment1\"\n" +
+                        "    },\n" +
+                        "    {\n" +
+                        "        \"source\": \"do {\",\n" +
+                        "        \"comment\": \"comment2\"\n" +
+                        "    },\n" +
+                        "    {\n" +
+                        "        \"source\": \"return ((uint)in_EAX & 0xffffff04) - (int)in_stack_00000004;\",\n" +
+                        "        \"comment\": \"comment3\"\n" +
+                        "    },\n" +
+                        "    {\n" +
+                        "        \"source\": \"return (int)in_EAX - (int)in_stack_00000004;\",\n" +
+                        "        \"comment\": \"comment4\"\n" +
+                        "    }\n" +
+                        "]\n" +
+                        "This is markdown. ```cpp\nint main() {}\n```\n";
+        JsonExtractor<CommentListJson> extractor5 = new JsonExtractor(s5, CommentListJson.class);
+        CommentListJson data5 = extractor5.get_data();
+        assertEquals(data5.size(), 4);
+        assertEquals(data5.get(0).get_source(), "piVar1 = (int *)(unaff_EBX + -0x3f7bfe3f);");
+        assertEquals(data5.get(0).get_comment(), "comment1");
+        assertEquals(data5.get(1).get_source(), "do {");
+        assertEquals(data5.get(1).get_comment(), "comment2");
+        assertEquals(data5.get(2).get_source(), "return ((uint)in_EAX & 0xffffff04) - (int)in_stack_00000004;");
+        assertEquals(data5.get(2).get_comment(), "comment3");
+        assertEquals(data5.get(3).get_source(), "return (int)in_EAX - (int)in_stack_00000004;");
+        assertEquals(data5.get(3).get_comment(), "comment4");
     }
 }
