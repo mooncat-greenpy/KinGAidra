@@ -3,6 +3,8 @@ package kingaidra.chat.gui;
 import java.awt.Dimension;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.util.List;
+import java.util.Map;
 
 import javax.swing.BoxLayout;
 import javax.swing.DefaultCellEditor;
@@ -125,5 +127,9 @@ public class GuessGUI extends JPanel {
 
     public Conversation run_guess(Conversation convo, String msg, Address addr) {
         return guess.guess(convo, msg, addr);
+    }
+
+    public List<Map.Entry<String, String>> run_guess_src_code_comments(Address addr) {
+        return guess.guess_src_code_comments(addr);
     }
 }

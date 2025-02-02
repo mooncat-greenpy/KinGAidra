@@ -33,7 +33,7 @@ def main():
             "role": convo.get_role(i),
             "content": convo.get_msg(i),
         })
-    if type == kingaidra.ai.task.TaskType.CHAT:
+    if type == kingaidra.ai.task.TaskType.CHAT or type == kingaidra.ai.task.TaskType.ADD_COMMENTS:
         data["messages"][-1]["content"] += POST_MSG
 
     req = urllib2.Request(

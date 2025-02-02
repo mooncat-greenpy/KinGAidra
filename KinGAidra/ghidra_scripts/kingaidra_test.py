@@ -423,6 +423,143 @@ These are potentially hardcoded credentials used for authentication when communi
 This string could be associated with a known malware family or an identifier that can link the sample to previous campaigns or actor groups, making it relevant for attribution or identifying shared techniques.
 
 By focusing on these strings, you can gather valuable information regarding the malware's functionality, persistence, and communication methods, as well as any cryptographic or authentication mechanisms it might use."""
+    elif type == kingaidra.ai.task.TaskType.ADD_COMMENTS:
+        data = """```json
+[
+    {
+        "source": "void __fastcall FUN_01222300(PHANDLE param_1)",
+        "comment": "Function declaration: A fastcall convention function that takes a pointer to a HANDLE (param_1), which is intended to hold a process token."
+    },
+    {
+        "source": "{",
+        "comment": "Opening brace for the function body."
+    },
+    {
+        "source": "HANDLE hObject;",
+        "comment": "Declaration of a HANDLE variable (hObject) used to store the snapshot of the processes."
+    },
+    {
+        "source": "int iVar1;",
+        "comment": "Declaration of an integer (iVar1) to store the result of various function calls."
+    },
+    {
+        "source": "HANDLE ProcessHandle;",
+        "comment": "Declaration of a HANDLE variable (ProcessHandle) to store the handle of the opened process."
+    },
+    {
+        "source": "undefined4 local_234;",
+        "comment": "A local variable (local_234) to hold process information during enumeration."
+    },
+    {
+        "source": "undefined local_230 [4];",
+        "comment": "A buffer (local_230) initialized to zero, likely used for memory management or padding."
+    },
+    {
+        "source": "DWORD local_22c;",
+        "comment": "Declaration of a DWORD variable (local_22c) to store the process ID of a found process."
+    },
+    {
+        "source": "ushort local_210 [260];",
+        "comment": "Array (local_210) of wide characters to store the name of processes, with a size of 260."
+    },
+    {
+        "source": "uint local_8;",
+        "comment": "Local variable (local_8) to store some temporary and likely initialization or state data."
+    },
+    {
+        "source": "local_8 = DAT_01253004 ^ (uint)&stack0xfffffffc;",
+        "comment": "Initializes local_8 using an XOR operation with a constant and the address of the stack to obfuscate or secure this variable's initial state."
+    },
+    {
+        "source": "_memset(local_230,0,0x228);",
+        "comment": "Clears the local_230 buffer by setting all its bytes to zero, ensuring no residual data is present."
+    },
+    {
+        "source": "hObject = (HANDLE)CreateToolhelp32Snapshot(2,0);",
+        "comment": "Creates a snapshot of all processes in the system. The '2' parameter specifies that we want the process list."
+    },
+    {
+        "source": "if (hObject == (HANDLE)0xffffffff) {",
+        "comment": "Checks if the snapshot creation failed (returns INVALID_HANDLE_VALUE)."
+    },
+    {
+        "source": "FUN_01230cbe(local_8 ^ (uint)&stack0xfffffffc);",
+        "comment": "Calls a cleanup or error handling function, providing it with a value derived from local_8."
+    },
+    {
+        "source": "return;",
+        "comment": "Exits the function if snapshot creation failed."
+    },
+    {
+        "source": "local_234 = 0x22c;",
+        "comment": "Sets up local_234 with the expected structure size for Process32FirstW function."
+    },
+    {
+        "source": "iVar1 = Process32FirstW(hObject,&local_234);",
+        "comment": "Initial call to retrieve the first process information from the snapshot."
+    },
+    {
+        "source": "while( true ) {",
+        "comment": "Starts an infinite loop to continue enumerating processes."
+    },
+    {
+        "source": "if (iVar1 == 0) {",
+        "comment": "Checks if no more processes are available (Process32FirstW returned 0)."
+    },
+    {
+        "source": "CloseHandle(hObject);",
+        "comment": "Cleans up and closes the handle to the process snapshot."
+    },
+    {
+        "source": "FUN_01230cbe(local_8 ^ (uint)&stack0xfffffffc);",
+        "comment": "Calls the cleanup function before returning from the loop."
+    },
+    {
+        "source": "return;",
+        "comment": "Exits the function after processing completes or if no process is found."
+    },
+    {
+        "source": "iVar1 = FUN_01239c4a(local_210,(ushort *)L\\\"Explorer.exe\\\");",
+        "comment": "Calls a function to check if the current process (stored in local_210) is 'Explorer.exe'."
+    },
+    {
+        "source": "if (iVar1 == 0) break;",
+        "comment": "Breaks the loop if the current process is not 'Explorer.exe'."
+    },
+    {
+        "source": "iVar1 = Process32NextW(hObject,&local_234);",
+        "comment": "Retrieves the next process information in the snapshot."
+    },
+    {
+        "source": "ProcessHandle = OpenProcess(0x400,0,local_22c);",
+        "comment": "Attempts to open the process with the specified ID (local_22c) with the specified access rights (0x400 - PROCESS_QUERY_INFORMATION)."
+    },
+    {
+        "source": "OpenProcessToken(ProcessHandle,0xf01ff,param_1);",
+        "comment": "Opens the access token associated with the process and stores it in param_1, allowing the caller to access the token's privileges."
+    },
+    {
+        "source": "CloseHandle(ProcessHandle);",
+        "comment": "Closes the handle to the opened process after acquiring its token."
+    },
+    {
+        "source": "CloseHandle(hObject);",
+        "comment": "Closes the handle to the process snapshot."
+    },
+    {
+        "source": "FUN_01230cbe(local_8 ^ (uint)&stack0xfffffffc);",
+        "comment": "Calls the cleanup function again before exiting, ensuring no sensitive data is left behind."
+    },
+    {
+        "source": "return;",
+        "comment": "Final return statement to exit the function."
+    },
+    {
+        "source": "}",
+        "comment": "Closing brace for the function body."
+    }
+]
+```"""
     else:
         data = ""
 

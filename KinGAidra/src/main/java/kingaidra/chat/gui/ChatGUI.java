@@ -3,6 +3,10 @@ package kingaidra.chat.gui;
 import java.awt.Dimension;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.util.AbstractMap;
+import java.util.LinkedList;
+import java.util.List;
+import java.util.Map;
 
 import javax.swing.BoxLayout;
 import javax.swing.JButton;
@@ -275,6 +279,26 @@ public class ChatGUI extends JPanel {
                     submit_btn.doClick();
                 }).popupMenuPath(new String[] {"Explain strings (malware)"}).popupMenuGroup("KinGAidra")
                 .buildAndInstall(plugin);
+
+        new ActionBuilder("Add comments using AI", provider.getName())
+                .withContext(ProgramLocationActionContext.class).enabledWhen(context -> {
+                    var func = context.getProgram().getFunctionManager()
+                            .getFunctionContaining(context.getAddress());
+                    return func != null;
+                }).onAction(context -> {
+                    var func = context.getProgram().getFunctionManager()
+                            .getFunctionContaining(context.getAddress());
+                    if (func == null) {
+                        Logger.append_message("Function not found");
+                        return;
+                    }
+
+                    Address addr = ghidra.get_current_addr();
+                    List<Map.Entry<String, String>> comments = ggui.run_guess_src_code_comments(addr);
+                    ghidra.add_comments(addr, comments);
+                }).popupMenuPath(new String[] {"Add comments using AI"}).popupMenuGroup("KinGAidra")
+                .buildAndInstall(plugin);
+
 
         conf_action = new DockingAction("ChatConfigure", provider.getName()) {
             @Override
