@@ -3,12 +3,13 @@
 KinGAidra is a Ghidra extension designed to enhance reverse engineering workflows by integrating AI capabilities. It helps analysts understand binaries more efficiently.
 
 ## Features
+- [**AI Chat for Assembly and Decompilation**](#Chat): Interact with AI to discuss and analyze binaries.
+- [**AI-Assisted Refactoring**](#Refactoring): Automatically refactor decompiled code using AI-generated suggestions.
+- [**AI-Assisted Commenting**](#Commenting): Automatically add comments to decompiled code using AI-generated suggestions.
+- [**Key Function Identification**](#KeyFunc): Utilize AI to identify important functions in a binary for analysis.
+- [**Chat Log**](#Log): Save chat logs for future reference or analysis.
+- [**Customizable Models**](#Configuration): Employ various AI models to meet your specific needs.
 
-- **AI Chat for Assembly and Decompilation**: Interact with AI to discuss and analyze binaries.
-- **AI-Assisted Refactoring**: Automatically refactor decompiled code using AI-generated suggestions.
-- **Key Function Identification**: Utilize AI to identify important functions in a binary for analysis.
-- **Chat Log**: Save chat logs for future reference or analysis.
-- **Customizable Models**: Employ various AI models to meet your specific needs.
 
 ### Chat
 
@@ -34,7 +35,13 @@ The Chat feature in KinGAidra allows users to interact with an AI to discuss and
 
 The Refactoring feature in KinGAidra enables users to automatically refactor decompiled code using AI-generated suggestions.
 
-![](./img/image.png)
+![](./img/refactor.png)
+
+### Commenting
+
+The Commenting feature in KinGAidra allows users to automatically add comments to decompiled code using AI-generated suggestions. This feature helps in understanding the code better by providing meaningful comments that explain the functionality of the code.
+
+![](./img/comment.png)
 
 ### KeyFunc
 
@@ -73,3 +80,7 @@ Before using KinGAidra, configure the script with your LLM API details:
    - `URL`
    - `MODEL`
    - `API_KEY`
+
+You can use the OpenAI API or similar APIs as the LLM API. For example, services like Groq or local LLMs can be used.
+
+![](./img/conf.png)
