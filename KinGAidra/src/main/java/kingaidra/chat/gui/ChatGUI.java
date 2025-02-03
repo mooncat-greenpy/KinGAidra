@@ -74,6 +74,7 @@ public class ChatGUI extends JPanel {
     private Conversation cur_convo;
 
     private boolean busy;
+    private boolean add_comments_busy;
 
     public ChatGUI(MainProvider provider, Tool dockingTool, Program program, Plugin plugin,
             String owner, KinGAidraChatTaskService srv, ConversationContainer container) {
@@ -83,6 +84,7 @@ public class ChatGUI extends JPanel {
         this.srv = srv;
         this.container = container;
         check_and_set_busy(false);
+        check_and_set_add_comments_busy(false);
         setLayout(new BoxLayout(this, BoxLayout.Y_AXIS));
 
         init_panel();
@@ -288,9 +290,20 @@ public class ChatGUI extends JPanel {
                         return;
                     }
 
-                    Address addr = ghidra.get_current_addr();
-                    List<Map.Entry<String, String>> comments = ggui.run_guess_src_code_comments(addr);
-                    ghidra.add_comments(addr, comments);
+                    if (!check_and_set_add_comments_busy(true)) {
+                        Logger.append_message("Another process running");
+                        return;
+                    }
+                    Thread th = new Thread(() -> {
+                        try {
+                            Address addr = ghidra.get_current_addr();
+                            List<Map.Entry<String, String>> comments = ggui.run_guess_src_code_comments(addr);
+                            ghidra.add_comments(addr, comments);
+                        } finally {
+                            check_and_set_add_comments_busy(false);
+                        }
+                    });
+                    th.start();
                 }).popupMenuPath(new String[] {"Add comments using AI"}).popupMenuGroup("KinGAidra")
                 .buildAndInstall(plugin);
 
@@ -334,6 +347,14 @@ public class ChatGUI extends JPanel {
             return false;
         }
         busy = v;
+        return true;
+    }
+
+    synchronized private boolean check_and_set_add_comments_busy(boolean v) {
+        if (v && add_comments_busy) {
+            return false;
+        }
+        add_comments_busy = v;
         return true;
     }
 
