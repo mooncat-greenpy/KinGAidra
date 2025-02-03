@@ -554,7 +554,7 @@ public class GhidraUtilImpl implements GhidraUtil {
                             comment = (prev_comment == null || prev_comment.isEmpty() ? "" : prev_comment + "\n") + comment;
                             program_listing.setComment(min_addr, ghidra.program.model.listing.CodeUnit.PRE_COMMENT, comment);
                             comment = "";
-                            line_idx = i;
+                            line_idx = i + 1;
                             break;
                         }
                     }
