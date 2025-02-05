@@ -30,6 +30,7 @@ import ghidra.program.model.data.Category;
 import ghidra.program.model.data.CategoryPath;
 import ghidra.program.model.data.DataType;
 import ghidra.program.model.data.DataTypeManager;
+import ghidra.program.model.listing.CodeUnit;
 import ghidra.program.model.listing.Data;
 import ghidra.program.model.listing.DataIterator;
 import ghidra.program.model.listing.Function;
@@ -524,40 +525,54 @@ public class GhidraUtilImpl implements GhidraUtil {
         }
         ClangTokenGroup token_grp = decom_result.getCCodeMarkup();
         List<ClangLine> lines = DecompilerUtils.toLines(token_grp);
-        int line_idx = 0;
+        int cur_line_base = 0;
         int tid = program.startTransaction("KinGAidra comments");
         try {
             String comment = "";
             for (Map.Entry<String, String> pair : comments) {
                 String src_code = pair.getKey();
-                comment += (comment.isEmpty() ? "" : "\n") + pair.getValue();
-                for (int i = line_idx; i < lines.size(); i++) {
-                    ClangLine line = lines.get(i);
-                    String line_str = line.toString();
-                    if (line_str.contains(src_code)) {
-                        Address min_addr = null;
-                        for (int j = i; j < lines.size(); j++) {
-                            ClangLine line_tmp = lines.get(j);
-                            for (ClangToken token : line_tmp.getAllTokens()) {
-                                Address tmp = token.getMinAddress();
-                                if (min_addr == null) {
-                                    min_addr = tmp;
-                                    break;
-                                }
+                String cur_comment = pair.getValue();
+
+                Address asm_addr = null;
+                boolean addr_found = false;
+                for (int i = cur_line_base; i < lines.size(); i++) {
+                    String line_code = lines.get(i).toString();
+                    if (!line_code.trim().contains(src_code.trim())) {
+                        continue;
+                    }
+
+                    for (int j = i; j < lines.size() && asm_addr == null; j++) {
+                        ClangLine line_j = lines.get(j);
+                        for (ClangToken token : line_j.getAllTokens()) {
+                            Address tmp_addr = token.getMinAddress();
+                            if (tmp_addr == null) {
+                                continue;
                             }
-                            if (min_addr != null) {
-                                break;
+                            asm_addr = tmp_addr;
+                            if (j == i) {
+                                addr_found = true;
                             }
-                        }
-                        if (min_addr != null) {
-                            String prev_comment = program_listing.getComment(ghidra.program.model.listing.CodeUnit.PRE_COMMENT, min_addr);
-                            comment = (prev_comment == null || prev_comment.isEmpty() ? "" : prev_comment + "\n") + comment;
-                            program_listing.setComment(min_addr, ghidra.program.model.listing.CodeUnit.PRE_COMMENT, comment);
-                            comment = "";
-                            line_idx = i + 1;
                             break;
                         }
                     }
+                    if (asm_addr != null) {
+                        cur_line_base = i + 1;
+                        break;
+                    }
+                }
+                if (asm_addr != null) {
+                    String prev_comment = program_listing.getComment(CodeUnit.PRE_COMMENT, asm_addr);
+                    comment = (prev_comment == null || prev_comment.isEmpty() ? "" : prev_comment + "\n\n") + comment;
+                    if (addr_found) {
+                        comment += cur_comment;
+                    } else {
+                        comment += "// " + cur_comment + "\n" + src_code;
+                    }
+                    program_listing.setComment(asm_addr, CodeUnit.PRE_COMMENT, comment);
+                    comment = "";
+                } else {
+                    comment += "// " + cur_comment + "\n";
+                    comment += src_code + "\n\n";
                 }
             }
         } finally {

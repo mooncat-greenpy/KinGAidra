@@ -171,11 +171,11 @@ public class Guess {
                         "```json\n" +
                         "[\n" +
                         "    {\n" +
-                        "        \"source\": \"source code A\",\n" +
+                        "        \"source\": \"source code line A\",\n" +
                         "        \"comment\": \"comment A\"\n" +
                         "    },\n" +
                         "    {\n" +
-                        "        \"source\": \"source code B\",\n" +
+                        "        \"source\": \"source code line B\",\n" +
                         "        \"comment\": \"comment B\"\n" +
                         "    },\n" +
                         "    ...\n" +

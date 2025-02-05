@@ -209,8 +209,10 @@ class GhidraUtilImplTest {
         gu.add_comments(util.get_addr(program, 0x402000), comments);
 
         String decom_result = gu.get_decom(util.get_addr(program, 0x402000));
-        assertTrue(decom_result.replace(" ", "").contains("/*comment0\r\ncomment1\r\ncomment2*/\r\npiVar1=(int*)(unaff_EBX+-0x3f7bfe3f);\r\n"));
-        assertTrue(decom_result.replace(" ", "").contains("do{\r\n/*comment3*/\r\n"));
+        assertTrue(decom_result.replace(" ", "").contains("/*//comment0\r\nDummy\r\n\r\n" +
+                "//comment1\r\nint*piVar1;\r\n\r\n" +
+                "comment2*/\r\npiVar1=(int*)(unaff_EBX+-0x3f7bfe3f);\r\n"));
+        assertTrue(decom_result.replace(" ", "").contains("/*//comment3\r\ndo{*/\r\n"));
         assertTrue(decom_result.replace(" ", "").contains("/*comment4*/\r\nif((char)in_EAX=='\\0'){\r\n"));
         assertTrue(decom_result.replace(" ", "").contains("/*comment5*/\r\nreturn(int)in_EAX-(int)in_stack_00000004;\r\n"));
     }
