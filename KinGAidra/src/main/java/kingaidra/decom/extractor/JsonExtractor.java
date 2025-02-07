@@ -73,7 +73,7 @@ public class JsonExtractor<T extends JsonDataInterface> {
         try {
             ObjectMapper objectMapper = new ObjectMapper();
             T data = objectMapper.readValue(s, type);
-            if (!data.validate()) {
+            if (data == null || !data.validate()) {
                 return null;
             }
             return data;
