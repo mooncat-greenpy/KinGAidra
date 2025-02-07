@@ -3,7 +3,7 @@ package kingaidra;
 import java.util.HashMap;
 import java.util.Map;
 
-import ghidra.app.DeveloperPluginPackage;
+import ghidra.app.CorePluginPackage;
 import ghidra.app.plugin.PluginCategoryNames;
 import ghidra.app.plugin.ProgramPlugin;
 import ghidra.app.services.GoToService;
@@ -22,7 +22,7 @@ import kingaidra.log.Logger;
 //@formatter:off
 @PluginInfo(
     status = PluginStatus.RELEASED,
-    packageName = DeveloperPluginPackage.NAME,
+    packageName = CorePluginPackage.NAME,
     category = PluginCategoryNames.COMMON,
     shortDescription = "AI-powered Ghidra extension for enhanced analysis.",
     description = "KinGAidra is a Ghidra extension designed to enhance reverse engineering workflows by integrating AI capabilities. " +
