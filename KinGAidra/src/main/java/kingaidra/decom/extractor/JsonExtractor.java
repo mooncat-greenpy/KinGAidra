@@ -60,6 +60,11 @@ public class JsonExtractor<T extends JsonDataInterface> {
                 if (!target.contains("{") || !target.contains("}")) {
                     break;
                 }
+                if ((!target.startsWith("{") || !target.endsWith("}")) &&
+                    (!target.startsWith("[") || !target.endsWith("]"))) {
+                    continue;
+                }
+
                 T j = extract_json(target);
                 if (j != null) {
                     return j;
