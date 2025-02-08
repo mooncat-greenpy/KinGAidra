@@ -7,8 +7,11 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import java.util.UUID;
 
 import ghidra.program.model.listing.Program;
+import ghidra.util.task.TaskMonitor;
 import kingaidra.ai.convo.Conversation;
 import kingaidra.ai.convo.ConversationContainerGhidraProgram;
+import kingaidra.ghidra.GhidraUtil;
+import kingaidra.ghidra.GhidraUtilImpl;
 import kingaidra.testutil.GhidraTestUtil;
 import kingaidra.testutil.ModelDummy;
 
@@ -17,8 +20,9 @@ public class ConversationContainerGhidraProgramTest {
     void test() throws Exception {
         GhidraTestUtil util = new GhidraTestUtil();
         Program program = util.create_program();
+        GhidraUtil gu = new GhidraUtilImpl(program, TaskMonitor.DUMMY);
         ConversationContainerGhidraProgram container =
-                new ConversationContainerGhidraProgram(program);
+                new ConversationContainerGhidraProgram(program, gu);
         Conversation convo = new Conversation(ConversationType.USER_CHAT, new ModelDummy("Dummy", "dummy.py", true));
         container.add_convo(convo);
 
@@ -36,8 +40,9 @@ public class ConversationContainerGhidraProgramTest {
     void test_one() throws Exception {
         GhidraTestUtil util = new GhidraTestUtil();
         Program program = util.create_program();
+        GhidraUtil gu = new GhidraUtilImpl(program, TaskMonitor.DUMMY);
         ConversationContainerGhidraProgram container =
-                new ConversationContainerGhidraProgram(program);
+                new ConversationContainerGhidraProgram(program, gu);
         Conversation convo = new Conversation(ConversationType.SYSTEM_DECOM, new ModelDummy("Dummy", "dummy.py", true));
         convo.add_user_msg("user_msg");
         convo.add_assistant_msg("assistant_msg");
@@ -67,9 +72,9 @@ public class ConversationContainerGhidraProgramTest {
     void test_two() throws Exception {
         GhidraTestUtil util = new GhidraTestUtil();
         Program program = util.create_program();
+        GhidraUtil gu = new GhidraUtilImpl(program, TaskMonitor.DUMMY);
         ConversationContainerGhidraProgram container =
-                new ConversationContainerGhidraProgram(program);
-
+                new ConversationContainerGhidraProgram(program, gu);
         Conversation convo1 = new Conversation(ConversationType.SYSTEM_DECOM, new ModelDummy("Dummy", "dummy.py", true));
         convo1.add_user_msg("user_msg");
         convo1.add_assistant_msg("assistant_msg");

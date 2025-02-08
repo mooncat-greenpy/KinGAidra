@@ -102,8 +102,11 @@ public class RefactorGUI extends JPanel {
     private Refactor refactor;
     private JTabbedPane tabbed_panel;
 
-    public RefactorGUI(Refactor refactor) {
+    private Logger logger;
+
+    public RefactorGUI(Refactor refactor, Logger logger) {
         this.refactor = refactor;
+        this.logger = logger;
 
         setLayout(new BorderLayout());
 
@@ -136,11 +139,11 @@ public class RefactorGUI extends JPanel {
 
     public void add_tab(String tab_name, DecomDiff diff) {
         if (addr != null && addr != diff.get_addr()) {
-            Logger.append_message("Invalid address function added");
+            logger.append_message("Invalid address function added");
             return;
         }
         if (name != null && name != diff.get_name().get_var_name()) {
-            Logger.append_message("Invalid name function added");
+            logger.append_message("Invalid name function added");
             return;
         }
         addr = diff.get_addr();
@@ -188,13 +191,13 @@ public class RefactorGUI extends JPanel {
     public DecomDiff run_refact() {
         JScrollPane sp = (JScrollPane) tabbed_panel.getSelectedComponent();
         if (sp == null) {
-            Logger.append_message("Not selected");
+            logger.append_message("Not selected");
             reset();
             return null;
         }
         JTable t = (JTable) sp.getViewport().getView();
         if (t == null) {
-            Logger.append_message("Failed to get table");
+            logger.append_message("Failed to get table");
             reset();
             return null;
         }

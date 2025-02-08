@@ -34,12 +34,13 @@ import kingaidra.log.Logger;
 public class KinGAidraPlugin extends ProgramPlugin implements KinGAidraChatTaskService {
 
     private final String NAME = "KinGAidra";
-    MainProvider provider;
+    private MainProvider provider;
+    private Logger logger;
 
     public KinGAidraPlugin(PluginTool tool) {
         super(tool);
 
-        Logger.set_logger(tool, false);
+        logger = new Logger(tool, true);
 
         status_map = new HashMap<>();
         type_map = new HashMap<>();
@@ -53,7 +54,7 @@ public class KinGAidraPlugin extends ProgramPlugin implements KinGAidraChatTaskS
 
     @Override
     public void programOpened(Program program) {
-        provider = new MainProvider(program, this, NAME, this);
+        provider = new MainProvider(program, this, NAME, this, logger);
 
         String topicName = "kingaidra";
         String anchorName = "HelpAnchor";

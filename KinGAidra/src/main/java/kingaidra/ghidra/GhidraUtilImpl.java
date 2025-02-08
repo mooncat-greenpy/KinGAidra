@@ -56,7 +56,6 @@ import ghidra.util.exception.InvalidInputException;
 import ghidra.util.task.TaskMonitor;
 import kingaidra.decom.DecomDiff;
 import kingaidra.decom.DiffPair;
-import kingaidra.log.Logger;
 
 public class GhidraUtilImpl implements GhidraUtil {
     private Program program;
@@ -81,7 +80,6 @@ public class GhidraUtilImpl implements GhidraUtil {
             }
             return service.getCurrentLocation().getAddress();
         }
-        Logger.append_message("Failed to get selected address");
         return null;
     }
 
@@ -90,11 +88,7 @@ public class GhidraUtilImpl implements GhidraUtil {
     }
 
     public Function get_func(Address addr) {
-        Function func = program_listing.getFunctionContaining(addr);
-        if (func == null) {
-            Logger.append_message("Failed to get function");
-        }
-        return func;
+        return program_listing.getFunctionContaining(addr);
     }
 
     public List<Function> get_func(String name) {
@@ -308,11 +302,7 @@ public class GhidraUtilImpl implements GhidraUtil {
 
     private HighFunction get_high_func(Function func) {
         DecompileResults decom_result = get_decom_results(func);
-        HighFunction hfunc = decom_result.getHighFunction();
-        if (hfunc == null) {
-            Logger.append_message("Failed to get decompiled function");
-        }
-        return hfunc;
+        return decom_result.getHighFunction();
     }
 
     public String get_decom(Address addr) {
@@ -323,7 +313,6 @@ public class GhidraUtilImpl implements GhidraUtil {
         DecompileResults decom_result = get_decom_results(func);
         DecompiledFunction decom_func = decom_result.getDecompiledFunction();
         if (decom_func == null) {
-            Logger.append_message("Failed to get decompiled function");
             return null;
         }
         return decom_func.getC();
@@ -415,8 +404,6 @@ public class GhidraUtilImpl implements GhidraUtil {
     public boolean refact(DecomDiff diff) {
         Function func = get_func(diff.get_addr());
         if (func == null) {
-            Logger.append_message(
-                    String.format("Failed to find func %x", diff.get_addr().getOffset()));
             return false;
         }
 
@@ -425,8 +412,6 @@ public class GhidraUtilImpl implements GhidraUtil {
             try {
                 func.setName(diff.get_name().get_new_name(), SourceType.USER_DEFINED);
             } catch (DuplicateNameException | InvalidInputException e) {
-                Logger.append_message(String.format("Failed to rename func name \"%s\" to \"%s\"",
-                        diff.get_name().get_var_name(), diff.get_name().get_new_name()));
             }
 
             for (int i = func.getParameterCount() - 1; i >= 0 ; i--) {
@@ -437,9 +422,6 @@ public class GhidraUtilImpl implements GhidraUtil {
                     try {
                         param.setName(param_pair.get_new_name(), SourceType.USER_DEFINED);
                     } catch (DuplicateNameException | InvalidInputException e) {
-                        Logger.append_message(String.format(
-                                "Failed to rename param name \\\"%s\\\" to \\\"%s\\\"",
-                                param_pair.get_var_name(), param_pair.get_new_name()));
                     }
                 }
 
@@ -452,9 +434,6 @@ public class GhidraUtilImpl implements GhidraUtil {
                             param.setDataType(dt_l.get(0), SourceType.USER_DEFINED);
                         }
                     } catch (InvalidInputException e) {
-                        Logger.append_message(String.format(
-                                "Failed to retype param name \\\"%s\\\" to \\\"%s\\\"",
-                                datatype_pair.get_var_name(), datatype_pair.get_new_name()));
                     }
                 }
             }
@@ -467,7 +446,6 @@ public class GhidraUtilImpl implements GhidraUtil {
             for (DiffPair pair : reverse_vars) {
                 HighFunction high_func = get_high_func(func);
                 if (high_func == null) {
-                    Logger.append_message("Failed to get vars");
                     break;
                 }
                 HighSymbol sym = high_func.getLocalSymbolMap().getSymbol(pair.get_id());
@@ -502,9 +480,6 @@ public class GhidraUtilImpl implements GhidraUtil {
                     HighFunctionDBUtil.updateDBVariable(sym, new_name, new_dt,
                             SourceType.USER_DEFINED);
                 } catch (InvalidInputException | DuplicateNameException e) {
-                    Logger.append_message(
-                            String.format("Failed to rename var name \\\"%s\\\" to \\\"%s\\\"",
-                                    pair.get_var_name(), pair.get_new_name()));
                 }
             }
         } finally {
@@ -520,7 +495,6 @@ public class GhidraUtilImpl implements GhidraUtil {
         }
         DecompileResults decom_result = get_decom_results(func);
         if (decom_result == null) {
-            Logger.append_message("Failed to get decompiled result");
             return false;
         }
         ClangTokenGroup token_grp = decom_result.getCCodeMarkup();

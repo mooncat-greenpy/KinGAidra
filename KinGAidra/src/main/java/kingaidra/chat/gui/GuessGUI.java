@@ -24,10 +24,12 @@ import kingaidra.chat.Guess;
 import kingaidra.log.Logger;
 
 public class GuessGUI extends JPanel {
-    Guess guess;
+    private Guess guess;
+    private Logger logger;
 
-    public GuessGUI(Guess chat) {
+    public GuessGUI(Guess chat, Logger logger) {
         this.guess = chat;
+        this.logger = logger;
         setLayout(new BoxLayout(this, BoxLayout.Y_AXIS));
 
         DefaultTableModel table_model =
@@ -83,11 +85,11 @@ public class GuessGUI extends JPanel {
             public void actionPerformed(ActionEvent e) {
                 String name = JOptionPane.showInputDialog(null, "What is the Model name?");
                 if (chat.exist_model(name)) {
-                    Logger.append_message("Already exists");
+                    logger.append_message("Already exists");
                     return;
                 }
                 if (!name.matches("[a-zA-Z0-9]+")) {
-                    Logger.append_message("Only alphanumeric characters");
+                    logger.append_message("Only alphanumeric characters");
                     return;
                 }
                 chat.add_model(name, "none.py");
@@ -102,7 +104,7 @@ public class GuessGUI extends JPanel {
             public void actionPerformed(ActionEvent e) {
                 int row = table.getSelectedRow();
                 if (row == -1) {
-                    Logger.append_message("Not selected");
+                    logger.append_message("Not selected");
                     return;
                 }
                 String name = (String) table_model.getValueAt(row, 1);

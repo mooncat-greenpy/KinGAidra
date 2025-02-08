@@ -29,17 +29,15 @@ import ghidra.program.model.address.Address;
 import ghidra.program.model.listing.Data;
 import ghidra.program.model.listing.Function;
 import ghidra.program.model.listing.Program;
-import ghidra.util.task.TaskMonitor;
 import kingaidra.ai.Ai;
-import kingaidra.ai.convo.ConversationContainer;
 import kingaidra.ai.model.Model;
 import kingaidra.ai.model.ModelByScript;
 import kingaidra.ai.task.KinGAidraChatTaskService;
 import kingaidra.keyfunc.Guess;
+import kingaidra.log.Logger;
 import kingaidra.ghidra.ChatModelPreferences;
 import kingaidra.ghidra.GhidraPreferences;
 import kingaidra.ghidra.GhidraUtil;
-import kingaidra.ghidra.GhidraUtilImpl;
 import kingaidra.gui.MainProvider;
 import resources.ResourceManager;
 
@@ -48,8 +46,9 @@ public class KeyFuncGUI extends JPanel {
     private Program program;
     private PluginTool plugin;
     private KinGAidraChatTaskService srv;
-    private ConversationContainer container;
     private GhidraUtil ghidra;
+    private Ai ai;
+    private Logger logger;
 
     private DockingAction conf_action;
 
@@ -60,12 +59,14 @@ public class KeyFuncGUI extends JPanel {
     private boolean busy;
 
     public KeyFuncGUI(MainProvider provider, Tool dockingTool, Program program, Plugin plugin,
-            String owner, KinGAidraChatTaskService srv, ConversationContainer container) {
+            String owner, KinGAidraChatTaskService srv, GhidraUtil ghidra, Ai ai, Logger logger) {
         super();
         this.program = program;
         this.plugin = plugin.getTool();
         this.srv = srv;
-        this.container = container;
+        this.ghidra = ghidra;
+        this.ai = ai;
+        this.logger = logger;
         setLayout(new BorderLayout());
 
         init_panel();
@@ -75,8 +76,6 @@ public class KeyFuncGUI extends JPanel {
 
     private void init_panel() {
         GhidraPreferences<Model> pref = new ChatModelPreferences("keyfunc");
-        ghidra = new GhidraUtilImpl(program, TaskMonitor.DUMMY);
-        Ai ai = new Ai(plugin, program, ghidra, container, srv);
         Guess guess = new Guess(ghidra, ai, pref);
 
         Model chatgptlike_model =
@@ -86,7 +85,7 @@ public class KeyFuncGUI extends JPanel {
             guess.set_model_status(chatgptlike_model.get_name(), chatgptlike_model.get_active());
         }
 
-        ggui = new GuessGUI(guess);
+        ggui = new GuessGUI(guess, logger);
 
         guess_btn = new JButton("Guess");
         Dimension button_size = new Dimension(100, 30);

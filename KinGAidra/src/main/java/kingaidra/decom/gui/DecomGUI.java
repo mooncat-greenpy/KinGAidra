@@ -23,19 +23,16 @@ import ghidra.framework.plugintool.Plugin;
 import ghidra.framework.plugintool.PluginTool;
 import ghidra.program.model.address.Address;
 import ghidra.program.model.listing.Program;
-import ghidra.util.task.TaskMonitor;
 import kingaidra.decom.DecomDiff;
 import kingaidra.decom.Guess;
 import kingaidra.decom.Refactor;
 import kingaidra.ai.Ai;
-import kingaidra.ai.convo.ConversationContainer;
 import kingaidra.ai.model.Model;
 import kingaidra.ai.model.ModelByScript;
 import kingaidra.ai.task.KinGAidraChatTaskService;
 import kingaidra.ghidra.ChatModelPreferences;
 import kingaidra.ghidra.GhidraPreferences;
 import kingaidra.ghidra.GhidraUtil;
-import kingaidra.ghidra.GhidraUtilImpl;
 import kingaidra.gui.MainProvider;
 import kingaidra.log.Logger;
 import resources.ResourceManager;
@@ -51,20 +48,23 @@ public class DecomGUI extends JPanel {
     private Program program;
     private PluginTool plugin;
     private KinGAidraChatTaskService srv;
-    private ConversationContainer container;
     private GhidraUtil ghidra;
+    private Ai ai;
+    private Logger logger;
     private GuessGUI ggui;
     private RefactorGUI rgui;
 
     private boolean busy;
 
     public DecomGUI(MainProvider provider, Tool dockingTool, Program program, Plugin plugin,
-            String owner, KinGAidraChatTaskService srv, ConversationContainer container) {
+            String owner, KinGAidraChatTaskService srv, GhidraUtil ghidra, Ai ai, Logger logger) {
         super();
         this.program = program;
         this.plugin = plugin.getTool();
         this.srv = srv;
-        this.container = container;
+        this.ghidra = ghidra;
+        this.ai = ai;
+        this.logger = logger;
         check_and_set_busy(false);
         setLayout(new BoxLayout(this, BoxLayout.Y_AXIS));
 
@@ -75,8 +75,6 @@ public class DecomGUI extends JPanel {
 
     private void buildPanel() {
         GhidraPreferences<Model> pref = new ChatModelPreferences("refactor");
-        ghidra = new GhidraUtilImpl(program, TaskMonitor.DUMMY);
-        Ai ai = new Ai(plugin, program, ghidra, container, srv);
         Guess guess = new Guess(ghidra, ai, pref);
         Refactor refactor = new Refactor(ghidra, ai, new Function<String, String>() {
             @Override
@@ -99,8 +97,8 @@ public class DecomGUI extends JPanel {
             guess.set_model_status(chatgptlike_chat_model.get_name(), chatgptlike_chat_model.get_active());
         }
 
-        ggui = new GuessGUI(guess);
-        rgui = new RefactorGUI(refactor);
+        ggui = new GuessGUI(guess, logger);
+        rgui = new RefactorGUI(refactor, logger);
 
         JPanel btn_panel = new JPanel();
         JLabel info_label = new JLabel();
@@ -116,7 +114,7 @@ public class DecomGUI extends JPanel {
             @Override
             public void actionPerformed(ActionEvent e) {
                 if (!check_and_set_busy(true)) {
-                    Logger.append_message("Another process running");
+                    logger.append_message("Another process running");
                     return;
                 }
                 restart_btn.setEnabled(false);
@@ -142,7 +140,7 @@ public class DecomGUI extends JPanel {
             @Override
             public void actionPerformed(ActionEvent e) {
                 if (!check_and_set_busy(true)) {
-                    Logger.append_message("Another process running");
+                    logger.append_message("Another process running");
                     return;
                 }
                 restart_btn.setEnabled(false);
@@ -190,7 +188,7 @@ public class DecomGUI extends JPanel {
             @Override
             public void actionPerformed(ActionEvent e) {
                 if (!check_and_set_busy(true)) {
-                    Logger.append_message("Another process running");
+                    logger.append_message("Another process running");
                     return;
                 }
                 restart_btn.setEnabled(false);
@@ -227,7 +225,7 @@ public class DecomGUI extends JPanel {
                     var func = context.getProgram().getFunctionManager()
                             .getFunctionContaining(context.getAddress());
                     if (func == null) {
-                        Logger.append_message("Function not found");
+                        logger.append_message("Function not found");
                         return;
                     }
 

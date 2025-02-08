@@ -25,20 +25,23 @@ import ghidra.util.table.field.AddressBasedLocation;
 import ghidra.util.task.TaskMonitor;
 import kingaidra.ai.convo.Conversation;
 import kingaidra.ai.convo.ConversationContainer;
+import kingaidra.log.Logger;
 
 public class LogGUI extends JPanel {
 
-    ConversationContainer container;
-    ChatGUI chat_gui;
+    private ConversationContainer container;
+    private ChatGUI chat_gui;
+    private Logger logger;
 
     private GhidraTable convo_table;
     private ConversationTableModel convo_table_model;
     private GhidraThreadedTablePanel<Conversation> convo_threaded_table_panel;
     private GhidraTableFilterPanel<Conversation> convo_filter_panel;
 
-    public LogGUI(ConversationContainer container, ChatGUI chat, PluginTool tool, Program program) {
+    public LogGUI(ConversationContainer container, ChatGUI chat, PluginTool tool, Program program, Logger logger) {
         this.container = container;
         this.chat_gui = chat;
+        this.logger = logger;
 
         init_panel(tool, program, TaskMonitor.DUMMY);
         setVisible(true);

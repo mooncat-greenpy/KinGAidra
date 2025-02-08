@@ -24,7 +24,6 @@ import ghidra.program.model.listing.Program;
 import ghidra.util.task.TaskMonitor;
 import kingaidra.ai.model.Model;
 import kingaidra.ghidra.GhidraUtil;
-import kingaidra.ghidra.GhidraUtilImpl;
 
 public class ConversationContainerGhidraProgram implements ConversationContainer {
 
@@ -32,9 +31,9 @@ public class ConversationContainerGhidraProgram implements ConversationContainer
     private Program program;
     private GhidraUtil ghidra;
 
-    public ConversationContainerGhidraProgram(Program program) {
+    public ConversationContainerGhidraProgram(Program program, GhidraUtil ghidra) {
         this.program = program;
-        ghidra = new GhidraUtilImpl(program, TaskMonitor.DUMMY);
+        this.ghidra = ghidra;
     }
 
     private Table get_table(String name) {

@@ -6,16 +6,15 @@ import ghidra.app.services.ConsoleService;
 import ghidra.framework.plugintool.PluginTool;
 
 public class Logger {
-    static PluginTool tool = null;
-    static PrintWriter writer = null;
-    static boolean mode = false;
+    private PluginTool tool;
+    private PrintWriter writer;
+    private boolean mode;
 
-    private Logger(PluginTool t, boolean debugmode) {
-        tool = t;
-        mode = debugmode;
+    public Logger(PluginTool t, boolean debugmode) {
+        set_logger(t, debugmode);
     }
 
-    private static PrintWriter get_writer() {
+    private PrintWriter get_writer() {
         if (tool == null) {
             return null;
         }
@@ -26,11 +25,12 @@ public class Logger {
         return console.getStdOut();
     }
 
-    public static void set_logger(PluginTool tool, boolean debugmode) {
-        new Logger(tool, debugmode);
+    public void set_logger(PluginTool tool, boolean debugmode) {
+        this.tool = tool;
+        this.mode = debugmode;
     }
 
-    public static void append_message(String str) {
+    public void append_message(String str) {
         if (!mode) {
             return;
         }

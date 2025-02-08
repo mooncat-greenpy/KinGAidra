@@ -66,6 +66,7 @@ public class ModelByScript implements Model, Serializable {
         if (!active) {
             return null;
         }
+        Logger logger = new Logger(tool, true);
 
         Random rand = new Random();
         String key = String.format("%x", rand.nextLong());
@@ -75,12 +76,12 @@ public class ModelByScript implements Model, Serializable {
 
         ResourceFile file = GhidraScriptUtil.findScriptByName(script_file);
         if (file == null) {
-            Logger.append_message(String.format("Failed to get script \"%s\"", script_file));
+            logger.append_message(String.format("Failed to get script \"%s\"", script_file));
             return null;
         }
         GhidraScriptProvider provider = GhidraScriptUtil.getProvider(file);
         if (provider == null) {
-            Logger.append_message(String.format("Failed to get script \"%s\"", script_file));
+            logger.append_message(String.format("Failed to get script \"%s\"", script_file));
             return null;
         }
         PrintWriter writer;
@@ -99,7 +100,7 @@ public class ModelByScript implements Model, Serializable {
         try {
             script = provider.getScriptInstance(file, writer);
         } catch (Exception e) {
-            Logger.append_message(String.format("Failed to get script \"%s\"", script_file));
+            logger.append_message(String.format("Failed to get script \"%s\"", script_file));
             return null;
         }
         try {
@@ -109,7 +110,7 @@ public class ModelByScript implements Model, Serializable {
             String[] args = {key};
             script.runScript(script_file, args);
         } catch (Exception e) {
-            Logger.append_message(String.format("Failed to run script \"%s\"", script_file));
+            logger.append_message(String.format("Failed to run script \"%s\"", script_file));
             return null;
         }
 

@@ -31,7 +31,6 @@ import ghidra.framework.plugintool.Plugin;
 import ghidra.framework.plugintool.PluginTool;
 import ghidra.program.model.address.Address;
 import ghidra.program.model.listing.Program;
-import ghidra.util.task.TaskMonitor;
 import kingaidra.ai.Ai;
 import kingaidra.ai.convo.Conversation;
 import kingaidra.ai.convo.ConversationContainer;
@@ -41,7 +40,6 @@ import kingaidra.ai.task.KinGAidraChatTaskService;
 import kingaidra.chat.Guess;
 import kingaidra.ghidra.GhidraPreferences;
 import kingaidra.ghidra.GhidraUtil;
-import kingaidra.ghidra.GhidraUtilImpl;
 import kingaidra.gui.MainProvider;
 import kingaidra.ghidra.ChatModelPreferences;
 import kingaidra.log.Logger;
@@ -67,8 +65,10 @@ public class ChatGUI extends JPanel {
     private Program program;
     private PluginTool plugin;
     private KinGAidraChatTaskService srv;
-    private ConversationContainer container;
     private GhidraUtil ghidra;
+    private ConversationContainer container;
+    private Ai ai;
+    private Logger logger;
     private GuessGUI ggui;
     private LogGUI lgui;
     private Conversation cur_convo;
@@ -77,12 +77,15 @@ public class ChatGUI extends JPanel {
     private boolean add_comments_busy;
 
     public ChatGUI(MainProvider provider, Tool dockingTool, Program program, Plugin plugin,
-            String owner, KinGAidraChatTaskService srv, ConversationContainer container) {
+            String owner, KinGAidraChatTaskService srv, GhidraUtil ghidra, ConversationContainer container, Ai ai, Logger logger) {
         super();
         this.program = program;
         this.plugin = plugin.getTool();
         this.srv = srv;
+        this.ghidra = ghidra;
         this.container = container;
+        this.ai = ai;
+        this.logger = logger;
         check_and_set_busy(false);
         check_and_set_add_comments_busy(false);
         setLayout(new BoxLayout(this, BoxLayout.Y_AXIS));
@@ -150,8 +153,6 @@ public class ChatGUI extends JPanel {
 
     private void init_panel() {
         GhidraPreferences<Model> pref = new ChatModelPreferences("chat");
-        ghidra = new GhidraUtilImpl(program, TaskMonitor.DUMMY);
-        Ai ai = new Ai(plugin, program, ghidra, container, srv);
         Guess guess = new Guess(ai, pref);
 
         Model chatgptlike_model =
@@ -161,8 +162,8 @@ public class ChatGUI extends JPanel {
             guess.set_model_status(chatgptlike_model.get_name(), chatgptlike_model.get_active());
         }
 
-        ggui = new GuessGUI(guess);
-        lgui = new LogGUI(container, this, plugin, program);
+        ggui = new GuessGUI(guess, logger);
+        lgui = new LogGUI(container, this, plugin, program, logger);
 
         btn_panel = new JPanel();
         info_label = new JLabel();
@@ -209,7 +210,7 @@ public class ChatGUI extends JPanel {
                     var func = context.getProgram().getFunctionManager()
                             .getFunctionContaining(context.getAddress());
                     if (func == null) {
-                        Logger.append_message("Function not found");
+                        logger.append_message("Function not found");
                         return;
                     }
 
@@ -236,7 +237,7 @@ public class ChatGUI extends JPanel {
                     var func = context.getProgram().getFunctionManager()
                             .getFunctionContaining(context.getAddress());
                     if (func == null) {
-                        Logger.append_message("Function not found");
+                        logger.append_message("Function not found");
                         return;
                     }
 
@@ -286,12 +287,12 @@ public class ChatGUI extends JPanel {
                     var func = context.getProgram().getFunctionManager()
                             .getFunctionContaining(context.getAddress());
                     if (func == null) {
-                        Logger.append_message("Function not found");
+                        logger.append_message("Function not found");
                         return;
                     }
 
                     if (!check_and_set_add_comments_busy(true)) {
-                        Logger.append_message("Another process running");
+                        logger.append_message("Another process running");
                         return;
                     }
                     Thread th = new Thread(() -> {
@@ -360,7 +361,7 @@ public class ChatGUI extends JPanel {
 
     public void reset(Conversation convo) {
         if (!check_and_set_busy(true)) {
-            Logger.append_message("Another process running");
+            logger.append_message("Another process running");
             return;
         }
         restart_btn.setEnabled(false);
@@ -380,7 +381,7 @@ public class ChatGUI extends JPanel {
 
     public void guess(Address addr) {
         if (!check_and_set_busy(true)) {
-            Logger.append_message("Another process running");
+            logger.append_message("Another process running");
             return;
         }
         restart_btn.setEnabled(false);
