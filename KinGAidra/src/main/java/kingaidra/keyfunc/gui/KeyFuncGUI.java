@@ -96,6 +96,7 @@ public class KeyFuncGUI extends JPanel {
                 if (!check_and_set_busy(true)) {
                     return;
                 }
+                logger.append_message("Start: KeyFunc");
                 guess_btn.setEnabled(false);
                 Thread th = new Thread(() -> {
                     try {
@@ -105,6 +106,7 @@ public class KeyFuncGUI extends JPanel {
                         guess_btn.setEnabled(true);
 
                         check_and_set_busy(false);
+                        logger.append_message("Finish: KeyFunc");
                         validate();
                     }
                 });

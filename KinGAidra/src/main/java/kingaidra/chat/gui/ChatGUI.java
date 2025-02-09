@@ -295,6 +295,7 @@ public class ChatGUI extends JPanel {
                         logger.append_message("Another process running");
                         return;
                     }
+                    logger.append_message("Start: Add comments");
                     Thread th = new Thread(() -> {
                         try {
                             Address addr = ghidra.get_current_addr();
@@ -302,6 +303,7 @@ public class ChatGUI extends JPanel {
                             ghidra.add_comments(addr, comments);
                         } finally {
                             check_and_set_add_comments_busy(false);
+                            logger.append_message("Finish: Add comments");
                         }
                     });
                     th.start();

@@ -41,6 +41,6 @@ public class Logger {
                 return;
             }
         }
-        writer.append(str + "\n");
+        writer.append("[KinGAidra] " + str + "\n");
     }
 }
