@@ -81,6 +81,6 @@ Before using KinGAidra, configure the script with your LLM API details:
    - `MODEL`
    - `API_KEY`
 
-You can use the OpenAI API or similar APIs as the LLM API. For example, services like Groq or local LLMs can be used.
+You can use the OpenAI API or similar APIs as the LLM API. For example, services like Groq or local LLMs are also supported. To change the language of the LLM response, modify the `POST_MSG` variable.
 
 ![](./img/conf.png)
