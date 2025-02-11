@@ -68,7 +68,7 @@ public class DecomGUI extends JPanel {
     }
 
     public JPanel get_conf_panel() {
-        return ggui;
+        return ggui.get_model_conf_gui();
     }
 
     private void buildPanel() {
@@ -90,9 +90,9 @@ public class DecomGUI extends JPanel {
 
         Model chatgptlike_chat_model =
                 new ModelByScript("ChatGPTLike", "kingaidra_chat.py", true);
-        if (!guess.exist_model(chatgptlike_chat_model.get_name())) {
-            guess.add_model(chatgptlike_chat_model.get_name(), chatgptlike_chat_model.get_script());
-            guess.set_model_status(chatgptlike_chat_model.get_name(), chatgptlike_chat_model.get_active());
+        if (!guess.get_model_conf().exist_model(chatgptlike_chat_model.get_name())) {
+            guess.get_model_conf().add_model(chatgptlike_chat_model.get_name(), chatgptlike_chat_model.get_script());
+            guess.get_model_conf().set_model_status(chatgptlike_chat_model.get_name(), chatgptlike_chat_model.get_active());
         }
 
         ggui = new GuessGUI(guess, logger);

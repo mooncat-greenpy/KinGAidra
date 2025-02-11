@@ -10,6 +10,7 @@ import kingaidra.ai.convo.ConversationContainer;
 import kingaidra.ai.convo.ConversationContainerDummy;
 import kingaidra.ai.convo.ConversationType;
 import kingaidra.ai.model.Model;
+import kingaidra.ai.model.ModelConfSingle;
 import kingaidra.ghidra.GhidraPreferences;
 import kingaidra.ghidra.GhidraUtil;
 import kingaidra.ghidra.GhidraUtilImpl;
@@ -36,14 +37,15 @@ public class GuessTest {
         GhidraPreferences<Model> pref = new ChatModelPreferencesDummy();
         pref.store("Dummy", new ChatModelDummy("Dummy", "dummy.py", true));
         Guess guess = new Guess(ai, pref);
-        assertTrue(guess.exist_model("Dummy"));
-        assertFalse(guess.exist_model("Dummy1"));
-        assertEquals(guess.get_model_script("Dummy"), "dummy.py");
-        assertEquals(guess.get_models_len(), 1);
-        assertEquals(guess.get_models()[0], "Dummy");
-        assertEquals(guess.get_model_status(guess.get_models()[0]), true);
+        ModelConfSingle model_conf = guess.get_model_conf();
+        assertTrue(model_conf.exist_model("Dummy"));
+        assertFalse(model_conf.exist_model("Dummy1"));
+        assertEquals(model_conf.get_model_script("Dummy"), "dummy.py");
+        assertEquals(model_conf.get_models_len(), 1);
+        assertEquals(model_conf.get_models()[0], "Dummy");
+        assertEquals(model_conf.get_model_status(model_conf.get_models()[0]), true);
         // Not suppoort
-        // assertEquals(guess.get_model_status(new ChatModelDummy("Dummy", "dummy.py", true)),
+        // assertEquals(model_conf.get_model_status(new ChatModelDummy("Dummy", "dummy.py", true)),
         // false);
     }
 
@@ -57,11 +59,12 @@ public class GuessTest {
         GhidraPreferences<Model> pref = new ChatModelPreferencesDummy();
         pref.store("Dummy", new ChatModelDummy("Dummy", "dummy.py", true));
         Guess guess = new Guess(ai, pref);
-        guess.set_model_name("Dummy", "d");
-        guess.set_model_script("d", "d.py");
-        assertTrue(guess.exist_model("d"));
-        assertFalse(guess.exist_model("Dummy"));
-        assertEquals(guess.get_model_script("d"), "d.py");
+        ModelConfSingle model_conf = guess.get_model_conf();
+        model_conf.set_model_name("Dummy", "d");
+        model_conf.set_model_script("d", "d.py");
+        assertTrue(model_conf.exist_model("d"));
+        assertFalse(model_conf.exist_model("Dummy"));
+        assertEquals(model_conf.get_model_script("d"), "d.py");
     }
 
     @Test
@@ -76,26 +79,28 @@ public class GuessTest {
         pref1.store("Dummy2", new ChatModelDummy("Dummy2", "dummy.py", true));
         pref1.store("Dummy3", new ChatModelDummy("Dummy3", "dummy.py", true));
         Guess guess1 = new Guess(ai, pref1);
-        assertEquals(guess1.get_model_status("Dummy1"), true);
-        assertEquals(guess1.get_model_status("Dummy2"), false);
-        assertEquals(guess1.get_model_status("Dummy3"), false);
-        guess1.set_model_status("Dummy1", true);
-        assertEquals(guess1.get_model_status("Dummy1"), true);
-        assertEquals(guess1.get_model_status("Dummy2"), false);
-        assertEquals(guess1.get_model_status("Dummy3"), false);
-        guess1.set_model_status("Dummy1", false);
-        assertEquals(guess1.get_model_status("Dummy1"), true);
-        assertEquals(guess1.get_model_status("Dummy2"), false);
-        assertEquals(guess1.get_model_status("Dummy3"), false);
+        ModelConfSingle model_conf1 = guess1.get_model_conf();
+        assertEquals(model_conf1.get_model_status("Dummy1"), true);
+        assertEquals(model_conf1.get_model_status("Dummy2"), false);
+        assertEquals(model_conf1.get_model_status("Dummy3"), false);
+        model_conf1.set_model_status("Dummy1", true);
+        assertEquals(model_conf1.get_model_status("Dummy1"), true);
+        assertEquals(model_conf1.get_model_status("Dummy2"), false);
+        assertEquals(model_conf1.get_model_status("Dummy3"), false);
+        model_conf1.set_model_status("Dummy1", false);
+        assertEquals(model_conf1.get_model_status("Dummy1"), true);
+        assertEquals(model_conf1.get_model_status("Dummy2"), false);
+        assertEquals(model_conf1.get_model_status("Dummy3"), false);
 
         GhidraPreferences<Model> pref2 = new ChatModelPreferencesDummy();
         pref2.store("Dummy1", new ChatModelDummy("Dummy1", "dummy.py", false));
         pref2.store("Dummy2", new ChatModelDummy("Dummy2", "dummy.py", false));
         pref2.store("Dummy3", new ChatModelDummy("Dummy3", "dummy.py", false));
         Guess guess2 = new Guess(ai, pref2);
-        assertEquals(guess2.get_model_status("Dummy1"), true);
-        assertEquals(guess2.get_model_status("Dummy2"), false);
-        assertEquals(guess2.get_model_status("Dummy3"), false);
+        ModelConfSingle model_conf2 = guess2.get_model_conf();
+        assertEquals(model_conf2.get_model_status("Dummy1"), true);
+        assertEquals(model_conf2.get_model_status("Dummy2"), false);
+        assertEquals(model_conf2.get_model_status("Dummy3"), false);
     }
 
     @Test

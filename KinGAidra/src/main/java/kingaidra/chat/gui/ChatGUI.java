@@ -95,7 +95,7 @@ public class ChatGUI extends JPanel {
     }
 
     public JPanel get_conf_panel() {
-        return ggui;
+        return ggui.get_model_conf_gui();
     }
 
     private String convert_md_to_html(String markdown) {
@@ -160,9 +160,9 @@ public class ChatGUI extends JPanel {
 
         Model chatgptlike_model =
                 new ModelByScript("ChatGPTLike", "kingaidra_chat.py", true);
-        if (!guess.exist_model(chatgptlike_model.get_name())) {
-            guess.add_model(chatgptlike_model.get_name(), chatgptlike_model.get_script());
-            guess.set_model_status(chatgptlike_model.get_name(), chatgptlike_model.get_active());
+        if (!guess.get_model_conf().exist_model(chatgptlike_model.get_name())) {
+            guess.get_model_conf().add_model(chatgptlike_model.get_name(), chatgptlike_model.get_script());
+            guess.get_model_conf().set_model_status(chatgptlike_model.get_name(), chatgptlike_model.get_active());
         }
 
         ggui = new GuessGUI(guess, logger);

@@ -10,6 +10,7 @@ import kingaidra.ai.convo.ConversationContainer;
 import kingaidra.ai.convo.ConversationContainerDummy;
 import kingaidra.ai.convo.ConversationType;
 import kingaidra.ai.model.Model;
+import kingaidra.ai.model.ModelConfMultiple;
 import kingaidra.ghidra.GhidraPreferences;
 import kingaidra.ghidra.GhidraUtil;
 import kingaidra.ghidra.GhidraUtilImpl;
@@ -32,14 +33,15 @@ public class GuessTest {
         GhidraPreferences<Model> pref = new ChatModelPreferencesDummy();
         pref.store("Dummy", new ModelDummy("Dummy", "dummy.py", true));
         Guess guess = new Guess(gu, ai, pref);
-        assertTrue(guess.exist_model("Dummy"));
-        assertFalse(guess.exist_model("Dummy1"));
-        assertEquals(guess.get_model_script("Dummy"), "dummy.py");
-        assertEquals(guess.get_models_len(), 1);
-        assertEquals(guess.get_models()[0], "Dummy");
-        assertEquals(guess.get_model_status(guess.get_models()[0]), true);
+        ModelConfMultiple model_conf = guess.get_model_conf();
+        assertTrue(model_conf.exist_model("Dummy"));
+        assertFalse(model_conf.exist_model("Dummy1"));
+        assertEquals(model_conf.get_model_script("Dummy"), "dummy.py");
+        assertEquals(model_conf.get_models_len(), 1);
+        assertEquals(model_conf.get_models()[0], "Dummy");
+        assertEquals(model_conf.get_model_status(model_conf.get_models()[0]), true);
         // Not suppoort
-        // assertEquals(guess.get_model_status(new ModelDummy("Dummy", "dummy.py", true)), false);
+        // assertEquals(model_conf.get_model_status(new ModelDummy("Dummy", "dummy.py", true)), false);
     }
 
     @Test
@@ -52,11 +54,12 @@ public class GuessTest {
         GhidraPreferences<Model> pref = new ChatModelPreferencesDummy();
         pref.store("Dummy", new ModelDummy("Dummy", "dummy.py", true));
         Guess guess = new Guess(gu, ai, pref);
-        guess.set_model_name("Dummy", "d");
-        guess.set_model_script("d", "d.py");
-        assertTrue(guess.exist_model("d"));
-        assertFalse(guess.exist_model("Dummy"));
-        assertEquals(guess.get_model_script("d"), "d.py");
+        ModelConfMultiple model_conf = guess.get_model_conf();
+        model_conf.set_model_name("Dummy", "d");
+        model_conf.set_model_script("d", "d.py");
+        assertTrue(model_conf.exist_model("d"));
+        assertFalse(model_conf.exist_model("Dummy"));
+        assertEquals(model_conf.get_model_script("d"), "d.py");
     }
 
     @Test
@@ -69,10 +72,11 @@ public class GuessTest {
         GhidraPreferences<Model> pref = new ChatModelPreferencesDummy();
         pref.store("Dummy", new ModelDummy("Dummy", "dummy.py", true));
         Guess guess = new Guess(gu, ai, pref);
-        guess.set_model_status(guess.get_models()[0], false);
-        assertEquals(guess.get_model_status(guess.get_models()[0]), false);
-        guess.set_model_status(guess.get_models()[0], true);
-        assertEquals(guess.get_model_status(guess.get_models()[0]), true);
+        ModelConfMultiple model_conf = guess.get_model_conf();
+        model_conf.set_model_status(model_conf.get_models()[0], false);
+        assertEquals(model_conf.get_model_status(model_conf.get_models()[0]), false);
+        model_conf.set_model_status(model_conf.get_models()[0], true);
+        assertEquals(model_conf.get_model_status(model_conf.get_models()[0]), true);
     }
 
     @Test
@@ -85,7 +89,7 @@ public class GuessTest {
         GhidraPreferences<Model> pref = new ChatModelPreferencesDummy();
         pref.store("Dummy", new ModelDummy("Dummy", "dummy.py", true));
         Guess guess = new Guess(gu, ai, pref);
-        DecomDiff diff = guess.guess(guess.get_models()[0], util.get_addr(program, 0x402000));
+        DecomDiff diff = guess.guess(guess.get_model_conf().get_models()[0], util.get_addr(program, 0x402000));
         assertEquals(diff.get_name().get_new_name(), "func_402000Dummy");
         for (DiffPair pair : diff.get_params()) {
             assertEquals(pair.get_new_name().substring(pair.get_new_name().length() - 5), "Dummy");
@@ -152,7 +156,7 @@ public class GuessTest {
         pref.store("Dummy1", new ModelDummy("Dummy1", "dummy.py", true));
         pref.store("Dummy2", new ModelDummy("Dummy2", "dummy.py", true));
         Guess guess = new Guess(gu, ai, pref);
-        guess.set_model_status(guess.get_models()[1], false);
+        guess.get_model_conf().set_model_status(guess.get_model_conf().get_models()[1], false);
         DecomDiff[] diffs = guess.guess_selected(util.get_addr(program, 0x402000));
         assertEquals(diffs.length, 1);
         DecomDiff diff = diffs[0];
