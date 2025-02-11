@@ -2,6 +2,9 @@ package kingaidra.gui;
 
 import javax.swing.*;
 
+import docking.ActionContext;
+import docking.action.DockingAction;
+import docking.action.ToolBarData;
 import docking.ComponentProvider;
 import ghidra.framework.plugintool.Plugin;
 import ghidra.program.model.listing.Program;
@@ -16,6 +19,7 @@ import kingaidra.ghidra.GhidraUtil;
 import kingaidra.ghidra.GhidraUtilImpl;
 import kingaidra.keyfunc.gui.KeyFuncGUI;
 import kingaidra.log.Logger;
+import resources.Icons;
 
 public class MainProvider extends ComponentProvider {
 
@@ -67,6 +71,30 @@ public class MainProvider extends ComponentProvider {
         if (chat_panel != null) {
             chat_panel.initActions(this, dockingTool);
         }
+
+        DockingAction conf_action = new DockingAction("Configure", this.getName()) {
+            @Override
+            public void actionPerformed(ActionContext context) {
+                JPanel p = new JPanel();
+                p.setLayout(new BoxLayout(p, BoxLayout.X_AXIS));
+
+                JPanel chat_conf = chat_panel.get_conf_panel();
+                chat_conf.setBorder(BorderFactory.createTitledBorder("Chat"));
+                p.add(chat_conf);
+                JPanel decom_conf = decom_panel.get_conf_panel();
+                decom_conf.setBorder(BorderFactory.createTitledBorder("Decom"));
+                p.add(decom_conf);
+                JPanel keyfunc_conf = keyfunc_panel.get_conf_panel();
+                keyfunc_conf.setBorder(BorderFactory.createTitledBorder("KeyFunc"));
+                p.add(keyfunc_conf);
+
+                JOptionPane.showMessageDialog(null, p, "Configure", JOptionPane.PLAIN_MESSAGE);
+            }
+        };
+        conf_action.setToolBarData(new ToolBarData(Icons.CONFIGURE_FILTER_ICON, null));
+        conf_action.setEnabled(true);
+        conf_action.markHelpUnnecessary();
+        dockingTool.addLocalAction(this, conf_action);
     }
 
     @Override

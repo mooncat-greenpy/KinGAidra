@@ -13,10 +13,7 @@ import javax.swing.JPanel;
 import javax.swing.JScrollPane;
 import javax.swing.JTextArea;
 
-import docking.ActionContext;
 import docking.Tool;
-import docking.action.DockingAction;
-import docking.action.ToolBarData;
 import docking.action.builder.ActionBuilder;
 import ghidra.app.context.ProgramLocationActionContext;
 import ghidra.framework.plugintool.Plugin;
@@ -35,15 +32,12 @@ import kingaidra.ghidra.GhidraPreferences;
 import kingaidra.ghidra.GhidraUtil;
 import kingaidra.gui.MainProvider;
 import kingaidra.log.Logger;
-import resources.ResourceManager;
 
 public class DecomGUI extends JPanel {
 
     private JButton restart_btn;
     private JButton guess_btn;
     private JButton refact_btn;
-
-    private DockingAction conf_action;
 
     private Program program;
     private PluginTool plugin;
@@ -71,6 +65,10 @@ public class DecomGUI extends JPanel {
         buildPanel();
 
         setVisible(true);
+    }
+
+    public JPanel get_conf_panel() {
+        return ggui;
     }
 
     private void buildPanel() {
@@ -236,23 +234,6 @@ public class DecomGUI extends JPanel {
                     guess_btn.doClick();
                 }).popupMenuPath(new String[] {"Refactoring using AI"}).popupMenuGroup("KinGAidra")
                 .buildAndInstall(plugin);
-
-        conf_action = new DockingAction("DecomConfigure", provider.getName()) {
-            @Override
-            public void actionPerformed(ActionContext context) {
-                JPanel p = new JPanel();
-                if (ggui != null) {
-                    p.add(ggui);
-                }
-
-                JOptionPane.showMessageDialog(null, p, "DecomConfigure", JOptionPane.PLAIN_MESSAGE);
-            }
-        };
-
-        conf_action.setToolBarData(new ToolBarData(ResourceManager.loadImage("images/decom_conf.png"), null));
-        conf_action.setEnabled(true);
-        conf_action.markHelpUnnecessary();
-        dockingTool.addLocalAction(provider, conf_action);
     }
 
     synchronized private boolean check_and_set_busy(boolean v) {

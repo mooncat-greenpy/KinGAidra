@@ -19,9 +19,6 @@ import javax.swing.JTable;
 import javax.swing.JTextField;
 import javax.swing.table.DefaultTableModel;
 
-import docking.ActionContext;
-import docking.action.DockingAction;
-import docking.action.ToolBarData;
 import docking.Tool;
 import ghidra.framework.plugintool.Plugin;
 import ghidra.framework.plugintool.PluginTool;
@@ -39,7 +36,6 @@ import kingaidra.ghidra.ChatModelPreferences;
 import kingaidra.ghidra.GhidraPreferences;
 import kingaidra.ghidra.GhidraUtil;
 import kingaidra.gui.MainProvider;
-import resources.ResourceManager;
 
 public class KeyFuncGUI extends JPanel {
 
@@ -49,8 +45,6 @@ public class KeyFuncGUI extends JPanel {
     private GhidraUtil ghidra;
     private Ai ai;
     private Logger logger;
-
-    private DockingAction conf_action;
 
     private JButton guess_btn;
     private GuessGUI ggui;
@@ -72,6 +66,10 @@ public class KeyFuncGUI extends JPanel {
         init_panel();
 
         setVisible(true);
+    }
+
+    public JPanel get_conf_panel() {
+        return ggui;
     }
 
     private void init_panel() {
@@ -133,21 +131,5 @@ public class KeyFuncGUI extends JPanel {
     }
 
     public void initActions(MainProvider provider, Tool dockingTool) {
-        conf_action = new DockingAction("KeyFuncConfigure", provider.getName()) {
-            @Override
-            public void actionPerformed(ActionContext context) {
-                JPanel p = new JPanel();
-                if (ggui != null) {
-                    p.add(ggui);
-                }
-
-                JOptionPane.showMessageDialog(null, p, "KeyFuncConfigure", JOptionPane.PLAIN_MESSAGE);
-            }
-        };
-
-        conf_action.setToolBarData(new ToolBarData(ResourceManager.loadImage("images/keyfunc_conf.png"), null));
-        conf_action.setEnabled(true);
-        conf_action.markHelpUnnecessary();
-        dockingTool.addLocalAction(provider, conf_action);
     }
 }

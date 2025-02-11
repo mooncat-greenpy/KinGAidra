@@ -59,7 +59,6 @@ public class ChatGUI extends JPanel {
     private JPanel btn_panel;
     private JCheckBox md_chk;
 
-    private DockingAction conf_action;
     private DockingAction log_action;
 
     private Program program;
@@ -93,6 +92,10 @@ public class ChatGUI extends JPanel {
         init_panel();
 
         setVisible(true);
+    }
+
+    public JPanel get_conf_panel() {
+        return ggui;
     }
 
     private String convert_md_to_html(String markdown) {
@@ -310,22 +313,6 @@ public class ChatGUI extends JPanel {
                 }).popupMenuPath(new String[] {"Add comments using AI"}).popupMenuGroup("KinGAidra")
                 .buildAndInstall(plugin);
 
-
-        conf_action = new DockingAction("ChatConfigure", provider.getName()) {
-            @Override
-            public void actionPerformed(ActionContext context) {
-                JPanel p = new JPanel();
-                if (ggui != null) {
-                    p.add(ggui);
-                }
-
-                JOptionPane.showMessageDialog(null, p, "ChatConfigure", JOptionPane.PLAIN_MESSAGE);
-            }
-        };
-        conf_action.setToolBarData(new ToolBarData(ResourceManager.loadImage("images/chat_conf.png"), null));
-        conf_action.setEnabled(true);
-        conf_action.markHelpUnnecessary();
-        dockingTool.addLocalAction(provider, conf_action);
 
         log_action = new DockingAction("ChatLog", provider.getName()) {
             @Override
