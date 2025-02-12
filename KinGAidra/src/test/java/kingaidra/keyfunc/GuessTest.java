@@ -35,8 +35,8 @@ public class GuessTest {
         Ai ai = new Ai(null, program, gu, container, null);
         GhidraPreferences<Model> pref = new ChatModelPreferencesDummy();
         pref.store("Dummy", new ModelDummy("Dummy", "dummy.py", true));
-        Guess guess = new Guess(gu, ai, pref);
-        ModelConfSingle model_conf = guess.get_model_conf();
+        ModelConfSingle model_conf = new ModelConfSingle("keyfunc", pref);
+        Guess guess = new Guess(gu, ai, model_conf);
         assertTrue(model_conf.exist_model("Dummy"));
         assertFalse(model_conf.exist_model("Dummy1"));
         assertEquals(model_conf.get_model_script("Dummy"), "dummy.py");
@@ -56,8 +56,8 @@ public class GuessTest {
         Ai ai = new Ai(null, program, gu, container, null);
         GhidraPreferences<Model> pref = new ChatModelPreferencesDummy();
         pref.store("Dummy", new ModelDummy("Dummy", "dummy.py", true));
-        Guess guess = new Guess(gu, ai, pref);
-        ModelConfSingle model_conf = guess.get_model_conf();
+        ModelConfSingle model_conf = new ModelConfSingle("keyfunc", pref);
+        Guess guess = new Guess(gu, ai, model_conf);
         model_conf.set_model_name("Dummy", "d");
         model_conf.set_model_script("d", "d.py");
         assertTrue(model_conf.exist_model("d"));
@@ -76,8 +76,8 @@ public class GuessTest {
         pref1.store("Dummy1", new ModelDummy("Dummy1", "dummy.py", true));
         pref1.store("Dummy2", new ModelDummy("Dummy2", "dummy.py", true));
         pref1.store("Dummy3", new ModelDummy("Dummy3", "dummy.py", true));
-        Guess guess1 = new Guess(gu, ai, pref1);
-        ModelConfSingle model_conf1 = guess1.get_model_conf();
+        ModelConfSingle model_conf1 = new ModelConfSingle("keyfunc", pref1);
+        Guess guess1 = new Guess(gu, ai, model_conf1);
         assertEquals(model_conf1.get_model_status("Dummy1"), true);
         assertEquals(model_conf1.get_model_status("Dummy2"), false);
         assertEquals(model_conf1.get_model_status("Dummy3"), false);
@@ -94,8 +94,8 @@ public class GuessTest {
         pref2.store("Dummy1", new ModelDummy("Dummy1", "dummy.py", false));
         pref2.store("Dummy2", new ModelDummy("Dummy2", "dummy.py", false));
         pref2.store("Dummy3", new ModelDummy("Dummy3", "dummy.py", false));
-        Guess guess2 = new Guess(gu, ai, pref2);
-        ModelConfSingle model_conf2 = guess2.get_model_conf();
+        ModelConfSingle model_conf2 = new ModelConfSingle("keyfunc", pref2);
+        Guess guess2 = new Guess(gu, ai, model_conf2);
         assertEquals(model_conf2.get_model_status("Dummy1"), true);
         assertEquals(model_conf2.get_model_status("Dummy2"), false);
         assertEquals(model_conf2.get_model_status("Dummy3"), false);
@@ -112,7 +112,8 @@ public class GuessTest {
         pref.store("Dummy1", new ModelDummy("Dummy1", "dummy.py", false));
         pref.store("Dummy2", new ModelDummy("Dummy2", "dummy.py", true));
         pref.store("Dummy3", new ModelDummy("Dummy3", "dummy.py", false));
-        Guess guess = new Guess(gu, ai, pref);
+        ModelConfSingle model_conf = new ModelConfSingle("keyfunc", pref);
+        Guess guess = new Guess(gu, ai, model_conf);
         Function[] funcs = guess.guess("- func_404000\n" +
                                 "    - func_403000\n" +
                                 "        - func_401000\n" +
@@ -146,7 +147,8 @@ public class GuessTest {
         pref.store("Dummy1", new ModelDummy("Dummy1", "dummy.py", false));
         pref.store("Dummy2", new ModelDummy("Dummy2", "dummy.py", true));
         pref.store("Dummy3", new ModelDummy("Dummy3", "dummy.py", false));
-        Guess guess = new Guess(gu, ai, pref);
+        ModelConfSingle model_conf = new ModelConfSingle("keyfunc", pref);
+        Guess guess = new Guess(gu, ai, model_conf);
         String[] strings = guess.guess_by_strings();
         assertEquals(strings.length, 4);
         assertEquals(strings[0], "string1");

@@ -6,10 +6,16 @@ import kingaidra.ai.model.Model;
 import kingaidra.ghidra.GhidraPreferences;
 
 public class ModelConfMultiple implements ModelConf {
+    private String name;
     private GhidraPreferences<Model> pref;
 
-    public ModelConfMultiple(GhidraPreferences<Model> pref) {
+    public ModelConfMultiple(String name, GhidraPreferences<Model> pref) {
+        this.name = name;
         this.pref = pref;
+    }
+
+    public String get_name() {
+        return name;
     }
 
     public Model get_model(String name) {
@@ -76,7 +82,7 @@ public class ModelConfMultiple implements ModelConf {
     }
 
     public void add_model(String name, String script_file) {
-        Model m = new ModelByScript(name, script_file, true);
+        Model m = new ModelByScript(name, script_file, false);
         pref.store(name, m);
     }
 

@@ -26,9 +26,8 @@ import kingaidra.decom.Refactor;
 import kingaidra.ai.Ai;
 import kingaidra.ai.model.Model;
 import kingaidra.ai.model.ModelByScript;
+import kingaidra.ai.model.ModelConf;
 import kingaidra.ai.task.KinGAidraChatTaskService;
-import kingaidra.ghidra.ChatModelPreferences;
-import kingaidra.ghidra.GhidraPreferences;
 import kingaidra.ghidra.GhidraUtil;
 import kingaidra.gui.MainProvider;
 import kingaidra.log.Logger;
@@ -43,6 +42,7 @@ public class DecomGUI extends JPanel {
     private PluginTool plugin;
     private KinGAidraChatTaskService srv;
     private GhidraUtil ghidra;
+    private ModelConf conf;
     private Ai ai;
     private Logger logger;
     private GuessGUI ggui;
@@ -51,12 +51,13 @@ public class DecomGUI extends JPanel {
     private boolean busy;
 
     public DecomGUI(MainProvider provider, Tool dockingTool, Program program, Plugin plugin,
-            String owner, KinGAidraChatTaskService srv, GhidraUtil ghidra, Ai ai, Logger logger) {
+            String owner, KinGAidraChatTaskService srv, GhidraUtil ghidra, ModelConf conf, Ai ai, Logger logger) {
         super();
         this.program = program;
         this.plugin = plugin.getTool();
         this.srv = srv;
         this.ghidra = ghidra;
+        this.conf = conf;
         this.ai = ai;
         this.logger = logger;
         check_and_set_busy(false);
@@ -67,13 +68,8 @@ public class DecomGUI extends JPanel {
         setVisible(true);
     }
 
-    public JPanel get_conf_panel() {
-        return ggui.get_model_conf_gui();
-    }
-
     private void buildPanel() {
-        GhidraPreferences<Model> pref = new ChatModelPreferences("refactor");
-        Guess guess = new Guess(ghidra, ai, pref);
+        Guess guess = new Guess(ghidra, ai, conf);
         Refactor refactor = new Refactor(ghidra, ai, new Function<String, String>() {
             @Override
             public String apply(String msg) {

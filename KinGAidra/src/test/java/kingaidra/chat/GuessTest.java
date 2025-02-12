@@ -36,8 +36,8 @@ public class GuessTest {
         Ai ai = new Ai(null, program, gu, container, null);
         GhidraPreferences<Model> pref = new ChatModelPreferencesDummy();
         pref.store("Dummy", new ChatModelDummy("Dummy", "dummy.py", true));
-        Guess guess = new Guess(ai, pref);
-        ModelConfSingle model_conf = guess.get_model_conf();
+        ModelConfSingle model_conf = new ModelConfSingle("chat", pref);
+        Guess guess = new Guess(ai, model_conf);
         assertTrue(model_conf.exist_model("Dummy"));
         assertFalse(model_conf.exist_model("Dummy1"));
         assertEquals(model_conf.get_model_script("Dummy"), "dummy.py");
@@ -58,8 +58,8 @@ public class GuessTest {
         Ai ai = new Ai(null, program, gu, container, null);
         GhidraPreferences<Model> pref = new ChatModelPreferencesDummy();
         pref.store("Dummy", new ChatModelDummy("Dummy", "dummy.py", true));
-        Guess guess = new Guess(ai, pref);
-        ModelConfSingle model_conf = guess.get_model_conf();
+        ModelConfSingle model_conf = new ModelConfSingle("chat", pref);
+        Guess guess = new Guess(ai, model_conf);
         model_conf.set_model_name("Dummy", "d");
         model_conf.set_model_script("d", "d.py");
         assertTrue(model_conf.exist_model("d"));
@@ -78,8 +78,8 @@ public class GuessTest {
         pref1.store("Dummy1", new ChatModelDummy("Dummy1", "dummy.py", true));
         pref1.store("Dummy2", new ChatModelDummy("Dummy2", "dummy.py", true));
         pref1.store("Dummy3", new ChatModelDummy("Dummy3", "dummy.py", true));
-        Guess guess1 = new Guess(ai, pref1);
-        ModelConfSingle model_conf1 = guess1.get_model_conf();
+        ModelConfSingle model_conf1 = new ModelConfSingle("chat", pref1);
+        Guess guess1 = new Guess(ai, model_conf1);
         assertEquals(model_conf1.get_model_status("Dummy1"), true);
         assertEquals(model_conf1.get_model_status("Dummy2"), false);
         assertEquals(model_conf1.get_model_status("Dummy3"), false);
@@ -96,8 +96,8 @@ public class GuessTest {
         pref2.store("Dummy1", new ChatModelDummy("Dummy1", "dummy.py", false));
         pref2.store("Dummy2", new ChatModelDummy("Dummy2", "dummy.py", false));
         pref2.store("Dummy3", new ChatModelDummy("Dummy3", "dummy.py", false));
-        Guess guess2 = new Guess(ai, pref2);
-        ModelConfSingle model_conf2 = guess2.get_model_conf();
+        ModelConfSingle model_conf2 = new ModelConfSingle("chat", pref2);
+        Guess guess2 = new Guess(ai, model_conf2);
         assertEquals(model_conf2.get_model_status("Dummy1"), true);
         assertEquals(model_conf2.get_model_status("Dummy2"), false);
         assertEquals(model_conf2.get_model_status("Dummy3"), false);
@@ -114,7 +114,8 @@ public class GuessTest {
         pref.store("Dummy1", new ChatModelDummy("Dummy1", "dummy.py", false));
         pref.store("Dummy2", new ChatModelDummy("Dummy2", "dummy.py", true));
         pref.store("Dummy3", new ChatModelDummy("Dummy3", "dummy.py", false));
-        Guess guess = new Guess(ai, pref);
+        ModelConfSingle model_conf = new ModelConfSingle("chat", pref);
+        Guess guess = new Guess(ai, model_conf);
         Conversation convo1 = guess.guess("msg", util.get_addr(program, 0x402000));
         assertEquals(convo1.get_type(), ConversationType.USER_CHAT);
         assertEquals(convo1.get_msgs_len(), 2);
@@ -167,7 +168,8 @@ public class GuessTest {
         pref.store("Dummy1", new ModelDummy("Dummy1", "dummy.py", false));
         pref.store("Dummy2", new ModelDummy("Dummy2", "dummy.py", true));
         pref.store("Dummy3", new ModelDummy("Dummy3", "dummy.py", false));
-        Guess guess = new Guess(ai, pref);
+        ModelConfSingle model_conf = new ModelConfSingle("chat", pref);
+        Guess guess = new Guess(ai, model_conf);
         List<Map.Entry<String, String>> comments = guess.guess_src_code_comments(util.get_addr(program, 0x402000));
         assertEquals(comments.size(), 4);
         assertEquals(comments.get(0).getKey(), "piVar1 = (int *)(unaff_EBX + -0x3f7bfe3f);");

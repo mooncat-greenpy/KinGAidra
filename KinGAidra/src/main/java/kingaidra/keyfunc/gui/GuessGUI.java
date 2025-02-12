@@ -16,8 +16,6 @@ import javax.swing.event.TableModelEvent;
 import javax.swing.event.TableModelListener;
 import javax.swing.table.DefaultTableModel;
 
-import kingaidra.ai.model.ModelConfSingle;
-import kingaidra.gui.ModelConfGUI;
 import kingaidra.keyfunc.Guess;
 import kingaidra.log.Logger;
 
@@ -27,20 +25,10 @@ public class GuessGUI extends JPanel {
     private Guess guess;
     private Logger logger;
 
-    private ModelConfGUI model_conf_gui;
-
     public GuessGUI(Guess guess, Logger logger) {
         this.guess = guess;
         this.logger = logger;
         setLayout(new BoxLayout(this, BoxLayout.Y_AXIS));
-
-        ModelConfSingle model_conf = guess.get_model_conf();
-
-        model_conf_gui = new ModelConfGUI(model_conf, logger);
-    }
-
-    public ModelConfGUI get_model_conf_gui() {
-        return model_conf_gui;
     }
 
     public Function[] run_guess(String call_tree) {

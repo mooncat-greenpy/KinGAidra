@@ -29,6 +29,7 @@ import ghidra.program.model.listing.Program;
 import kingaidra.ai.Ai;
 import kingaidra.ai.model.Model;
 import kingaidra.ai.model.ModelByScript;
+import kingaidra.ai.model.ModelConf;
 import kingaidra.ai.task.KinGAidraChatTaskService;
 import kingaidra.keyfunc.Guess;
 import kingaidra.log.Logger;
@@ -43,6 +44,7 @@ public class KeyFuncGUI extends JPanel {
     private PluginTool plugin;
     private KinGAidraChatTaskService srv;
     private GhidraUtil ghidra;
+    private ModelConf conf;
     private Ai ai;
     private Logger logger;
 
@@ -53,12 +55,13 @@ public class KeyFuncGUI extends JPanel {
     private boolean busy;
 
     public KeyFuncGUI(MainProvider provider, Tool dockingTool, Program program, Plugin plugin,
-            String owner, KinGAidraChatTaskService srv, GhidraUtil ghidra, Ai ai, Logger logger) {
+            String owner, KinGAidraChatTaskService srv, GhidraUtil ghidra, ModelConf conf, Ai ai, Logger logger) {
         super();
         this.program = program;
         this.plugin = plugin.getTool();
         this.srv = srv;
         this.ghidra = ghidra;
+        this.conf = conf;
         this.ai = ai;
         this.logger = logger;
         setLayout(new BorderLayout());
@@ -68,13 +71,10 @@ public class KeyFuncGUI extends JPanel {
         setVisible(true);
     }
 
-    public JPanel get_conf_panel() {
-        return ggui.get_model_conf_gui();
-    }
-
     private void init_panel() {
-        GhidraPreferences<Model> pref = new ChatModelPreferences("keyfunc");
-        Guess guess = new Guess(ghidra, ai, pref);
+        GhidraPreferences<Model> old_pref = new ChatModelPreferences("keyfunc");
+        old_pref.remove_all();
+        Guess guess = new Guess(ghidra, ai, conf);
 
         Model chatgptlike_model =
                 new ModelByScript("ChatGPTLike", "kingaidra_chat.py", true);

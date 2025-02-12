@@ -36,12 +36,11 @@ import kingaidra.ai.convo.Conversation;
 import kingaidra.ai.convo.ConversationContainer;
 import kingaidra.ai.model.Model;
 import kingaidra.ai.model.ModelByScript;
+import kingaidra.ai.model.ModelConf;
 import kingaidra.ai.task.KinGAidraChatTaskService;
 import kingaidra.chat.Guess;
-import kingaidra.ghidra.GhidraPreferences;
 import kingaidra.ghidra.GhidraUtil;
 import kingaidra.gui.MainProvider;
-import kingaidra.ghidra.ChatModelPreferences;
 import kingaidra.log.Logger;
 import resources.Icons;
 import resources.ResourceManager;
@@ -65,6 +64,7 @@ public class ChatGUI extends JPanel {
     private PluginTool plugin;
     private KinGAidraChatTaskService srv;
     private GhidraUtil ghidra;
+    private ModelConf conf;
     private ConversationContainer container;
     private Ai ai;
     private Logger logger;
@@ -76,12 +76,13 @@ public class ChatGUI extends JPanel {
     private boolean add_comments_busy;
 
     public ChatGUI(MainProvider provider, Tool dockingTool, Program program, Plugin plugin,
-            String owner, KinGAidraChatTaskService srv, GhidraUtil ghidra, ConversationContainer container, Ai ai, Logger logger) {
+            String owner, KinGAidraChatTaskService srv, GhidraUtil ghidra, ModelConf conf, ConversationContainer container, Ai ai, Logger logger) {
         super();
         this.program = program;
         this.plugin = plugin.getTool();
         this.srv = srv;
         this.ghidra = ghidra;
+        this.conf = conf;
         this.container = container;
         this.ai = ai;
         this.logger = logger;
@@ -92,10 +93,6 @@ public class ChatGUI extends JPanel {
         init_panel();
 
         setVisible(true);
-    }
-
-    public JPanel get_conf_panel() {
-        return ggui.get_model_conf_gui();
     }
 
     private String convert_md_to_html(String markdown) {
@@ -155,8 +152,7 @@ public class ChatGUI extends JPanel {
     }
 
     private void init_panel() {
-        GhidraPreferences<Model> pref = new ChatModelPreferences("chat");
-        Guess guess = new Guess(ai, pref);
+        Guess guess = new Guess(ai, conf);
 
         Model chatgptlike_model =
                 new ModelByScript("ChatGPTLike", "kingaidra_chat.py", true);

@@ -10,7 +10,7 @@ import kingaidra.ai.convo.Conversation;
 import kingaidra.ai.convo.ConversationType;
 import kingaidra.ai.model.Model;
 import kingaidra.ai.model.ModelByScript;
-import kingaidra.ai.model.ModelConfMultiple;
+import kingaidra.ai.model.ModelConf;
 import kingaidra.ai.task.TaskType;
 import kingaidra.decom.extractor.DataTypeJson;
 import kingaidra.decom.extractor.DataTypeListJson;
@@ -18,22 +18,21 @@ import kingaidra.decom.extractor.FuncParamVarJson;
 import kingaidra.decom.extractor.JsonExtractor;
 import kingaidra.decom.extractor.ParamJson;
 import kingaidra.decom.extractor.VarJson;
-import kingaidra.ghidra.GhidraPreferences;
 import kingaidra.ghidra.GhidraUtil;
 
 public class Guess {
     private GhidraUtil ghidra;
     private Ai ai;
-    private ModelConfMultiple model_conf;
+    private ModelConf model_conf;
 
-    public Guess(GhidraUtil ghidra, Ai ai, GhidraPreferences<Model> pref) {
+    public Guess(GhidraUtil ghidra, Ai ai, ModelConf conf) {
         this.ghidra = ghidra;
         this.ai = ai;
 
-        model_conf = new ModelConfMultiple(pref);
+        model_conf = conf;
     }
 
-    public ModelConfMultiple get_model_conf() {
+    public ModelConf get_model_conf() {
         return model_conf;
     }
 

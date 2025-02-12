@@ -3,6 +3,8 @@ package kingaidra.ai.model;
 import kingaidra.ai.model.Model;
 
 public interface ModelConf {
+    public String get_name();
+
     public Model get_model(String name);
 
     public String[] get_models();

@@ -6,9 +6,11 @@ import kingaidra.ai.model.Model;
 import kingaidra.ghidra.GhidraPreferences;
 
 public class ModelConfSingle implements ModelConf {
+    private String name;
     private GhidraPreferences<Model> pref;
 
-    public ModelConfSingle(GhidraPreferences<Model> pref) {
+    public ModelConfSingle(String name, GhidraPreferences<Model> pref) {
+        this.name = name;
         this.pref = pref;
 
         boolean exist_true = false;
@@ -24,6 +26,10 @@ public class ModelConfSingle implements ModelConf {
         if (get_models_len() > 0 && !exist_true) {
             set_model_status(get_models()[0], true);
         }
+    }
+
+    public String get_name() {
+        return name;
     }
 
     public Model get_model(String name) {
@@ -99,10 +105,10 @@ public class ModelConfSingle implements ModelConf {
     }
 
     public void add_model(String name, String script_file) {
-        Model m = new ModelByScript(name, script_file, true);
+        Model m = new ModelByScript(name, script_file, false);
         pref.store(name, m);
 
-        set_model_status(name, true);
+        set_model_status(name, false);
     }
 
     public void remove_model(String name) {
@@ -111,5 +117,9 @@ public class ModelConfSingle implements ModelConf {
             return;
         }
         pref.remove(name);
+
+        if (m.get_active() && get_models_len() > 0) {
+            set_model_status(get_models()[0], true);
+        }
     }
 }

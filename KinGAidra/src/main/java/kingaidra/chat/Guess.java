@@ -12,24 +12,23 @@ import kingaidra.ai.convo.Conversation;
 import kingaidra.ai.convo.ConversationType;
 import kingaidra.ai.model.Model;
 import kingaidra.ai.model.ModelByScript;
-import kingaidra.ai.model.ModelConfSingle;
+import kingaidra.ai.model.ModelConf;
 import kingaidra.ai.task.TaskType;
 import kingaidra.decom.extractor.CommentJson;
 import kingaidra.decom.extractor.CommentListJson;
 import kingaidra.decom.extractor.JsonExtractor;
-import kingaidra.ghidra.GhidraPreferences;
 
 public class Guess {
     private Ai ai;
-    private ModelConfSingle model_conf;
+    private ModelConf model_conf;
 
-    public Guess(Ai ai, GhidraPreferences<Model> pref) {
+    public Guess(Ai ai, ModelConf conf) {
         this.ai = ai;
 
-        model_conf = new ModelConfSingle(pref);
+        model_conf = conf;
     }
 
-    public ModelConfSingle get_model_conf() {
+    public ModelConf get_model_conf() {
         return model_conf;
     }
 
