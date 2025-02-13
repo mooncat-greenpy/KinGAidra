@@ -57,15 +57,15 @@ public class Ai {
     public String resolve_asm_code(Conversation convo, String msg, Address addr) {
         return resolve_placeholder(msg, addr, "asm", new java.util.function.Function<Address, String>() {
             @Override
-            public String apply(Address addr) {
-                if (addr == null) {
+            public String apply(Address func_addr) {
+                if (func_addr == null) {
                     return null;
                 }
-                String asm_code = ghidra.get_asm(addr);
+                String asm_code = ghidra.get_asm(func_addr);
                 if (asm_code == null) {
                     return null;
                 }
-                Function match_func = ghidra.get_func(addr);
+                Function match_func = ghidra.get_func(func_addr);
                 if (match_func != null) {
                     convo.add_addr(match_func.getEntryPoint());
                 }
@@ -77,15 +77,15 @@ public class Ai {
     public String resolve_src_code(Conversation convo, String msg, Address addr) {
         return resolve_placeholder(msg, addr, "code", new java.util.function.Function<Address, String>() {
             @Override
-            public String apply(Address addr) {
-                if (addr == null) {
+            public String apply(Address func_addr) {
+                if (func_addr == null) {
                     return null;
                 }
-                String src_code = ghidra.get_decom(addr);;
+                String src_code = ghidra.get_decom(func_addr);
                 if (src_code == null) {
                     return null;
                 }
-                Function match_func = ghidra.get_func(addr);
+                Function match_func = ghidra.get_func(func_addr);
                 convo.add_addr(match_func.getEntryPoint());
                 return src_code;
             }
@@ -95,12 +95,12 @@ public class Ai {
     public String resolve_calltree(Conversation convo, String msg, Address addr) {
         return resolve_placeholder(msg, addr, "calltree", new java.util.function.Function<Address, String>() {
             @Override
-            public String apply(Address addr) {
+            public String apply(Address func_addr) {
                 String calltree;
-                if (addr == null) {
+                if (func_addr == null) {
                     calltree = ghidra.get_func_call_tree();
                 } else {
-                    Function match_func = ghidra.get_func(addr);
+                    Function match_func = ghidra.get_func(func_addr);
                     calltree = ghidra.get_func_call_tree(match_func);
                     if (calltree != null) {
                         convo.add_addr(match_func.getEntryPoint());

@@ -122,7 +122,6 @@ public class LogGUI extends JPanel {
             @Override
             public AddressBasedLocation getValue(Conversation rowObject, Settings settings, Program pgm,
                     ServiceProvider serviceProvider) throws IllegalArgumentException {
-                String s = "";
                 Address[] addrs = rowObject.get_addrs();
                 if (addrs.length > 0) {
                     return new AddressBasedLocation(pgm, addrs[0]);

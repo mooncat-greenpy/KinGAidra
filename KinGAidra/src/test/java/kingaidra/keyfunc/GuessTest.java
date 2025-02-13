@@ -16,7 +16,6 @@ import kingaidra.ai.model.ModelConfSingle;
 import kingaidra.ghidra.GhidraPreferences;
 import kingaidra.ghidra.GhidraUtil;
 import kingaidra.ghidra.GhidraUtilImpl;
-import kingaidra.testutil.ChatModelDummy;
 import kingaidra.testutil.ChatModelPreferencesDummy;
 import kingaidra.testutil.GhidraTestUtil;
 import kingaidra.testutil.ModelDummy;
@@ -158,11 +157,11 @@ public class GuessTest {
         Data[] data = guess.guess_string_data();
         assertEquals(data.length, 3);
         assertEquals(data[0].getAddress(), util.get_addr(program, 0x40f000));
-        assertEquals((String) data[0].getValue(), "string1");
+        assertEquals(data[0].getValue(), "string1");
         assertEquals(data[1].getAddress(), util.get_addr(program, 0x40f100));
-        assertEquals((String) data[1].getValue(), "string2");
+        assertEquals(data[1].getValue(), "string2");
         assertEquals(data[2].getAddress(), util.get_addr(program, 0x40f200));
-        assertEquals((String) data[2].getValue(), "string3");
+        assertEquals(data[2].getValue(), "string3");
 
         Conversation convo = container.get_convo(container.get_ids()[0]);
         assertEquals(convo.get_type(), ConversationType.SYSTEM_KEYFUNC);

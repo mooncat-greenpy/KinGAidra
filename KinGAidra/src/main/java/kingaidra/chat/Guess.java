@@ -1,7 +1,6 @@
 package kingaidra.chat;
 
 import java.util.AbstractMap;
-import java.util.Arrays;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
@@ -11,7 +10,6 @@ import kingaidra.ai.Ai;
 import kingaidra.ai.convo.Conversation;
 import kingaidra.ai.convo.ConversationType;
 import kingaidra.ai.model.Model;
-import kingaidra.ai.model.ModelByScript;
 import kingaidra.ai.model.ModelConf;
 import kingaidra.ai.task.TaskType;
 import kingaidra.decom.extractor.CommentJson;

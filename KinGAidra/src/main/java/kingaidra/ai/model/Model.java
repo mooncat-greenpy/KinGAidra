@@ -23,6 +23,6 @@ public interface Model {
 
     public void set_type(ModelType type);
 
-    public Conversation guess(TaskType type, Conversation convo, KinGAidraChatTaskService service, PluginTool tool,
+    public Conversation guess(TaskType task_type, Conversation convo, KinGAidraChatTaskService service, PluginTool tool,
             Program program);
 }

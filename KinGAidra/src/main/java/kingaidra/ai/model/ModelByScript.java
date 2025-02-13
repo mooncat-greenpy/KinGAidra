@@ -61,7 +61,7 @@ public class ModelByScript implements Model, Serializable {
         this.type = type;
     }
 
-    public Conversation guess(TaskType type, Conversation convo, KinGAidraChatTaskService service,
+    public Conversation guess(TaskType task_type, Conversation convo, KinGAidraChatTaskService service,
             PluginTool tool, Program program) {
         if (!active) {
             return null;
@@ -72,7 +72,7 @@ public class ModelByScript implements Model, Serializable {
         String key = String.format("%x", rand.nextLong());
 
         convo.set_model(this);
-        service.add_task(key, type, convo);
+        service.add_task(key, task_type, convo);
 
         ResourceFile file = GhidraScriptUtil.findScriptByName(script_file);
         if (file == null) {

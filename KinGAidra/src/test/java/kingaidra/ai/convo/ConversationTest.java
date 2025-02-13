@@ -1,7 +1,6 @@
 package kingaidra.ai.convo;
 
 import org.junit.jupiter.api.Test;
-import kingaidra.ai.convo.Conversation;
 import kingaidra.testutil.ModelDummy;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;

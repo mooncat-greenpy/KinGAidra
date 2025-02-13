@@ -4,7 +4,6 @@ import org.junit.jupiter.api.Test;
 
 import ghidra.program.model.listing.Program;
 import ghidra.util.task.TaskMonitor;
-import kingaidra.ai.Ai;
 import kingaidra.ai.convo.Conversation;
 import kingaidra.ai.convo.ConversationContainer;
 import kingaidra.ai.convo.ConversationContainerDummy;

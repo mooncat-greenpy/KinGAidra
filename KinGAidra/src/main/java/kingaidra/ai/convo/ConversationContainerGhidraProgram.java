@@ -21,7 +21,6 @@ import db.Table;
 import ghidra.program.database.ProgramDB;
 import ghidra.program.model.address.Address;
 import ghidra.program.model.listing.Program;
-import ghidra.util.task.TaskMonitor;
 import kingaidra.ai.model.Model;
 import kingaidra.ghidra.GhidraUtil;
 

@@ -8,8 +8,6 @@ import java.util.UUID;
 
 import ghidra.program.model.listing.Program;
 import ghidra.util.task.TaskMonitor;
-import kingaidra.ai.convo.Conversation;
-import kingaidra.ai.convo.ConversationContainerGhidraProgram;
 import kingaidra.ghidra.GhidraUtil;
 import kingaidra.ghidra.GhidraUtilImpl;
 import kingaidra.testutil.GhidraTestUtil;

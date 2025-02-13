@@ -1,7 +1,6 @@
 package kingaidra.decom;
 
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
 
 import ghidra.program.model.address.Address;
@@ -9,7 +8,6 @@ import kingaidra.ai.Ai;
 import kingaidra.ai.convo.Conversation;
 import kingaidra.ai.convo.ConversationType;
 import kingaidra.ai.model.Model;
-import kingaidra.ai.model.ModelByScript;
 import kingaidra.ai.model.ModelConf;
 import kingaidra.ai.task.TaskType;
 import kingaidra.decom.extractor.DataTypeJson;

@@ -10,7 +10,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.Stack;
-import java.util.TreeMap;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -39,7 +38,6 @@ import ghidra.program.model.listing.Instruction;
 import ghidra.program.model.listing.Listing;
 import ghidra.program.model.listing.Parameter;
 import ghidra.program.model.listing.Program;
-import ghidra.program.model.mem.Memory;
 import ghidra.program.model.pcode.HighFunction;
 import ghidra.program.model.pcode.HighFunctionDBUtil;
 import ghidra.program.model.pcode.HighSymbol;
@@ -276,7 +274,7 @@ public class GhidraUtilImpl implements GhidraUtil {
                         Address to = ref.getToAddress();
                         Data data = get_data(to);
                         if (data != null && data.getValueClass() == String.class) {
-                            comment += String.format("[%x]=\"%s\" ", to.getOffset(), (String) data.getValue());
+                            comment += String.format("[%x]=\"%s\" ", to.getOffset(), data.getValue());
                         }
                     }
                 }
@@ -557,9 +555,6 @@ public class GhidraUtilImpl implements GhidraUtil {
     }
 
     public Data get_data(Address addr) {
-        Memory memory = program.getMemory();
-        DataTypeManager datatype_manager = program.getDataTypeManager();
-
         try {
             return program_listing.getDataAt(addr);
         } catch (Exception e) {

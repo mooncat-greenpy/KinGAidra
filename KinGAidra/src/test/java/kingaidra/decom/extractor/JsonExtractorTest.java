@@ -26,7 +26,7 @@ public class JsonExtractorTest {
                    "        }\n" +
                    "    ]\n" +
                    "}";
-        JsonExtractor<FuncParamVarJson> extractor = new JsonExtractor(s1, FuncParamVarJson.class);
+        JsonExtractor<FuncParamVarJson> extractor = new JsonExtractor<>(s1, FuncParamVarJson.class);
         FuncParamVarJson data1 = extractor.get_data();
         assertEquals(data1.new_func_name, "new function name");
         assertEquals(data1.orig_func_name, "original function name");
@@ -61,7 +61,7 @@ public class JsonExtractorTest {
                    "        }\n" +
                    "    ]\n" +
                    "}";
-        JsonExtractor<FuncParamVarJson> extractor2 = new JsonExtractor(s2, FuncParamVarJson.class);
+        JsonExtractor<FuncParamVarJson> extractor2 = new JsonExtractor<>(s2, FuncParamVarJson.class);
         FuncParamVarJson data2 = extractor2.get_data();
         assertEquals(data2.new_func_name, "new function name");
         assertEquals(data2.orig_func_name, "original function name");
@@ -83,7 +83,7 @@ public class JsonExtractorTest {
                    "        \"var_name\": \"variable name\"\n" +
                    "    }\n" +
                    "]";
-        JsonExtractor<DataTypeListJson> extractor3 = new JsonExtractor(s3, DataTypeListJson.class);
+        JsonExtractor<DataTypeListJson> extractor3 = new JsonExtractor<>(s3, DataTypeListJson.class);
         DataTypeListJson data3 = extractor3.get_data();
         assertEquals(data3.size(), 1);
         assertEquals(data3.get(0).get_new_datatype(), "new datatype name");
@@ -102,7 +102,7 @@ public class JsonExtractorTest {
                    "        \"var_name\": \"variable name2\"\n" +
                    "    }\n" +
                    "]";
-        JsonExtractor<DataTypeListJson> extractor4 = new JsonExtractor(s4, DataTypeListJson.class);
+        JsonExtractor<DataTypeListJson> extractor4 = new JsonExtractor<>(s4, DataTypeListJson.class);
         DataTypeListJson data4 = extractor4.get_data();
         assertEquals(data4.size(), 2);
         assertEquals(data4.get(0).get_new_datatype(), "new datatype name");
@@ -130,7 +130,7 @@ public class JsonExtractorTest {
                         "        \"comment\": \"comment4\"\n" +
                         "    }\n" +
                         "]";
-        JsonExtractor<CommentListJson> extractor5 = new JsonExtractor(s5, CommentListJson.class);
+        JsonExtractor<CommentListJson> extractor5 = new JsonExtractor<>(s5, CommentListJson.class);
         CommentListJson data5 = extractor5.get_data();
         assertEquals(data5.size(), 4);
         assertEquals(data5.get(0).get_source(), "piVar1 = (int *)(unaff_EBX + -0x3f7bfe3f);");
@@ -163,7 +163,7 @@ public class JsonExtractorTest {
                    "    ]\n" +
                    "}\n" +
                    "```";
-        JsonExtractor<FuncParamVarJson> extractor = new JsonExtractor(s1, FuncParamVarJson.class);
+        JsonExtractor<FuncParamVarJson> extractor = new JsonExtractor<>(s1, FuncParamVarJson.class);
         FuncParamVarJson data1 = extractor.get_data();
         assertEquals(data1.new_func_name, "new function name");
         assertEquals(data1.orig_func_name, "original function name");
@@ -202,7 +202,7 @@ public class JsonExtractorTest {
                    "}\n" +
                    "```\n" +
                    "This is markdown. ```cpp\nint main() {}\n```\n";
-        JsonExtractor<FuncParamVarJson> extractor2 = new JsonExtractor(s2, FuncParamVarJson.class);
+        JsonExtractor<FuncParamVarJson> extractor2 = new JsonExtractor<>(s2, FuncParamVarJson.class);
         FuncParamVarJson data2 = extractor2.get_data();
         assertEquals(data2.new_func_name, "new function name");
         assertEquals(data2.orig_func_name, "original function name");
@@ -226,7 +226,7 @@ public class JsonExtractorTest {
                    "    }\n" +
                    "]\n" +
                    "```";
-        JsonExtractor<DataTypeListJson> extractor3 = new JsonExtractor(s3, DataTypeListJson.class);
+        JsonExtractor<DataTypeListJson> extractor3 = new JsonExtractor<>(s3, DataTypeListJson.class);
         DataTypeListJson data3 = extractor3.get_data();
         assertEquals(data3.size(), 1);
         assertEquals(data3.get(0).get_new_datatype(), "new datatype name");
@@ -249,7 +249,7 @@ public class JsonExtractorTest {
                    "]\n" +
                    "```\n" +
                    "This is markdown. ```cpp\nint main() {}\n```\n";
-        JsonExtractor<DataTypeListJson> extractor4 = new JsonExtractor(s4, DataTypeListJson.class);
+        JsonExtractor<DataTypeListJson> extractor4 = new JsonExtractor<>(s4, DataTypeListJson.class);
         DataTypeListJson data4 = extractor4.get_data();
         assertEquals(data4.size(), 2);
         assertEquals(data4.get(0).get_new_datatype(), "new datatype name");
@@ -279,7 +279,7 @@ public class JsonExtractorTest {
                         "    }\n" +
                         "]\n" +
                         "```";
-        JsonExtractor<CommentListJson> extractor5 = new JsonExtractor(s5, CommentListJson.class);
+        JsonExtractor<CommentListJson> extractor5 = new JsonExtractor<>(s5, CommentListJson.class);
         CommentListJson data5 = extractor5.get_data();
         assertEquals(data5.size(), 4);
         assertEquals(data5.get(0).get_source(), "piVar1 = (int *)(unaff_EBX + -0x3f7bfe3f);");
@@ -313,7 +313,7 @@ public class JsonExtractorTest {
                    "}\n" +
                    "```\n" +
                    "This is markdown.";
-        JsonExtractor<FuncParamVarJson> extractor = new JsonExtractor(s1, FuncParamVarJson.class);
+        JsonExtractor<FuncParamVarJson> extractor = new JsonExtractor<>(s1, FuncParamVarJson.class);
         FuncParamVarJson data1 = extractor.get_data();
         assertEquals(data1.new_func_name, "new function name");
         assertEquals(data1.orig_func_name, "original function name");
@@ -350,7 +350,7 @@ public class JsonExtractorTest {
                    "    ]\n" +
                    "}\n" +
                    "This is markdown. ```cpp\nint main() {}\n```\n";
-        JsonExtractor<FuncParamVarJson> extractor2 = new JsonExtractor(s2, FuncParamVarJson.class);
+        JsonExtractor<FuncParamVarJson> extractor2 = new JsonExtractor<>(s2, FuncParamVarJson.class);
         FuncParamVarJson data2 = extractor2.get_data();
         assertEquals(data2.new_func_name, "new function name");
         assertEquals(data2.orig_func_name, "original function name");
@@ -375,7 +375,7 @@ public class JsonExtractorTest {
                    "]\n" +
                    "```\n" +
                    "This is markdown.";
-        JsonExtractor<DataTypeListJson> extractor3 = new JsonExtractor(s3, DataTypeListJson.class);
+        JsonExtractor<DataTypeListJson> extractor3 = new JsonExtractor<>(s3, DataTypeListJson.class);
         DataTypeListJson data3 = extractor3.get_data();
         assertEquals(data3.size(), 1);
         assertEquals(data3.get(0).get_new_datatype(), "new datatype name");
@@ -396,7 +396,7 @@ public class JsonExtractorTest {
                    "    }\n" +
                    "]\n" +
                    "This is markdown. ```cpp\nint main() {}\n```\n";
-        JsonExtractor<DataTypeListJson> extractor4 = new JsonExtractor(s4, DataTypeListJson.class);
+        JsonExtractor<DataTypeListJson> extractor4 = new JsonExtractor<>(s4, DataTypeListJson.class);
         DataTypeListJson data4 = extractor4.get_data();
         assertEquals(data4.size(), 2);
         assertEquals(data4.get(0).get_new_datatype(), "new datatype name");
@@ -426,7 +426,7 @@ public class JsonExtractorTest {
                         "    }\n" +
                         "]\n" +
                         "This is markdown. ```cpp\nint main() {}\n```\n";
-        JsonExtractor<CommentListJson> extractor5 = new JsonExtractor(s5, CommentListJson.class);
+        JsonExtractor<CommentListJson> extractor5 = new JsonExtractor<>(s5, CommentListJson.class);
         CommentListJson data5 = extractor5.get_data();
         assertEquals(data5.size(), 4);
         assertEquals(data5.get(0).get_source(), "piVar1 = (int *)(unaff_EBX + -0x3f7bfe3f);");

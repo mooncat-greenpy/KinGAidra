@@ -2,7 +2,6 @@ package kingaidra.ghidra;
 
 import org.junit.jupiter.api.Test;
 
-import ghidra.program.model.address.Address;
 import ghidra.program.model.listing.Data;
 import ghidra.program.model.listing.Function;
 import ghidra.program.model.listing.Program;
@@ -152,15 +151,15 @@ class GhidraUtilImplTest {
         Data[] strs = gu.get_strings();
         assertEquals(strs.length, 5);
         assertEquals(strs[0].getAddress(), util.get_addr(program, 0x40f000));
-        assertEquals((String) strs[0].getValue(), "string1");
+        assertEquals(strs[0].getValue(), "string1");
         assertEquals(strs[1].getAddress(), util.get_addr(program, 0x40f100));
-        assertEquals((String) strs[1].getValue(), "string2");
+        assertEquals(strs[1].getValue(), "string2");
         assertEquals(strs[2].getAddress(), util.get_addr(program, 0x40f200));
-        assertEquals((String) strs[2].getValue(), "string3");
+        assertEquals(strs[2].getValue(), "string3");
         assertEquals(strs[3].getAddress(), util.get_addr(program, 0x40f300));
-        assertEquals((String) strs[3].getValue(), "string4");
+        assertEquals(strs[3].getValue(), "string4");
         assertEquals(strs[4].getAddress(), util.get_addr(program, 0x40f400));
-        assertEquals((String) strs[4].getValue(), "string5");
+        assertEquals(strs[4].getValue(), "string5");
 
         assertEquals(gu.get_strings_str(), "[40f000]=\"string1\"\n" +
                                 "[40f100]=\"string2\"\n" +

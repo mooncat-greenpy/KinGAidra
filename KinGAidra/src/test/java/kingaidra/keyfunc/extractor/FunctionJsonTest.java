@@ -21,7 +21,7 @@ public class FunctionJsonTest {
                         "    ]\n" +
                         "}\n" +
                         "```";
-        JsonExtractor<FunctionJson> extractor = new JsonExtractor(s1, FunctionJson.class);
+        JsonExtractor<FunctionJson> extractor = new JsonExtractor<>(s1, FunctionJson.class);
         FunctionJson data1 = extractor.get_data();
         assertEquals(data1.get_funcs().size(), 3);
         assertEquals(data1.get_funcs().get(0), "Func_1");

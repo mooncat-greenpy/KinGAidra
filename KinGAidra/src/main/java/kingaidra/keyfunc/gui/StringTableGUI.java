@@ -4,12 +4,8 @@ import java.awt.BorderLayout;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
-import java.util.UUID;
 
 import javax.swing.JPanel;
-import javax.swing.JScrollPane;
-import javax.swing.event.ListSelectionEvent;
-import javax.swing.event.ListSelectionListener;
 
 import docking.widgets.table.*;
 import docking.widgets.table.threaded.ThreadedTableModel;
@@ -30,10 +26,7 @@ import ghidra.util.table.GhidraTableFilterPanel;
 import ghidra.util.table.GhidraThreadedTablePanel;
 import ghidra.util.table.field.AbstractProgramBasedDynamicTableColumn;
 import ghidra.util.task.TaskMonitor;
-import kingaidra.ai.convo.Conversation;
-import kingaidra.ai.convo.ConversationContainer;
 import kingaidra.ghidra.GhidraUtil;
-import kingaidra.keyfunc.gui.StringTableGUI.StringDataEntry;
 
 public class StringTableGUI extends JPanel {
 

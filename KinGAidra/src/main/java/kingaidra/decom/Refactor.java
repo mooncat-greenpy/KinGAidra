@@ -1,9 +1,5 @@
 package kingaidra.decom;
 
-import javax.swing.JTextArea;
-import javax.swing.JOptionPane;
-import javax.swing.JScrollPane;
-
 import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.List;

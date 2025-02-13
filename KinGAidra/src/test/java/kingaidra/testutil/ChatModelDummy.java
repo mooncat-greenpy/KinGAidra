@@ -54,7 +54,7 @@ public class ChatModelDummy implements Model {
         this.type = type;
     }
 
-    public Conversation guess(TaskType type, Conversation convo, KinGAidraChatTaskService service, PluginTool tool,
+    public Conversation guess(TaskType task_type, Conversation convo, KinGAidraChatTaskService service, PluginTool tool,
             Program program) {
         convo.add_assistant_msg(
                 convo.get_msg(convo.get_msgs_len() - 1) + convo.get_model().get_name());
