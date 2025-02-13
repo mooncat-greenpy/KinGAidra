@@ -121,8 +121,8 @@ public class ModelConfGUI extends JPanel {
 
                 String name = name_field.getText();
                 String script = script_field.getText();
-                if (!name.matches("[a-zA-Z0-9]+")) {
-                    logger.append_message("Only alphanumeric characters");
+                if (!name.matches("[a-zA-Z0-9_\\-]+")) {
+                    logger.append_message("Only alphanumeric characters, underscores, and hyphens are allowed");
                     return;
                 }
                 for (ModelConf model_conf : model_conf_list) {
