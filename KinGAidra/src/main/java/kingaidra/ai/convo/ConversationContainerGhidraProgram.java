@@ -228,4 +228,20 @@ public class ConversationContainerGhidraProgram implements ConversationContainer
             program.endTransaction(tid, true);
         }
     }
+
+    public void del_convo(UUID id) {
+        int tid = program.startTransaction("KinGAidra database");
+        try {
+            Table table = create_or_open_table(CONVO_TABLE_NAME, CONVERSATION_SCHEMA_V1);
+            if (table == null) {
+                return;
+            }
+            try {
+                table.deleteRecord(new StringField(id.toString()));
+            } catch (IOException e) {
+            }
+        } finally {
+            program.endTransaction(tid, true);
+        }
+    }
 }

@@ -64,6 +64,9 @@ public class ConversationContainerGhidraProgramTest {
         for (int i = 0; i < convo.get_addrs().length; i++) {
             assertEquals(convo.get_addrs()[i], result.get_addrs()[i]);
         }
+
+        container.del_convo(convo.get_uuid());
+        assertEquals(container.get_ids().length, 0);
     }
 
     @Test
@@ -122,5 +125,12 @@ public class ConversationContainerGhidraProgramTest {
         for (int i = 0; i < convo2.get_addrs().length; i++) {
             assertEquals(convo2.get_addrs()[i], result2.get_addrs()[i]);
         }
+
+        container.del_convo(convo1.get_uuid());
+        assertEquals(container.get_ids().length, 1);
+        container.del_convo(convo1.get_uuid());
+        assertEquals(container.get_ids().length, 1);
+        container.del_convo(convo2.get_uuid());
+        assertEquals(container.get_ids().length, 0);
     }
 }

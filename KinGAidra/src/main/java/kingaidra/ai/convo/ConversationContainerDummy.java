@@ -23,4 +23,8 @@ public class ConversationContainerDummy implements ConversationContainer {
     public void add_convo(Conversation convo) {
         data.put(convo.get_uuid(), convo);
     }
+
+    public void del_convo(UUID id) {
+        data.remove(id);
+    }
 }

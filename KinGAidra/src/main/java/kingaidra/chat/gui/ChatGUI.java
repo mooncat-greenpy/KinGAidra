@@ -54,6 +54,7 @@ public class ChatGUI extends JPanel {
     private JTextArea input_area;
     private JButton restart_btn;
     private JButton submit_btn;
+    private JButton delete_btn;
     private JLabel info_label;
     private JPanel btn_panel;
     private JCheckBox md_chk;
@@ -169,6 +170,7 @@ public class ChatGUI extends JPanel {
         info_label.setPreferredSize(new Dimension(0, 40));
         restart_btn = new JButton("Clean");
         submit_btn = new JButton("Submit");
+        delete_btn = new JButton("Delete");
         Dimension button_size = new Dimension(100, 40);
 
         restart_btn.addActionListener(new ActionListener() {
@@ -188,6 +190,19 @@ public class ChatGUI extends JPanel {
         });
         submit_btn.setPreferredSize(button_size);
         btn_panel.add(submit_btn);
+
+        delete_btn.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                if (cur_convo == null) {
+                    return;
+                }
+                container.del_convo(cur_convo.get_uuid());
+                reset(null);
+            }
+        });
+        delete_btn.setPreferredSize(button_size);
+        btn_panel.add(delete_btn);
 
         md_chk = new JCheckBox("markdown");
         btn_panel.add(md_chk);
@@ -351,6 +366,7 @@ public class ChatGUI extends JPanel {
         }
         restart_btn.setEnabled(false);
         submit_btn.setEnabled(false);
+        delete_btn.setEnabled(false);
         info_label.setText("Working ...");
         try {
             cur_convo = convo;
@@ -359,6 +375,7 @@ public class ChatGUI extends JPanel {
             info_label.setText("Finished!");
             restart_btn.setEnabled(true);
             submit_btn.setEnabled(true);
+            delete_btn.setEnabled(true);
             check_and_set_busy(false);
             validate();
         }
@@ -371,6 +388,7 @@ public class ChatGUI extends JPanel {
         }
         restart_btn.setEnabled(false);
         submit_btn.setEnabled(false);
+        delete_btn.setEnabled(false);
         info_label.setText("Working ...");
         // TODO: Need to be fixed
         Thread th = new Thread(() -> {
@@ -391,6 +409,7 @@ public class ChatGUI extends JPanel {
                 }
                 restart_btn.setEnabled(true);
                 submit_btn.setEnabled(true);
+                delete_btn.setEnabled(true);
                 check_and_set_busy(false);
                 validate();
             }

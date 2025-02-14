@@ -10,4 +10,6 @@ public interface ConversationContainer {
     public Conversation get_convo(UUID uuid);
 
     public void add_convo(Conversation convo);
+
+    public void del_convo(UUID uuid);
 }
