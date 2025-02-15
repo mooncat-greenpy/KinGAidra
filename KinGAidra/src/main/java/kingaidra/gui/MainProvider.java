@@ -18,6 +18,7 @@ import kingaidra.ai.convo.ConversationContainerGhidraProgram;
 import kingaidra.ai.model.ModelConf;
 import kingaidra.ai.model.ModelConfMultiple;
 import kingaidra.ai.model.ModelConfSingle;
+import kingaidra.ai.model.ModelScriptUpdater;
 import kingaidra.ai.task.KinGAidraChatTaskService;
 import kingaidra.chat.gui.ChatGUI;
 import kingaidra.decom.gui.DecomGUI;
@@ -63,6 +64,9 @@ public class MainProvider extends ComponentProvider {
         setVisible(true);
 
         createActions(chat_model_conf, refactor_model_conf, logger);
+
+        ModelScriptUpdater updater = new ModelScriptUpdater();
+        updater.update_scripts();
     }
 
     public void change_tab(String name) {

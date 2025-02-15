@@ -5,15 +5,24 @@
 #@toolbar 
 
 
-import kingaidra
-
-import urllib2
-import json
-
 URL = "" # "https://api.openai.com/v1/chat/completions"
 MODEL = "" # "gpt-4o-mini"
 API_KEY = ""
 POST_MSG = "" # "Please respond in XXXX."
+
+
+# Only modify the code above this comment.
+# Do not modify the code below this comment.
+# The same applies when copying and using this script.
+
+
+# <KinGAidra Marker For Update: v1.1.0>
+
+
+import kingaidra
+
+import urllib2
+import json
 
 
 def main():
