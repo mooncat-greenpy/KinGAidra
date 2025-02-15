@@ -107,6 +107,56 @@ public class ChatGUI extends JPanel {
     private void build_panel() {
         removeAll();
 
+        btn_panel = new JPanel();
+        info_label = new JLabel();
+        info_label.setPreferredSize(new Dimension(0, 40));
+        restart_btn = new JButton("Clean");
+        submit_btn = new JButton("Submit");
+        delete_btn = new JButton("Delete");
+        Dimension button_size = new Dimension(100, 40);
+
+        restart_btn.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                reset(null);
+            }
+        });
+        restart_btn.setPreferredSize(button_size);
+        restart_btn.setToolTipText("Next chat");
+        btn_panel.add(restart_btn);
+
+        submit_btn.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                guess(ghidra.get_current_addr());
+            }
+        });
+        submit_btn.setPreferredSize(button_size);
+        submit_btn.setToolTipText("Send message to llm");
+        btn_panel.add(submit_btn);
+
+        delete_btn.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                if (cur_convo == null) {
+                    return;
+                }
+                container.del_convo(cur_convo.get_uuid());
+                reset(null);
+            }
+        });
+        delete_btn.setPreferredSize(button_size);
+        delete_btn.setToolTipText("Delete chat from history");
+        btn_panel.add(delete_btn);
+
+        md_chk = new JCheckBox("markdown");
+        btn_panel.add(md_chk);
+
+        input_area = new JTextArea("");
+        input_area.setLineWrap(true);
+        input_area.setWrapStyleWord(true);
+
+
         JPanel p = new JPanel();
         p.setLayout(new BoxLayout(p, BoxLayout.Y_AXIS));
         Border line_border = new LineBorder(getBackground(), 10, true);
@@ -164,52 +214,6 @@ public class ChatGUI extends JPanel {
 
         ggui = new GuessGUI(guess, logger);
         lgui = new LogGUI(container, this, plugin, program, logger);
-
-        btn_panel = new JPanel();
-        info_label = new JLabel();
-        info_label.setPreferredSize(new Dimension(0, 40));
-        restart_btn = new JButton("Clean");
-        submit_btn = new JButton("Submit");
-        delete_btn = new JButton("Delete");
-        Dimension button_size = new Dimension(100, 40);
-
-        restart_btn.addActionListener(new ActionListener() {
-            @Override
-            public void actionPerformed(ActionEvent e) {
-                reset(null);
-            }
-        });
-        restart_btn.setPreferredSize(button_size);
-        btn_panel.add(restart_btn);
-
-        submit_btn.addActionListener(new ActionListener() {
-            @Override
-            public void actionPerformed(ActionEvent e) {
-                guess(ghidra.get_current_addr());
-            }
-        });
-        submit_btn.setPreferredSize(button_size);
-        btn_panel.add(submit_btn);
-
-        delete_btn.addActionListener(new ActionListener() {
-            @Override
-            public void actionPerformed(ActionEvent e) {
-                if (cur_convo == null) {
-                    return;
-                }
-                container.del_convo(cur_convo.get_uuid());
-                reset(null);
-            }
-        });
-        delete_btn.setPreferredSize(button_size);
-        btn_panel.add(delete_btn);
-
-        md_chk = new JCheckBox("markdown");
-        btn_panel.add(md_chk);
-
-        input_area = new JTextArea("");
-        input_area.setLineWrap(true);
-        input_area.setWrapStyleWord(true);
 
         build_panel();
     }
@@ -325,7 +329,7 @@ public class ChatGUI extends JPanel {
                 .buildAndInstall(plugin);
 
 
-        log_action = new DockingAction("ChatLog", provider.getName()) {
+        log_action = new DockingAction("History", provider.getName()) {
             @Override
             public void actionPerformed(ActionContext context) {
                 JPanel p = new JPanel();
@@ -334,7 +338,7 @@ public class ChatGUI extends JPanel {
                     p.add(lgui);
                 }
 
-                JOptionPane.showMessageDialog(null, p, "ChatLog", JOptionPane.PLAIN_MESSAGE);
+                JOptionPane.showMessageDialog(null, p, "History", JOptionPane.PLAIN_MESSAGE);
             }
         };
         log_action.setToolBarData(new ToolBarData(Icons.MAKE_SELECTION_ICON, null));

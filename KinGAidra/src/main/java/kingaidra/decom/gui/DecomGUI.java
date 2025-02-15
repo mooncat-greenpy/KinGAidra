@@ -100,7 +100,7 @@ public class DecomGUI extends JPanel {
         add(info_label);
         restart_btn = new JButton("Clean");
         guess_btn = new JButton("Guess");
-        refact_btn = new JButton("Refact");
+        refact_btn = new JButton("Refactor");
         refact_btn.setEnabled(false);
         Dimension button_size = new Dimension(100, 40);
 
@@ -176,6 +176,7 @@ public class DecomGUI extends JPanel {
             }
         });
         guess_btn.setPreferredSize(button_size);
+        guess_btn.setToolTipText("Get refactoring ideas");
         btn_panel.add(guess_btn);
 
         refact_btn.addActionListener(new ActionListener() {
@@ -202,7 +203,7 @@ public class DecomGUI extends JPanel {
             }
         });
         refact_btn.setPreferredSize(button_size);
-        refact_btn.setToolTipText("Apply the information of the selected tab");
+        refact_btn.setToolTipText("Refactor decompile results with information from selected tabs");
         btn_panel.add(refact_btn);
 
         add(btn_panel);
