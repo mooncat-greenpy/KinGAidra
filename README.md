@@ -7,7 +7,7 @@ KinGAidra is a Ghidra extension designed to enhance reverse engineering workflow
 - [**AI-Assisted Refactoring**](#Refactoring): Automatically refactor decompiled code using AI-generated suggestions.
 - [**AI-Assisted Commenting**](#Commenting): Automatically add comments to decompiled code using AI-generated suggestions.
 - [**Key Function Identification**](#KeyFunc): Utilize AI to identify important functions in a binary for analysis.
-- [**Chat Log**](#Log): Save chat logs for future reference or analysis.
+- [**Chat History**](#History): Save chat logs for future reference or analysis.
 - [**Customizable Models**](#Configuration): Employ various AI models to meet your specific needs.
 
 
@@ -21,40 +21,39 @@ The Chat feature in KinGAidra allows users to interact with an AI to discuss and
 
 **Chat Example**
 
-![](./img/test_chat.png)
+![Chat Example](./img/test_chat.png)
 
 **Explain Decompiled Code**
 
-![](./img/explain.png)
+![Explain Decompiled Code](./img/explain.png)
 
 **Decompile Assembly**
 
-![](./img/decom_asm.png)
+![Decompile Assembly](./img/decom_asm.png)
 
 ### Refactoring
 
 The Refactoring feature in KinGAidra enables users to automatically refactor decompiled code using AI-generated suggestions.
 
-![](./img/refactor.png)
+![Refactoring Example](./img/refactor.png)
 
 ### Commenting
 
 The Commenting feature in KinGAidra allows users to automatically add comments to decompiled code using AI-generated suggestions. This feature helps in understanding the code better by providing meaningful comments that explain the functionality of the code.
 
-![](./img/comment.png)
+![Commenting Example](./img/comment.png)
 
 ### KeyFunc
 
 The KeyFunc feature in KinGAidra assists users in identifying and prioritizing key functions within a binary for analysis. This feature leverages AI to highlight functions of interest, allowing analysts to focus on critical parts of the code.
 
-![](./img/keyfunc.png)
+![KeyFunc Example](./img/keyfunc.png)
 
-### Log
+### History
 
-The Log feature in KinGAidra allows users to save chat logs for future reference or analysis. This can be particularly useful for tracking the progress of reverse engineering tasks, sharing insights with team members, or revisiting previous conversations to extract valuable information.
+The History feature in KinGAidra allows users to save chat logs for future reference or analysis. This can be particularly useful for tracking the progress of reverse engineering tasks, sharing insights with team members, or revisiting previous conversations to extract valuable information.
 
-![](./img/log.png)
-
+![History Example](./img/log.png)
 
 ## Installation
 
@@ -83,4 +82,8 @@ Before using KinGAidra, configure the script with your LLM API details:
 
 You can use the OpenAI API or similar APIs as the LLM API. For example, services like Groq or local LLMs are also supported. To change the language of the LLM response, modify the `POST_MSG` variable.
 
-![](./img/conf.png)
+![Configuration Script](./img/conf_script.png)
+
+You can add scripts to KinGAidra through the settings screen shown in the image below. Additionally, you can select which features will utilize the added scripts.
+
+![Configuration Models](./img/conf_models.png)
