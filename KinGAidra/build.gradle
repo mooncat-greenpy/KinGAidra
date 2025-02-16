@@ -52,5 +52,19 @@ test {
 	useJUnitPlatform()
 }
 
+task replaceJavaCode(type: Copy) {
+    from 'src/main/java'
+    into 'build/tmp/processedJava'
+
+    filter { line ->
+        return System.getenv("GHIDRA_INSTALL_DIR").contains("11.0") || System.getenv("GHIDRA_INSTALL_DIR").contains("11.1") ?
+		    line.replace("import ghidra.app.script.AbstractPythonScriptProvider;", "import ghidra.python.PythonScriptProvider;")
+			    .replace("AbstractPythonScriptProvider", "PythonScriptProvider") : line
+    }
+}
+
+compileJava.dependsOn replaceJavaCode
+sourceSets.main.java.srcDirs = ['build/tmp/processedJava']
+
 // Exclude additional files from the built extension
 // Ex: buildExtension.exclude '.idea/**'
