@@ -149,7 +149,6 @@ public class ChatGUI extends JPanel {
         delete_btn.setToolTipText("Delete chat from history");
         btn_panel.add(delete_btn);
 
-        md_chk = new JCheckBox("markdown");
         btn_panel.add(md_chk);
 
         input_area = new JTextArea("");
@@ -214,6 +213,8 @@ public class ChatGUI extends JPanel {
 
         ggui = new GuessGUI(guess, logger);
         lgui = new LogGUI(container, this, plugin, program, logger);
+
+        md_chk = new JCheckBox("markdown");
 
         build_panel();
     }
@@ -382,6 +383,7 @@ public class ChatGUI extends JPanel {
             delete_btn.setEnabled(true);
             check_and_set_busy(false);
             validate();
+            repaint();
         }
     }
 
