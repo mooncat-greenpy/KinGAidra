@@ -477,7 +477,7 @@ public class GhidraUtilImpl implements GhidraUtil {
                 try {
                     HighFunctionDBUtil.updateDBVariable(sym, new_name, new_dt,
                             SourceType.USER_DEFINED);
-                } catch (InvalidInputException | DuplicateNameException e) {
+                } catch (InvalidInputException | DuplicateNameException | IllegalArgumentException e) {
                 }
             }
         } finally {
