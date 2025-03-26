@@ -30,6 +30,7 @@ import kingaidra.ghidra.GhidraUtilImpl;
 
 public class kingaidra_auto extends GhidraScript {
 
+    private static int RECURSIVE_COUNT = 4;
     private GhidraUtil ghidra;
     private kingaidra.decom.Guess decom_guess;
     private kingaidra.decom.Refactor refactor;
@@ -43,6 +44,16 @@ public class kingaidra_auto extends GhidraScript {
         }
         refactor.refact(diff_arr[0], false);
         Thread.sleep(1000*60);
+    }
+
+    public void analyze_called_func_recur(Function target, int recur_count) throws Exception {
+        if (recur_count <= 0) {
+            return;
+        }
+        for (Function called_func : target.getCalledFunctions(TaskMonitor.DUMMY)) {
+            analyze_called_func_recur(called_func, recur_count - 1);
+            analyze_func(called_func);
+        }
     }
 
     public void run() throws Exception {
@@ -79,6 +90,8 @@ public class kingaidra_auto extends GhidraScript {
                 if (func == null) {
                     continue;
                 }
+                analyze_called_func_recur(func, RECURSIVE_COUNT);
+
                 analyze_func(func);
             }
         }
