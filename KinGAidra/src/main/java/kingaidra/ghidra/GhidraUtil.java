@@ -49,5 +49,7 @@ public interface GhidraUtil {
 
     public boolean refact(DecomDiff diff);
 
+    public void clear_comments(Address addr);
+
     public boolean add_comments(Address addr, List<Map.Entry<String, String>> comments);
 }

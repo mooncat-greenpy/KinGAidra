@@ -486,7 +486,42 @@ public class GhidraUtilImpl implements GhidraUtil {
         return true;
     }
 
+    public void clear_comments(Address addr) {
+        Function func = get_func(addr);
+        if (func == null) {
+            return;
+        }
+        int tid = program.startTransaction("KinGAidra comments");
+        try {
+            Address cur_addr = addr;
+            Address end_addr = func.getBody().getMaxAddress();
+            while (cur_addr.getOffset() < end_addr.getOffset()) {
+                String comment = program_listing.getComment(CodeUnit.PRE_COMMENT, cur_addr);
+                if (comment == null) {
+                    cur_addr = cur_addr.add(1);
+                    continue;
+                }
+                String[] comment_lines = comment.split("\n");
+                StringBuilder comment_builder = new StringBuilder();
+                for (int line_idx = 0; line_idx < comment_lines.length; line_idx++) {
+                    String line = comment_lines[line_idx];
+                    if (!line.startsWith("KAI: ")) {
+                        comment_builder.append(line);
+                        if (line_idx < comment_lines.length - 1) {
+                            comment_builder.append("\n");
+                        }
+                    }
+                }
+                program_listing.setComment(cur_addr, CodeUnit.PRE_COMMENT, comment_builder.toString());
+                cur_addr = cur_addr.add(1);
+            }
+        } finally {
+            program.endTransaction(tid, true);
+        }
+    }
+
     public boolean add_comments(Address addr, List<Map.Entry<String, String>> comments) {
+        clear_comments(addr);
         Function func = get_func(addr);
         if (func == null) {
             return false;
@@ -533,13 +568,22 @@ public class GhidraUtilImpl implements GhidraUtil {
                     }
                 }
                 if (asm_addr != null) {
-                    String prev_comment = program_listing.getComment(CodeUnit.PRE_COMMENT, asm_addr);
-                    comment = (prev_comment == null || prev_comment.isEmpty() ? "" : prev_comment + "\n\n") + comment;
                     if (addr_found) {
                         comment += cur_comment;
                     } else {
                         comment += "// " + cur_comment + "\n" + src_code;
                     }
+                    String[] comment_lines = comment.split("\n");
+                    StringBuilder comment_builder = new StringBuilder();
+                    for (int line_idx = 0; line_idx < comment_lines.length; line_idx++) {
+                        String line = comment_lines[line_idx];
+                        comment_builder.append("KAI: ").append(line);
+                        if (line_idx < comment_lines.length - 1) {
+                            comment_builder.append("\n");
+                        }
+                    }
+                    String prev_comment = program_listing.getComment(CodeUnit.PRE_COMMENT, asm_addr);
+                    comment = (prev_comment == null || prev_comment.isEmpty() ? "" : prev_comment + "\nKAI: \n") + comment_builder.toString();
                     program_listing.setComment(asm_addr, CodeUnit.PRE_COMMENT, comment);
                     comment = "";
                 } else {

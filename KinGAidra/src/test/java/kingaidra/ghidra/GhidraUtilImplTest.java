@@ -194,6 +194,22 @@ class GhidraUtilImplTest {
     }
 
     @Test
+    void test_clear_comments() throws Exception {
+        GhidraTestUtil util = new GhidraTestUtil();
+        Program program = util.create_program();
+        GhidraUtil gu = new GhidraUtilImpl(program, TaskMonitor.DUMMY);
+        List<Map.Entry<String, String>> comments = new LinkedList<>();
+        comments.add(new AbstractMap.SimpleEntry<>("int *piVar1;", "comment1"));
+        gu.add_comments(util.get_addr(program, 0x402000), comments);
+
+        String decom_result = gu.get_decom(util.get_addr(program, 0x402000));
+        assertTrue(decom_result.replace(" ", "").contains("KAI://comment1\r\nKAI:int*piVar1;"));
+        gu.clear_comments(util.get_addr(program, 0x402000));
+        decom_result = gu.get_decom(util.get_addr(program, 0x402000));
+        assertTrue(!decom_result.replace(" ", "").contains("KAI://comment1\r\nKAI:int*piVar1;"));
+    }
+
+    @Test
     void test_add_comments() throws Exception {
         GhidraTestUtil util = new GhidraTestUtil();
         Program program = util.create_program();
@@ -208,12 +224,21 @@ class GhidraUtilImplTest {
         gu.add_comments(util.get_addr(program, 0x402000), comments);
 
         String decom_result = gu.get_decom(util.get_addr(program, 0x402000));
-        assertTrue(decom_result.replace(" ", "").contains("/*//comment0\r\nDummy\r\n\r\n" +
-                "//comment1\r\nint*piVar1;\r\n\r\n" +
-                "comment2*/\r\npiVar1=(int*)(unaff_EBX+-0x3f7bfe3f);\r\n"));
-        assertTrue(decom_result.replace(" ", "").contains("/*//comment3\r\ndo{*/\r\n"));
-        assertTrue(decom_result.replace(" ", "").contains("/*comment4*/\r\nif((char)in_EAX=='\\0'){\r\n"));
-        assertTrue(decom_result.replace(" ", "").contains("/*comment5*/\r\nreturn(int)in_EAX-(int)in_stack_00000004;\r\n"));
+        assertTrue(decom_result.replace(" ", "").contains("/*KAI://comment0\r\nKAI:Dummy\r\nKAI:\r\n" +
+                "KAI://comment1\r\nKAI:int*piVar1;\r\nKAI:\r\n" +
+                "KAI:comment2*/\r\npiVar1=(int*)(unaff_EBX+-0x3f7bfe3f);\r\n"));
+        assertTrue(decom_result.replace(" ", "").contains("/*KAI://comment3\r\nKAI:do{*/\r\n"));
+        assertTrue(decom_result.replace(" ", "").contains("/*KAI:comment4*/\r\nif((char)in_EAX=='\\0'){\r\n"));
+        assertTrue(decom_result.replace(" ", "").contains("/*KAI:comment5*/\r\nreturn(int)in_EAX-(int)in_stack_00000004;\r\n"));
+
+        gu.add_comments(util.get_addr(program, 0x402000), comments);
+
+        assertTrue(decom_result.replace(" ", "").contains("/*KAI://comment0\r\nKAI:Dummy\r\nKAI:\r\n" +
+                "KAI://comment1\r\nKAI:int*piVar1;\r\nKAI:\r\n" +
+                "KAI:comment2*/\r\npiVar1=(int*)(unaff_EBX+-0x3f7bfe3f);\r\n"));
+        assertTrue(decom_result.replace(" ", "").contains("/*KAI://comment3\r\nKAI:do{*/\r\n"));
+        assertTrue(decom_result.replace(" ", "").contains("/*KAI:comment4*/\r\nif((char)in_EAX=='\\0'){\r\n"));
+        assertTrue(decom_result.replace(" ", "").contains("/*KAI:comment5*/\r\nreturn(int)in_EAX-(int)in_stack_00000004;\r\n"));
     }
 
     @Test
