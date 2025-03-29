@@ -318,6 +318,7 @@ public class ChatGUI extends JPanel {
                     Thread th = new Thread(() -> {
                         try {
                             Address addr = ghidra.get_current_addr();
+                            ghidra.clear_comments(addr);
                             List<Map.Entry<String, String>> comments = ggui.run_guess_src_code_comments(addr);
                             ghidra.add_comments(addr, comments);
                         } finally {

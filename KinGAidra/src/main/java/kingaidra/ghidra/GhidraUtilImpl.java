@@ -491,6 +491,7 @@ public class GhidraUtilImpl implements GhidraUtil {
         if (func == null) {
             return;
         }
+        addr = func.getEntryPoint();
         int tid = program.startTransaction("KinGAidra comments");
         try {
             Address cur_addr = addr;
@@ -521,7 +522,6 @@ public class GhidraUtilImpl implements GhidraUtil {
     }
 
     public boolean add_comments(Address addr, List<Map.Entry<String, String>> comments) {
-        clear_comments(addr);
         Function func = get_func(addr);
         if (func == null) {
             return false;
