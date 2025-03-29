@@ -7,6 +7,8 @@
 
 import java.util.HashSet;
 import java.util.List;
+import java.util.LinkedList;
+import java.util.Map;
 import java.util.Set;
 
 import ghidra.app.script.GhidraScript;
@@ -47,28 +49,43 @@ public class kingaidra_auto extends GhidraScript {
         Thread.sleep(1000*60);
     }
 
-    public void analyze_called_func_recur(Function target, int recur_count) throws Exception {
+    public void add_func(List<Function> analyze_func_list, Function target) throws Exception {
+        if (target.isExternal()) {
+            return;
+        }
+        if (analyze_func_list.contains(target.getEntryPoint())) {
+            return;
+        }
+        if (!target.getName().contains("FUN_")) {
+            return;
+        }
+        analyze_func_list.add(target);
+    }
+
+    public void add_called_func_recur(List<Function> analyze_func_list, Function target, int recur_count) throws Exception {
         if (recur_count <= 0) {
             return;
         }
         for (Function called_func : target.getCalledFunctions(TaskMonitor.DUMMY)) {
-            analyze_called_func_recur(called_func, recur_count - 1);
-            analyze_func(called_func);
+            add_called_func_recur(analyze_func_list, called_func, recur_count - 1);
+            add_func(analyze_func_list, called_func);
         }
     }
 
-    public void analyze_calling_func_recur(Function target, int recur_count) throws Exception {
+    public void add_calling_func_recur(List<Function> analyze_func_list, Function target, int recur_count) throws Exception {
         if (recur_count <= 0) {
             return;
         }
         for (Function calling_func : target.getCallingFunctions(TaskMonitor.DUMMY)) {
-            analyze_called_func_recur(calling_func, CALLED_RECURSIVE_COUNT);
-            analyze_func(calling_func);
-            analyze_calling_func_recur(calling_func, recur_count - 1);
+            add_called_func_recur(analyze_func_list, calling_func, CALLED_RECURSIVE_COUNT);
+            add_func(analyze_func_list, calling_func);
+            add_calling_func_recur(analyze_func_list, calling_func, recur_count - 1);
         }
     }
 
     public void run() throws Exception {
+        List<Function> analyze_func_list = new LinkedList();
+
         KinGAidraChatTaskService srv = state.getTool().getService(KinGAidraChatTaskService.class);
         PluginTool tool = state.getTool();
         ghidra = new GhidraUtilImpl(currentProgram, TaskMonitor.DUMMY);
@@ -102,12 +119,16 @@ public class kingaidra_auto extends GhidraScript {
                 if (func == null) {
                     continue;
                 }
-                analyze_called_func_recur(func, CALLED_RECURSIVE_COUNT);
 
-                analyze_func(func);
+                add_called_func_recur(analyze_func_list, func, CALLED_RECURSIVE_COUNT);
 
-                analyze_calling_func_recur(func, CALLING_RECURSIVE_COUNT);
+                add_func(analyze_func_list, func);
+
+                add_calling_func_recur(analyze_func_list, func, CALLING_RECURSIVE_COUNT);
             }
+        }
+        for (Function func : analyze_func_list) {
+            analyze_func(func);
         }
     }
 }
