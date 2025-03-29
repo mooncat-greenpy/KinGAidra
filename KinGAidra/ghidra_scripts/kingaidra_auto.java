@@ -35,6 +35,7 @@ public class kingaidra_auto extends GhidraScript {
     private static int CALLED_RECURSIVE_COUNT = 4;
     private static int CALLING_RECURSIVE_COUNT = 4;
     private GhidraUtil ghidra;
+    private kingaidra.chat.Guess chat_guess;
     private kingaidra.decom.Guess decom_guess;
     private kingaidra.decom.Refactor refactor;
     private kingaidra.keyfunc.Guess keyfunc_guess;
@@ -46,6 +47,14 @@ public class kingaidra_auto extends GhidraScript {
             return;
         }
         refactor.refact(diff_arr[0], false);
+        Thread.sleep(1000*60);
+
+        ghidra.clear_comments(func.getEntryPoint());
+        List<Map.Entry<String, String>> comments = chat_guess.guess_src_code_comments(func.getEntryPoint());
+        if (comments.size() < 1) {
+            return;
+        }
+        ghidra.add_comments(func.getEntryPoint(), comments);
         Thread.sleep(1000*60);
     }
 
@@ -93,6 +102,8 @@ public class kingaidra_auto extends GhidraScript {
         Ai ai = new Ai(tool, currentProgram, ghidra, container, srv);
         ModelConfSingle chat_model_conf = new ModelConfSingle("Chat and others",
                 new ChatModelPreferences("chat"));
+        chat_guess = new kingaidra.chat.Guess(ai, chat_model_conf);
+
         decom_guess = new kingaidra.decom.Guess(ghidra, ai, chat_model_conf);
         refactor = new kingaidra.decom.Refactor(ghidra, ai, new java.util.function.Function<String, String>() {
             @Override
