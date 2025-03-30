@@ -26,23 +26,15 @@ import json
 
 
 def main():
-    consumer_list = currentProgram.getConsumerList()
-    service = consumer_list[0].getService(kingaidra.ai.task.KinGAidraChatTaskService)
-
-    convo = service.get_task(state.getEnvironmentVar("KEY"))
-    type = service.get_task_type(state.getEnvironmentVar("KEY"))
-
     data = {
         "model": MODEL,
         "messages": [],
     }
 
-    for i in range(convo.get_msgs_len()):
-        data["messages"].append({
-            "role": convo.get_role(i),
-            "content": convo.get_msg(i),
-        })
-    if type == kingaidra.ai.task.TaskType.CHAT or type == kingaidra.ai.task.TaskType.ADD_COMMENTS:
+    type = state.getEnvironmentVar("TYPE")
+    data["messages"] = json.loads(state.getEnvironmentVar("MESSAGES"))
+
+    if type == kingaidra.ai.task.TaskType.CHAT.toString() or type == kingaidra.ai.task.TaskType.ADD_COMMENTS.toString():
         data["messages"][-1]["content"] += POST_MSG
 
     req = urllib2.Request(
@@ -56,12 +48,9 @@ def main():
     )
     response = json.loads(urllib2.urlopen(req).read())
 
-    if "error" in response:
-        service.commit_task_error(json.dumps(response))
-        return
     data = response["choices"][0]["message"]["content"]
 
-    service.commit_task(state.getEnvironmentVar("KEY"), data)
+    state.addEnvironmentVar("RESPONSE", data)
 
 if __name__ == "__main__":
     main()

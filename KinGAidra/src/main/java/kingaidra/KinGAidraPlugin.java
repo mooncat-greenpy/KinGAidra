@@ -54,7 +54,7 @@ public class KinGAidraPlugin extends ProgramPlugin implements KinGAidraChatTaskS
 
     @Override
     public void programOpened(Program program) {
-        provider = new MainProvider(program, this, NAME, this, logger);
+        provider = new MainProvider(program, this, NAME, null, logger);
 
         String topicName = "kingaidra";
         String anchorName = "HelpAnchor";

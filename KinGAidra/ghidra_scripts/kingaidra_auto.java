@@ -119,7 +119,7 @@ public class kingaidra_auto extends GhidraScript {
     public void run() throws Exception {
         List<Function> analyze_func_list = new LinkedList();
 
-        KinGAidraChatTaskService srv = state.getTool().getService(KinGAidraChatTaskService.class);
+        KinGAidraChatTaskService srv = null;
         PluginTool tool = state.getTool();
         ghidra = new GhidraUtilImpl(currentProgram, TaskMonitor.DUMMY);
         ConversationContainer container = new ConversationContainerGhidraProgram(currentProgram, ghidra);

@@ -6,20 +6,18 @@
 
 
 import kingaidra
+import json
 
 
 def main():
-    consumer_list = currentProgram.getConsumerList()
-    service = consumer_list[0].getService(kingaidra.ai.task.KinGAidraChatTaskService)
+    type = state.getEnvironmentVar("TYPE")
+    msgs = json.loads(state.getEnvironmentVar("MESSAGES"))
 
-    convo = service.get_task(state.getEnvironmentVar("KEY"))
+    msg = msgs[-1]["content"]
 
-    msg = convo.get_msg(convo.get_msgs_len() - 1)
-
-    type = service.get_task_type(state.getEnvironmentVar("KEY"))
-    if type == kingaidra.ai.task.TaskType.CHAT and "test" in msg:
+    if type == kingaidra.ai.task.TaskType.CHAT.toString() and "test" in msg:
         data = """Hello! How can I assist you today?"""
-    elif type == kingaidra.ai.task.TaskType.CHAT and "Please explain what the following decompiled C function does." in msg and "FUN_01222300" in msg:
+    elif type == kingaidra.ai.task.TaskType.CHAT.toString() and "Please explain what the following decompiled C function does." in msg and "FUN_01222300" in msg:
         data = """Let's break down the decompiled C function step-by-step. The function's purpose seems to be related to interacting with system processes, specifically locating a process (likely `Explorer.exe`), opening it, and then obtaining a process token.
 
 ### Function Signature:
@@ -141,7 +139,7 @@ When executed, the function will:
 - Clean up all resources and exit.
 
 This function might be part of a larger program that interacts with system processes, possibly for managing or impersonating the `Explorer.exe` process."""
-    elif type == kingaidra.ai.task.TaskType.CHAT and "Decompile the following assembly code into equivalent C code." in msg and "FUN_01222300" in msg:
+    elif type == kingaidra.ai.task.TaskType.CHAT.toString() and "Decompile the following assembly code into equivalent C code." in msg and "FUN_01222300" in msg:
         data = """The assembly code provided is quite complex and involves calls to Windows API functions such as `CreateToolhelp32Snapshot`, `Process32FirstW`, `Process32NextW`, `OpenProcess`, `OpenProcessToken`, and `CloseHandle`. These are used to interact with system processes, and the logic appears to involve creating a snapshot of running processes, filtering them, and checking for certain processes (like `Explorer.exe`). The program then interacts with processes by opening their tokens and performing various actions.
 
 ### Let's decompile the assembly to C code step by step:
@@ -219,7 +217,7 @@ void FUN_01222300(void) {
 - **The `FUN_01230cbe` and other function calls** in the original assembly are not fully clear, so they aren't included in the C code. These would need to be examined separately to understand their purpose.
 
 """
-    elif type == kingaidra.ai.task.TaskType.DECOM_REFACTOR_FUNC_PARAM_VAR and "FUN_01222300" in msg:
+    elif type == kingaidra.ai.task.TaskType.DECOM_REFACTOR_FUNC_PARAM_VAR.toString() and "FUN_01222300" in msg:
         data = """```json
 {
     "new_func_name": "retrieve_process_token",
@@ -258,7 +256,7 @@ void FUN_01222300(void) {
     ]
 }
 ```"""
-    elif type == kingaidra.ai.task.TaskType.DECOM_REFACTOR_DATATYPE and "FUN_01222300" in msg:
+    elif type == kingaidra.ai.task.TaskType.DECOM_REFACTOR_DATATYPE.toString() and "FUN_01222300" in msg:
         data = """To address the data type issues in the provided code, I will analyze the function and suggest corrections for each variable type where necessary. Based on common knowledge of Windows API programming and typical C code structures, I will correct the data types where appropriate.
 
 ### Review of Key Variables:
@@ -308,7 +306,7 @@ void FUN_01222300(void) {
 2. **local_230**: Since it is initialized as a buffer using `_memset`, this is likely intended to be a byte buffer (array of `unsigned char`).
 3. **local_22c**: This is used in the `OpenProcess` call, which expects a `DWORD` as one of its arguments. Therefore, the type should be `DWORD`.
 4. **local_210**: It is used with `Process32FirstW` and `Process32NextW`, which expect a `wchar_t` (wide character type) string for process names. Thus, `local_210` should be of type `wchar_t[260]` instead of `ushort[260]`."""
-    elif type == kingaidra.ai.task.TaskType.DECOM_RESOLVE_DATATYPE and "PROCESSENTRY32W" in msg:
+    elif type == kingaidra.ai.task.TaskType.DECOM_RESOLVE_DATATYPE.toString() and "PROCESSENTRY32W" in msg:
         data = """Sure! Below is the `PROCESSENTRY32W` structure in C for a 32-bit system, written without using `typedef`, `#include`, or `#define`. This includes all the dependent data types and structures:
 
 ```c
@@ -348,7 +346,7 @@ struct PROCESSENTRY32W {
 10. **szExeFile**: A wide-character array holding the full path of the executable file associated with the process. The length of the array (260) is large enough to accommodate the maximum path length (commonly 260 characters in Windows).
 
 This structure corresponds to the 32-bit version, and the use of wide-character strings (`szExeFile`) suggests the use of Unicode. The `PROCESSENTRY32W` structure is used in the Windows API to retrieve information about a process in the system, typically via `CreateToolhelp32Snapshot`, `Process32First`, and `Process32Next`."""
-    elif type == kingaidra.ai.task.TaskType.KEYFUNC_STRING and "Given a list of strings found within a malware sample" in msg:
+    elif type == kingaidra.ai.task.TaskType.KEYFUNC_STRING.toString() and "Given a list of strings found within a malware sample" in msg:
         data = """Here are the strings from the list that could potentially be useful for further analysis:
 
 ### 1. **URLs or IP addresses**
@@ -423,7 +421,7 @@ These are potentially hardcoded credentials used for authentication when communi
 This string could be associated with a known malware family or an identifier that can link the sample to previous campaigns or actor groups, making it relevant for attribution or identifying shared techniques.
 
 By focusing on these strings, you can gather valuable information regarding the malware's functionality, persistence, and communication methods, as well as any cryptographic or authentication mechanisms it might use."""
-    elif type == kingaidra.ai.task.TaskType.ADD_COMMENTS:
+    elif type == kingaidra.ai.task.TaskType.ADD_COMMENTS.toString():
         data = """```json
 [
     {
@@ -563,7 +561,7 @@ By focusing on these strings, you can gather valuable information regarding the 
     else:
         data = ""
 
-    service.commit_task(state.getEnvironmentVar("KEY"), data)
+    state.addEnvironmentVar("RESPONSE", data)
 
 if __name__ == "__main__":
     main()

@@ -13,26 +13,6 @@ import ghidra.program.model.address.Address;
 import kingaidra.ai.model.Model;
 
 
-class Message implements Serializable {
-
-    private String role;
-    private String content;
-
-    public Message(String role, String content) {
-        this.role = role;
-        this.content = content;
-    }
-
-    public String get_role() {
-        return role;
-    }
-
-    public String get_content() {
-        return content;
-    }
-}
-
-
 public class Conversation implements Serializable {
 
     public static final String SYSTEM_ROLE = "system";
