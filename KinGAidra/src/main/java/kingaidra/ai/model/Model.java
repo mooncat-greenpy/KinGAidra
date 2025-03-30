@@ -1,5 +1,6 @@
 package kingaidra.ai.model;
 
+import ghidra.app.script.GhidraState;
 import ghidra.framework.plugintool.PluginTool;
 import ghidra.program.model.listing.Program;
 import kingaidra.ai.convo.Conversation;
@@ -24,5 +25,5 @@ public interface Model {
     public void set_type(ModelType type);
 
     public Conversation guess(TaskType task_type, Conversation convo, KinGAidraChatTaskService service, PluginTool tool,
-            Program program);
+            Program program, GhidraState src_state);
 }

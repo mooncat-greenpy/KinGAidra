@@ -67,7 +67,7 @@ public class ModelByScript implements Model, Serializable {
     }
 
     public Conversation guess(TaskType task_type, Conversation convo, KinGAidraChatTaskService service,
-            PluginTool tool, Program program) {
+            PluginTool tool, Program program, GhidraState src_state) {
         if (!active) {
             return null;
         }
@@ -109,7 +109,12 @@ public class ModelByScript implements Model, Serializable {
         }
         String assistant_response = null;
         try {
-            GhidraState state = new GhidraState(tool, tool.getProject(), program, null, null, null);
+            GhidraState state;
+            if (tool == null) {
+                state = new GhidraState(src_state);
+            } else {
+                state = new GhidraState(tool, tool.getProject(), program, null, null, null);
+            }
 
             ObjectMapper obj_mapper = new ObjectMapper();
             List<Message> msgs = new LinkedList<>();

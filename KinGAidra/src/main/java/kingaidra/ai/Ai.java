@@ -3,6 +3,7 @@ package kingaidra.ai;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+import ghidra.app.script.GhidraState;
 import ghidra.framework.plugintool.PluginTool;
 import ghidra.program.model.address.Address;
 import ghidra.program.model.listing.Function;
@@ -19,6 +20,7 @@ public class Ai {
     private GhidraUtil ghidra;
     private ConversationContainer container;
     private KinGAidraChatTaskService service;
+    private GhidraState state;
 
     public Ai(PluginTool tool, Program program, GhidraUtil ghidra, ConversationContainer container,
             KinGAidraChatTaskService service) {
@@ -27,6 +29,11 @@ public class Ai {
         this.ghidra = ghidra;
         this.container = container;
         this.service = service;
+        this.state = null;
+    }
+
+    public void set_ghidra_state(GhidraState state) {
+        this.state = state;
     }
 
     private String resolve_placeholder(String msg, Address addr, String placeholder, java.util.function.Function<Address, String> replace_func) {
@@ -128,7 +135,7 @@ public class Ai {
         msg = resolve_strings(convo, msg);
         convo.add_user_msg(msg);
 
-        Conversation rep = convo.get_model().guess(type, convo, service, tool, program);
+        Conversation rep = convo.get_model().guess(type, convo, service, tool, program, state);
         if (rep != null) {
             container.add_convo(rep);
         }

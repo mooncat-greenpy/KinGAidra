@@ -124,8 +124,10 @@ public class kingaidra_auto extends GhidraScript {
         ghidra = new GhidraUtilImpl(currentProgram, TaskMonitor.DUMMY);
         ConversationContainer container = new ConversationContainerGhidraProgram(currentProgram, ghidra);
         Ai ai = new Ai(tool, currentProgram, ghidra, container, srv);
+        ai.set_ghidra_state(state);
         ModelConfSingle chat_model_conf = new ModelConfSingle("Chat and others",
                 new ChatModelPreferences("chat"));
+
         chat_guess = new kingaidra.chat.Guess(ai, chat_model_conf);
 
         decom_guess = new kingaidra.decom.Guess(ghidra, ai, chat_model_conf);
@@ -135,6 +137,7 @@ public class kingaidra_auto extends GhidraScript {
                 return msg;
             }
         });
+
         keyfunc_guess = new kingaidra.keyfunc.Guess(ghidra, ai, chat_model_conf);
 
         Data[] str_data_list = keyfunc_guess.guess_string_data();
