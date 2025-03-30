@@ -32,6 +32,7 @@ import kingaidra.ghidra.GhidraUtilImpl;
 
 public class kingaidra_auto extends GhidraScript {
 
+    private static int INTERVAL_MILLISECOND = 1000*60;
     private static int CALLED_RECURSIVE_COUNT = 4;
     private static int CALLING_RECURSIVE_COUNT = 4;
     private GhidraUtil ghidra;
@@ -40,29 +41,52 @@ public class kingaidra_auto extends GhidraScript {
     private kingaidra.decom.Refactor refactor;
     private kingaidra.keyfunc.Guess keyfunc_guess;
 
-    private void analyze_func(Function func) throws Exception {
-        println("Refactoring: " + func.getName());
+    private boolean refactoring(Function func) {
         DecomDiff[] diff_arr = decom_guess.guess_selected(func.getEntryPoint());
         if (diff_arr.length < 1) {
-            return;
+            return false;
         }
         refactor.refact(diff_arr[0], false);
-        Thread.sleep(1000*60);
+        return true;
+    }
 
-        ghidra.clear_comments(func.getEntryPoint());
+    private boolean add_comments(Function func) {
         List<Map.Entry<String, String>> comments = chat_guess.guess_src_code_comments(func.getEntryPoint());
         if (comments.size() < 1) {
-            return;
+            return false;
         }
         ghidra.add_comments(func.getEntryPoint(), comments);
-        Thread.sleep(1000*60);
+        return true;
+    }
+
+    private void analyze_func(Function func) throws Exception {
+        println("Refactoring: " + func.getName());
+
+        if (!refactoring(func)) {
+            Thread.sleep(INTERVAL_MILLISECOND);
+            if (!refactoring(func)) {
+                return;
+            }
+        }
+
+        Thread.sleep(INTERVAL_MILLISECOND);
+
+        ghidra.clear_comments(func.getEntryPoint());
+        if (!add_comments(func)) {
+            Thread.sleep(INTERVAL_MILLISECOND);
+            if (!add_comments(func)) {
+                return;
+            }
+        }
+
+        Thread.sleep(INTERVAL_MILLISECOND);
     }
 
     public void add_func(List<Function> analyze_func_list, Function target) throws Exception {
         if (target.isExternal()) {
             return;
         }
-        if (analyze_func_list.contains(target.getEntryPoint())) {
+        if (analyze_func_list.contains(target)) {
             return;
         }
         if (!target.getName().contains("FUN_")) {
