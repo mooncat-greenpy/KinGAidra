@@ -32,9 +32,16 @@ import kingaidra.ghidra.GhidraUtilImpl;
 
 public class kingaidra_auto extends GhidraScript {
 
-    private static int INTERVAL_MILLISECOND = 1000*60;
-    private static int CALLED_RECURSIVE_COUNT = 4;
-    private static int CALLING_RECURSIVE_COUNT = 4;
+    private static final int DEFAULT_INTERVAL_MILLISECOND = 1000 * 60;
+    private static final int DEFAULT_CALLED_RECURSIVE_COUNT = 4;
+    private static final int DEFAULT_CALLING_RECURSIVE_COUNT = 4;
+    private static final int DEFAULT_FUNCTION_COUNT_THRESHOLD = 500;
+
+    private int interval_millisecond = DEFAULT_INTERVAL_MILLISECOND;
+    private int called_recursive_count = DEFAULT_CALLED_RECURSIVE_COUNT;
+    private int calling_recursive_count = DEFAULT_CALLING_RECURSIVE_COUNT;
+    private int function_count_threshold = DEFAULT_FUNCTION_COUNT_THRESHOLD;
+
     private GhidraUtil ghidra;
     private kingaidra.chat.Guess chat_guess;
     private kingaidra.decom.Guess decom_guess;
@@ -63,23 +70,23 @@ public class kingaidra_auto extends GhidraScript {
         println("Refactoring: " + func.getName());
 
         if (!refactoring(func)) {
-            Thread.sleep(INTERVAL_MILLISECOND);
+            Thread.sleep(interval_millisecond);
             if (!refactoring(func)) {
                 return;
             }
         }
 
-        Thread.sleep(INTERVAL_MILLISECOND);
+        Thread.sleep(interval_millisecond);
 
         ghidra.clear_comments(func.getEntryPoint());
         if (!add_comments(func)) {
-            Thread.sleep(INTERVAL_MILLISECOND);
+            Thread.sleep(interval_millisecond);
             if (!add_comments(func)) {
                 return;
             }
         }
 
-        Thread.sleep(INTERVAL_MILLISECOND);
+        Thread.sleep(interval_millisecond);
     }
 
     public void add_func(List<Function> analyze_func_list, Function target) throws Exception {
@@ -110,13 +117,31 @@ public class kingaidra_auto extends GhidraScript {
             return;
         }
         for (Function calling_func : target.getCallingFunctions(TaskMonitor.DUMMY)) {
-            add_called_func_recur(analyze_func_list, calling_func, CALLED_RECURSIVE_COUNT);
+            add_called_func_recur(analyze_func_list, calling_func, called_recursive_count);
             add_func(analyze_func_list, calling_func);
             add_calling_func_recur(analyze_func_list, calling_func, recur_count - 1);
         }
     }
 
+    private void parse_args() {
+        String[] args = getScriptArgs();
+
+        for (String arg : args) {
+            if (arg.startsWith("interval=")) {
+                interval_millisecond = Integer.parseInt(arg.split("=")[1]);
+            } else if (arg.startsWith("called_recur=")) {
+                called_recursive_count = Integer.parseInt(arg.split("=")[1]);
+            } else if (arg.startsWith("calling_recur=")) {
+                calling_recursive_count = Integer.parseInt(arg.split("=")[1]);
+            } else if (arg.startsWith("func_threshold=")) {
+                function_count_threshold = Integer.parseInt(arg.split("=")[1]);
+            }
+        }
+    }
+
     public void run() throws Exception {
+        parse_args();
+
         List<Function> analyze_func_list = new LinkedList();
 
         KinGAidraChatTaskService srv = null;
@@ -158,12 +183,17 @@ public class kingaidra_auto extends GhidraScript {
                     continue;
                 }
 
-                add_called_func_recur(analyze_func_list, func, CALLED_RECURSIVE_COUNT);
+                add_called_func_recur(analyze_func_list, func, called_recursive_count);
 
                 add_func(analyze_func_list, func);
 
-                add_calling_func_recur(analyze_func_list, func, CALLING_RECURSIVE_COUNT);
+                add_calling_func_recur(analyze_func_list, func, calling_recursive_count);
             }
+        }
+        println(String.format("functions: %d", analyze_func_list.size()));
+        if (analyze_func_list.size() > function_count_threshold) {
+            println("Function count exceeds threshold, stopping analysis.");
+            return;
         }
         for (Function func : analyze_func_list) {
             analyze_func(func);
