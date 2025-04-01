@@ -126,15 +126,32 @@ public class kingaidra_auto extends GhidraScript {
     private void parse_args() {
         String[] args = getScriptArgs();
 
-        for (String arg : args) {
-            if (arg.startsWith("interval=")) {
-                interval_millisecond = Integer.parseInt(arg.split("=")[1]);
-            } else if (arg.startsWith("called_recur=")) {
-                called_recursive_count = Integer.parseInt(arg.split("=")[1]);
-            } else if (arg.startsWith("calling_recur=")) {
-                calling_recursive_count = Integer.parseInt(arg.split("=")[1]);
-            } else if (arg.startsWith("func_threshold=")) {
-                function_count_threshold = Integer.parseInt(arg.split("=")[1]);
+        for (int i = 0; i < args.length; i++) {
+            String key = args[i];
+
+            if (i + 1 >= args.length) {
+                continue;
+            }
+
+            String value = args[i + 1];
+
+            try {
+                switch (key) {
+                    case "interval":
+                        interval_millisecond = Integer.parseInt(value);
+                        break;
+                    case "called_recur":
+                        called_recursive_count = Integer.parseInt(value);
+                        break;
+                    case "calling_recur":
+                        calling_recursive_count = Integer.parseInt(value);
+                        break;
+                    case "func_threshold":
+                        function_count_threshold = Integer.parseInt(value);
+                        break;
+                }
+            } catch (NumberFormatException e) {
+                println("Invalid number format for argument: " + key + " with value: " + value);
             }
         }
     }
