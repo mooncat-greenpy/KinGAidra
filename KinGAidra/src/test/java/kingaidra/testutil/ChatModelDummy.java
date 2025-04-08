@@ -1,5 +1,6 @@
 package kingaidra.testutil;
 
+import ghidra.app.script.GhidraState;
 import ghidra.framework.plugintool.PluginTool;
 import ghidra.program.model.listing.Program;
 import kingaidra.ai.convo.Conversation;
@@ -55,7 +56,7 @@ public class ChatModelDummy implements Model {
     }
 
     public Conversation guess(TaskType task_type, Conversation convo, KinGAidraChatTaskService service, PluginTool tool,
-            Program program) {
+            Program program, GhidraState src_state) {
         convo.add_assistant_msg(
                 convo.get_msg(convo.get_msgs_len() - 1) + convo.get_model().get_name());
         return convo;

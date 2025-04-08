@@ -2,6 +2,7 @@ package kingaidra.testutil;
 
 import java.io.Serializable;
 
+import ghidra.app.script.GhidraState;
 import ghidra.framework.plugintool.PluginTool;
 import ghidra.program.model.listing.Program;
 import kingaidra.decom.DecomDiff;
@@ -58,7 +59,7 @@ public class ModelDummy implements Model, Serializable {
     }
 
     public Conversation guess(TaskType task_type, Conversation convo, KinGAidraChatTaskService service, PluginTool tool,
-            Program program) {
+            Program program, GhidraState src_state) {
         if (task_type == TaskType.DECOM_REFACTOR_FUNC_PARAM_VAR && convo.get_msg(convo.get_msgs_len() - 1).contains("func_401000") && convo.get_msg(convo.get_msgs_len() - 1).contains("new_func_name")) {
             convo.add_assistant_msg("{\n" +
                         "    \"new_func_name\": \"func_401000" + name + "\",\n" +
