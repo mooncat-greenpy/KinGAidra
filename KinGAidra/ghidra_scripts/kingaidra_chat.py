@@ -20,15 +20,31 @@ TOOLS_FLAG = True
 # <KinGAidra Marker For Update: v1.1.0>
 
 
-import kingaidra
-
 import urllib2
 import json
+
+import java.util.AbstractMap as AbstractMap
+import java.util.LinkedList as LinkedList
+
+import kingaidra
 
 import ghidra.util.task.TaskMonitor as TaskMonitor
 
 def add_tools(data):
     data["tools"] = [
+        {
+            "type": "function",
+            "function": {
+                "name": "get_current_address",
+                "description": "Returns the user's selected address.",
+                "parameters": {
+                    "type": "object",
+                    "properties": {},
+                    "additionalProperties": False
+                },
+                "strict": True
+            }
+        },
         {
             "type": "function",
             "function": {
@@ -151,25 +167,55 @@ def add_tools(data):
                 },
                 "strict": True
             }
+        },
+        {
+            "type": "function",
+            "function": {
+                "name": "add_comments",
+                "description": "Adds comments to the specified function based on the provided list.",
+                "parameters": {
+                    "type": "object",
+                    "properties": {
+                        "address": {"type": "number"},
+                        "comments": {
+                            "type": "array",
+                            "items": {
+                                "type": "object",
+                                "properties": {
+                                    "source_code_line": {"type": "string"},
+                                    "comment": {"type": "string"}
+                                },
+                                "required": ["source_code_line", "comment"],
+                                "additionalProperties": False
+                            }
+                        }
+                    },
+                    "required": ["address", "comments"],
+                    "additionalProperties": False
+                },
+                "strict": True
+            }
         }
     ]
 
 def handle_tool_call(tool_call, ghidra):
     func_name = tool_call["function"]["name"]
     args = json.loads(tool_call["function"]["arguments"])
-    if func_name == "get_function_address_by_name":
+    if func_name == "get_current_address":
+        content = "%d" % (ghidra.get_current_addr().getOffset())
+    elif func_name == "get_function_address_by_name":
         same_name_funcs = ghidra.get_func(args["name"])
-        content = "Address list.\n"
+        content = "Addresses list.\n"
         for func in same_name_funcs:
             content += "- %d\n" % (func.getEntryPoint().getOffset())
     elif func_name == "get_called_function":
         func = ghidra.get_func(ghidra.get_addr(args["address"]))
-        content = ""
+        content = "Functions list.\n"
         for calling_func in func.getCalledFunctions(TaskMonitor.DUMMY):
             content += "- [%d]: %s\n" % (calling_func.getEntryPoint().getOffset(), calling_func.getName())
     elif func_name == "get_calling_function":
         func = ghidra.get_func(ghidra.get_addr(args["address"]))
-        content = ""
+        content = "Functions list.\n"
         for calling_func in func.getCallingFunctions(TaskMonitor.DUMMY):
             content += "- [%d]: %s\n" % (calling_func.getEntryPoint().getOffset(), calling_func.getName())
     elif func_name == "get_asm":
@@ -186,9 +232,19 @@ def handle_tool_call(tool_call, ghidra):
             diff.set_var_new_name(var["orig_var_name"], var["new_var_name"])
             diff.set_datatype_new_name(var["orig_var_name"], var["new_datatype"])
         if ghidra.refact(diff):
-           content = "Success"
+            content = "Success"
         else:
-           content = "Failed"
+            content = "Failed"
+    elif func_name == "add_comments":
+        addr = ghidra.get_addr(args["address"])
+        ghidra.clear_comments(ghidra.get_addr(args["address"]))
+        comments_list = LinkedList()
+        for cmt in args["comments"]:
+            comments_list.add(AbstractMap.SimpleEntry(cmt["source_code_line"], cmt["comment"]))
+        if ghidra.add_comments(addr, comments_list):
+            content = "Success"
+        else:
+            content = "Failed"
     return content
 
 def main():
