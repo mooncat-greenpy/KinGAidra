@@ -49,20 +49,28 @@ public class kingaidra_auto extends GhidraScript {
     private kingaidra.keyfunc.Guess keyfunc_guess;
 
     private boolean refactoring(Function func) {
-        DecomDiff[] diff_arr = decom_guess.guess_selected(func.getEntryPoint());
-        if (diff_arr.length < 1) {
+        try {
+            DecomDiff[] diff_arr = decom_guess.guess_selected(func.getEntryPoint());
+            if (diff_arr.length < 1) {
+                return false;
+            }
+            refactor.refact(diff_arr[0], false);
+        } catch(Exception e) {
             return false;
         }
-        refactor.refact(diff_arr[0], false);
         return true;
     }
 
     private boolean add_comments(Function func) {
-        List<Map.Entry<String, String>> comments = chat_guess.guess_src_code_comments(func.getEntryPoint());
-        if (comments.size() < 1) {
+        try {
+            List<Map.Entry<String, String>> comments = chat_guess.guess_src_code_comments(func.getEntryPoint());
+            if (comments.size() < 1) {
+                return false;
+            }
+            ghidra.add_comments(func.getEntryPoint(), comments);
+        } catch(Exception e) {
             return false;
         }
-        ghidra.add_comments(func.getEntryPoint(), comments);
         return true;
     }
 
