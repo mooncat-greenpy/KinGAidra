@@ -65,7 +65,7 @@ def add_tools(data):
             "type": "function",
             "function": {
                 "name": "get_function_list",
-                "description": "Retrieve functions in the binary.",
+                "description": "Retrieve functions in the binary and return their names and addresses.",
                 "parameters": {
                     "type": "object",
                     "properties": {
@@ -79,7 +79,7 @@ def add_tools(data):
             "type": "function",
             "function": {
                 "name": "get_called_function",
-                "description": "Retrieve functions that are called by the specified function.",
+                "description": "Retrieve functions that are called by the specified function and return their names and addresses.",
                 "parameters": {
                     "type": "object",
                     "properties": {
@@ -95,7 +95,7 @@ def add_tools(data):
             "type": "function",
             "function": {
                 "name": "get_calling_function",
-                "description": "Retrieve functions that call the specified function.",
+                "description": "Retrieve functions that call the specified function and return their names and addresses.",
                 "parameters": {
                     "type": "object",
                     "properties": {
@@ -246,7 +246,7 @@ def add_tools(data):
             "type": "function",
             "function": {
                 "name": "get_strings",
-                "description": "Retrieve strings in the binary.",
+                "description": "Retrieve strings in the binary and their addresses.",
                 "parameters": {
                     "type": "object",
                     "properties": {
@@ -260,7 +260,7 @@ def add_tools(data):
             "type": "function",
             "function": {
                 "name": "get_ref_to",
-                "description": "Returns a list of references to the specified address.",
+                "description": "Returns a list of reference source addresses to the specified address.",
                 "parameters": {
                     "type": "object",
                     "properties": {
@@ -281,6 +281,9 @@ def handle_tool_call(tool_call, ghidra):
         content = "%d" % (ghidra.get_current_addr().getOffset())
     elif func_name == "get_function_address_by_name":
         same_name_funcs = ghidra.get_func(args["name"])
+        if not same_name_funcs:
+            content = "None"
+            return content
         content = "Addresses list.\n"
         for func in same_name_funcs:
             content += "- %d\n" % (func.getEntryPoint().getOffset())
@@ -292,34 +295,55 @@ def handle_tool_call(tool_call, ghidra):
             content += "- [%d]: %s\n" % (func.getEntryPoint().getOffset(), func.getName())
     elif func_name == "get_called_function":
         func = ghidra.get_func(ghidra.get_addr(args["address"]))
+        if not func:
+            content = "Invalid address"
+            return content
         called_func_list = func.getCalledFunctions(TaskMonitor.DUMMY)
+        if not called_func_list:
+            content = "None"
+            return content
         content = "Functions list.\n"
         for called_func in called_func_list:
             content += "- [%d]: %s\n" % (called_func.getEntryPoint().getOffset(), called_func.getName())
     elif func_name == "get_calling_function":
         func = ghidra.get_func(ghidra.get_addr(args["address"]))
+        if not func:
+            content = "Invalid address"
+            return content
         calling_func_list = func.getCallingFunctions(TaskMonitor.DUMMY)
+        if not calling_func_list:
+            content = "None"
+            return content
         content = "Functions list.\n"
         for calling_func in calling_func_list:
             content += "- [%d]: %s\n" % (calling_func.getEntryPoint().getOffset(), calling_func.getName())
     elif func_name == "get_asm_by_name":
         same_name_funcs = ghidra.get_func(args["name"])
-        if len(same_name_funcs) == 1:
-            content = ghidra.get_asm(same_name_funcs[0].getEntryPoint())
-        else:
+        if not len(same_name_funcs) == 1:
             content = "Failed"
+            return content
+        content = ghidra.get_asm(same_name_funcs[0].getEntryPoint())
     elif func_name == "get_asm":
         content = ghidra.get_asm(ghidra.get_addr(args["address"]))
+        if not content:
+            content = "Invalid address"
+            return content
     elif func_name == "get_decompiled_code_by_name":
         same_name_funcs = ghidra.get_func(args["name"])
-        if len(same_name_funcs) == 1:
-            content = ghidra.get_decom(same_name_funcs[0].getEntryPoint())
-        else:
+        if not len(same_name_funcs) == 1:
             content = "Failed"
+            return content
+        content = ghidra.get_decom(same_name_funcs[0].getEntryPoint())
     elif func_name == "get_decompiled_code":
         content = ghidra.get_decom(ghidra.get_addr(args["address"]))
+        if not content:
+            content = "Invalid address"
+            return content
     elif func_name == "refactoring":
         diff = ghidra.get_decomdiff(ghidra.get_addr(args["address"]))
+        if not diff:
+            content = "Invalid address"
+            return content
         diff.set_name(args["new_func_name"])
         for param in args["params"]:
             diff.set_param_new_name(param["orig_param_name"], param["new_param_name"])
@@ -333,7 +357,10 @@ def handle_tool_call(tool_call, ghidra):
             content = "Failed"
     elif func_name == "add_comments":
         addr = ghidra.get_addr(args["address"])
-        ghidra.clear_comments(ghidra.get_addr(args["address"]))
+        if not addr:
+            content = "Invalid address"
+            return content
+        ghidra.clear_comments(addr)
         comments_list = LinkedList()
         for cmt in args["comments"]:
             comments_list.add(AbstractMap.SimpleEntry(cmt["source_code_line"], cmt["comment"]))
@@ -343,14 +370,22 @@ def handle_tool_call(tool_call, ghidra):
             content = "Failed"
     elif func_name == "get_strings":
         data_list = ghidra.get_strings()
+        if not data_list:
+            content = "None"
+            return
         content = "Strings list.\n"
         for data in data_list:
             content += "- [%d]: %s\n" % (data.getAddress().getOffset(), data.getDefaultValueRepresentation())
     elif func_name == "get_ref_to":
         ref_list = ghidra.get_ref_to(ghidra.get_addr(args["address"]))
+        if not ref_list:
+            content = "None"
+            return
         content = "Reference address.\n"
         for ref in ref_list:
             content += "- %d\n" % (ref.getFromAddress().getOffset())
+    if not content:
+        content = "Failed"
     return content
 
 def main():
@@ -384,7 +419,10 @@ def main():
 
         if response["choices"][0]["finish_reason"] == "tool_calls":
             for i in response["choices"][0]["message"]["tool_calls"]:
-                content = handle_tool_call(i, ghidra)
+                try:
+                    content = handle_tool_call(i, ghidra)
+                except Exception as e:
+                    content = "Failed"
                 data["messages"].append({"role": "tool", "tool_call_id": i["id"], "content": content})
         elif response["choices"][0]["finish_reason"] == "stop":
             break
