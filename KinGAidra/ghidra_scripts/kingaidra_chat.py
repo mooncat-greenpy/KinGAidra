@@ -393,4 +393,5 @@ def main():
     state.addEnvironmentVar("RESPONSE", result)
 
 if __name__ == "__main__":
+    TOOLS_FLAG = globals().get("TOOLS_FLAG", True)
     main()
