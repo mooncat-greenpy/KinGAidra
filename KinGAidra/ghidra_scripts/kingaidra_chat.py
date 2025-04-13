@@ -413,10 +413,15 @@ def main():
                 "User-Agent": "Python",
             }
         )
-        response = json.loads(urllib2.urlopen(req).read())
+
+        try:
+            response = json.loads(urllib2.urlopen(req).read())
+        except urllib2.HTTPError as e:
+            printerr(str(e))
+            printerr(e.read())
+            exit()
 
         data["messages"].append(response["choices"][0]["message"])
-
         if response["choices"][0]["finish_reason"] == "tool_calls":
             for i in response["choices"][0]["message"]["tool_calls"]:
                 try:
