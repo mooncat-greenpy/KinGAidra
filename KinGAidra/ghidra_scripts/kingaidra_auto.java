@@ -5,6 +5,8 @@
 //@toolbar 
 
 
+import java.io.BufferedWriter;
+import java.io.FileWriter;
 import java.util.HashSet;
 import java.util.List;
 import java.util.LinkedList;
@@ -16,10 +18,12 @@ import ghidra.framework.plugintool.PluginTool;
 import ghidra.program.model.address.Address;
 import ghidra.program.model.listing.Data;
 import ghidra.program.model.listing.Function;
+import ghidra.program.model.listing.FunctionIterator;
 import ghidra.program.model.symbol.Reference;
 import ghidra.util.task.TaskMonitor;
 
 import kingaidra.ai.Ai;
+import kingaidra.ai.convo.Conversation;
 import kingaidra.ai.convo.ConversationContainer;
 import kingaidra.ai.convo.ConversationContainerGhidraProgram;
 import kingaidra.ai.model.ModelConfSingle;
@@ -37,10 +41,14 @@ public class kingaidra_auto extends GhidraScript {
     private static final int DEFAULT_CALLING_RECURSIVE_COUNT = 4;
     private static final int DEFAULT_FUNCTION_COUNT_THRESHOLD = 500;
 
+    private static final int MAX_PROMPT_LINE = 3000;
+    private static final String DEFAULT_REPORT_NAME = "report.md";
+
     private int interval_millisecond = DEFAULT_INTERVAL_MILLISECOND;
     private int called_recursive_count = DEFAULT_CALLED_RECURSIVE_COUNT;
     private int calling_recursive_count = DEFAULT_CALLING_RECURSIVE_COUNT;
     private int function_count_threshold = DEFAULT_FUNCTION_COUNT_THRESHOLD;
+    private String report_name = DEFAULT_REPORT_NAME;
 
     private GhidraUtil ghidra;
     private kingaidra.chat.Guess chat_guess;
@@ -131,6 +139,130 @@ public class kingaidra_auto extends GhidraScript {
         }
     }
 
+    private void summarize_report_funcs(List<String> report_list) {
+        String prompt =
+            "You are analyzing a malware sample using summaries from multiple function chunks.\n" +
+            "\n" +
+            "Please synthesize these summaries and generate a full **Markdown-formatted malware analysis report**, following this structure:\n" +
+            "\n" +
+            "---\n" +
+            "\n" +
+            "# Malware Analysis Report\n" +
+            "\n" +
+            "## 1. Executive Summary\n" +
+            "Summarize the malware's purpose and behavior at a high level.\n" +
+            "\n" +
+            "## 2. Detailed Functional Analysis\n" +
+            "For each functionality category, provide:\n" +
+            "- A short description\n" +
+            "- The names of functions that implement it\n" +
+            "\n" +
+            "### Encryption\n" +
+            "- Description: ...\n" +
+            "- Functions:\n" +
+            "    - `<function_name>`: <description>\n" +
+            "    - ...\n" +
+            "\n" +
+            "### C2 Communication\n" +
+            "- Description: ...\n" +
+            "- Functions:\n" +
+            "    - `<function_name>`: <description>\n" +
+            "    - ...\n" +
+            "\n" +
+            "... (repeat for other categories)\n" +
+            "\n" +
+            "## 3. APIs or Strings Found (if available)\n" +
+            "List notable Windows APIs, URLs, registry keys, etc.\n" +
+            "\n" +
+            "## 4. Conclusion\n" +
+            "State your judgment about the malware type (e.g., ransomware, RAT, info-stealer) and any recommendations or insights for malware analysts.\n" +
+            "\n" +
+            "---\n" +
+            "\n" +
+            "Below are the summaries from each chunk:\n" +
+            "\n";
+
+        for (int i = 0; i < report_list.size(); i++) {
+            prompt += String.format("## chunk%d\n\n%s\n\n", i, report_list.get(i));
+        }
+        Conversation convo = chat_guess.guess(prompt, null);
+        if (convo == null) {
+            return;
+        }
+        String msg = convo.get_msg(convo.get_msgs_len() - 1);
+        try (BufferedWriter writer = new BufferedWriter(new FileWriter(report_name, false))) {
+            writer.write(msg);
+            writer.newLine();
+        } catch (Exception e) {
+        }
+    }
+
+    private String report_funcs(Function func, String report_prompt, List<String> report_list) {
+        String decom_str = ghidra.get_decom(func.getEntryPoint());
+        if (decom_str == null) {
+            return report_prompt;
+        }
+        report_prompt += String.format("%s\n\n", decom_str);
+        if (report_prompt.split("\\R").length > MAX_PROMPT_LINE) {
+            Conversation convo = chat_guess.guess(
+                "You are analyzing a group of decompiled functions from a piece of malware.\n" +
+                "\n" +
+                "Please examine the code and generate a structured analysis in **Markdown format**, following these instructions:\n" +
+                "\n" +
+                "---\n" +
+                "\n" +
+                "### Instructions:\n" +
+                "\n" +
+                "1. Identify any of the following categories of functionality (you may add more if applicable):\n" +
+                "   - C2 Communication\n" +
+                "   - Persistence\n" +
+                "   - Encryption\n" +
+                "   - Information Gathering\n" +
+                "   - File Operations\n" +
+                "   - Process Manipulation\n" +
+                "   - Anti-Analysis\n" +
+                "   - Others (freely add if needed)\n" +
+                "\n" +
+                "2. For each category, explain the observed behavior and list the corresponding function names. Function names are indicated by comments like // Function: <function_name> at the top of each function.\n" +
+                "\n" +
+                "3. Format your output in the following **Markdown structure**:\n" +
+                "\n" +
+                "---\n" +
+                "\n" +
+                "## Functionality Classification\n" +
+                "\n" +
+                "### C2 Communication\n" +
+                "- **Description**: Brief explanation...\n" +
+                "- **Function Names**:\n" +
+                "    - `<function_name>`: <description>\n" +
+                "    - ...\n" +
+                "\n" +
+                "### Encryption\n" +
+                "- **Description**: ...\n" +
+                "- **Function Names**:\n" +
+                "    - `<function_name>`: <description>\n" +
+                "    - ...\n" +
+                "\n" +
+                "... (repeat for other categories)\n" +
+                "\n" +
+                "---\n" +
+                "\n" +
+                "If possible, also mention any relevant APIs or strings found in the code (e.g., `InternetConnectA`, `CryptEncrypt`, `RegSetValueEx`).\n" +
+                "\n" +
+                "Below is the list of decompiled functions:\n" +
+                "\n" +
+                report_prompt
+            , null);
+            if (convo == null) {
+                return report_prompt;
+            }
+            String msg = convo.get_msg(convo.get_msgs_len() - 1);
+            report_list.add(msg);
+            report_prompt = "";
+        }
+        return report_prompt;
+    }
+
     private void parse_args() {
         String[] args = getScriptArgs();
 
@@ -156,6 +288,9 @@ public class kingaidra_auto extends GhidraScript {
                         break;
                     case "func_threshold":
                         function_count_threshold = Integer.parseInt(value);
+                        break;
+                    case "report_name":
+                        report_name = value;
                         break;
                 }
             } catch (NumberFormatException e) {
@@ -223,5 +358,12 @@ public class kingaidra_auto extends GhidraScript {
         for (Function func : analyze_func_list) {
             analyze_func(func);
         }
+        String report_prompt = "";
+        List<String> report_list = new LinkedList<>();
+        FunctionIterator itr = currentProgram.getListing().getFunctions(true);
+        while (itr.hasNext()) {
+            report_prompt = report_funcs(itr.next(), report_prompt, report_list);
+        }
+        summarize_report_funcs(report_list);
     }
 }
