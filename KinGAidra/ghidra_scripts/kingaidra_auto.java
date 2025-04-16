@@ -56,6 +56,8 @@ public class kingaidra_auto extends GhidraScript {
     private kingaidra.decom.Refactor refactor;
     private kingaidra.keyfunc.Guess keyfunc_guess;
 
+    private boolean verbose = false;
+
     private boolean refactoring(Function func) {
         try {
             DecomDiff[] diff_arr = decom_guess.guess_selected(func.getEntryPoint());
@@ -269,6 +271,11 @@ public class kingaidra_auto extends GhidraScript {
         for (int i = 0; i < args.length; i++) {
             String key = args[i];
 
+            if (key.equals("-v")) {
+                verbose = true;
+                continue;
+            }
+
             if (i + 1 >= args.length) {
                 continue;
             }
@@ -297,6 +304,14 @@ public class kingaidra_auto extends GhidraScript {
                 println("Invalid number format for argument: " + key + " with value: " + value);
             }
         }
+
+        if (verbose) {
+            println(String.format("interval=%s", interval_millisecond));
+            println(String.format("called_recur=%s", called_recursive_count));
+            println(String.format("calling_recur=%s", calling_recursive_count));
+            println(String.format("func_threshold=%s", function_count_threshold));
+            println(String.format("report_name=%s", report_name));
+        }
     }
 
     public void run() throws Exception {
@@ -324,6 +339,15 @@ public class kingaidra_auto extends GhidraScript {
         });
 
         keyfunc_guess = new kingaidra.keyfunc.Guess(ghidra, ai, chat_model_conf);
+
+        if (verbose) {
+            for (String model_name : chat_model_conf.get_models()) {
+                if (chat_model_conf.get_model_status(model_name)) {
+                    println(String.format("model name=%s, script=%s", model_name, chat_model_conf.get_model(model_name).get_script()));
+                    break;
+                }
+            }
+        }
 
         Data[] str_data_list = keyfunc_guess.guess_string_data();
         for (Data data : str_data_list) {
