@@ -63,7 +63,7 @@ public class MarkupExtractor {
                 if (s.charAt(i) == '`') {
                     if (in_quote) {
                         String str = current_quote.toString();
-                        if (str.startsWith("\"") && str.endsWith("\"")) {
+                        if (str.startsWith("\"") && str.endsWith("\"") && str.length() > 2) {
                             str = str.substring(1, str.length() - 1);
                         }
                         quotes.add(str);
