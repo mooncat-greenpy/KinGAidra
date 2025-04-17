@@ -192,11 +192,7 @@ public class kingaidra_auto extends GhidraScript {
             return;
         }
         String msg = convo.get_msg(convo.get_msgs_len() - 1);
-        try (BufferedWriter writer = new BufferedWriter(new FileWriter(report_name, false))) {
-            writer.write(msg);
-            writer.newLine();
-        } catch (Exception e) {
-        }
+        create_file(report_name, msg);
     }
 
     private String report_funcs(Function func, String report_prompt, List<String> report_list) {
@@ -265,6 +261,14 @@ public class kingaidra_auto extends GhidraScript {
         return report_prompt;
     }
 
+    private void create_file(String file_name, String data) {
+        try (BufferedWriter writer = new BufferedWriter(new FileWriter(file_name, false))) {
+            writer.write(data);
+            writer.newLine();
+        } catch (Exception e) {
+        }
+    }
+
     private void parse_args() {
         String[] args = getScriptArgs();
 
@@ -314,40 +318,8 @@ public class kingaidra_auto extends GhidraScript {
         }
     }
 
-    public void run() throws Exception {
-        parse_args();
-
+    private void analyze_function_auto() throws Exception {
         List<Function> analyze_func_list = new LinkedList();
-
-        KinGAidraChatTaskService srv = null;
-        PluginTool tool = state.getTool();
-        ghidra = new GhidraUtilImpl(currentProgram, TaskMonitor.DUMMY);
-        ConversationContainer container = new ConversationContainerGhidraProgram(currentProgram, ghidra);
-        Ai ai = new Ai(tool, currentProgram, ghidra, container, srv);
-        ai.set_ghidra_state(state);
-        ModelConfSingle chat_model_conf = new ModelConfSingle("Chat and others",
-                new ChatModelPreferences("chat"));
-
-        chat_guess = new kingaidra.chat.Guess(ai, chat_model_conf);
-
-        decom_guess = new kingaidra.decom.Guess(ghidra, ai, chat_model_conf);
-        refactor = new kingaidra.decom.Refactor(ghidra, ai, new java.util.function.Function<String, String>() {
-            @Override
-            public String apply(String msg) {
-                return msg;
-            }
-        });
-
-        keyfunc_guess = new kingaidra.keyfunc.Guess(ghidra, ai, chat_model_conf);
-
-        if (verbose) {
-            for (String model_name : chat_model_conf.get_models()) {
-                if (chat_model_conf.get_model_status(model_name)) {
-                    println(String.format("model name=%s, script=%s", model_name, chat_model_conf.get_model(model_name).get_script()));
-                    break;
-                }
-            }
-        }
 
         Data[] str_data_list = keyfunc_guess.guess_string_data();
         for (Data data : str_data_list) {
@@ -382,6 +354,9 @@ public class kingaidra_auto extends GhidraScript {
         for (Function func : analyze_func_list) {
             analyze_func(func);
         }
+    }
+
+    private void report_function_auto() throws Exception {
         String report_prompt = "";
         List<String> report_list = new LinkedList<>();
         FunctionIterator itr = currentProgram.getListing().getFunctions(true);
@@ -389,5 +364,43 @@ public class kingaidra_auto extends GhidraScript {
             report_prompt = report_funcs(itr.next(), report_prompt, report_list);
         }
         summarize_report_funcs(report_list);
+    }
+
+    public void run() throws Exception {
+        parse_args();
+
+        KinGAidraChatTaskService srv = null;
+        PluginTool tool = state.getTool();
+        ghidra = new GhidraUtilImpl(currentProgram, TaskMonitor.DUMMY);
+        ConversationContainer container = new ConversationContainerGhidraProgram(currentProgram, ghidra);
+        Ai ai = new Ai(tool, currentProgram, ghidra, container, srv);
+        ai.set_ghidra_state(state);
+        ModelConfSingle chat_model_conf = new ModelConfSingle("Chat and others",
+                new ChatModelPreferences("chat"));
+
+        chat_guess = new kingaidra.chat.Guess(ai, chat_model_conf);
+
+        decom_guess = new kingaidra.decom.Guess(ghidra, ai, chat_model_conf);
+        refactor = new kingaidra.decom.Refactor(ghidra, ai, new java.util.function.Function<String, String>() {
+            @Override
+            public String apply(String msg) {
+                return msg;
+            }
+        });
+
+        keyfunc_guess = new kingaidra.keyfunc.Guess(ghidra, ai, chat_model_conf);
+
+        if (verbose) {
+            for (String model_name : chat_model_conf.get_models()) {
+                if (chat_model_conf.get_model_status(model_name)) {
+                    println(String.format("model name=%s, script=%s", model_name, chat_model_conf.get_model(model_name).get_script()));
+                    break;
+                }
+            }
+        }
+
+        analyze_function_auto();
+
+        report_function_auto();
     }
 }
