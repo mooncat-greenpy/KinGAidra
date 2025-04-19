@@ -157,18 +157,18 @@ public class kingaidra_auto extends GhidraScript {
             "## 2. Detailed Functional Analysis\n" +
             "For each functionality category, provide:\n" +
             "- A short description\n" +
-            "- The names of functions that implement it\n" +
+            "- The names and addresses of functions that implement it\n" +
             "\n" +
             "### Encryption\n" +
             "- Description: ...\n" +
             "- Functions:\n" +
-            "    - `<function_name>`: <description>\n" +
+            "    - `<function_name>` (`<function_address>`): <description>\n" +
             "    - ...\n" +
             "\n" +
             "### C2 Communication\n" +
             "- Description: ...\n" +
             "- Functions:\n" +
-            "    - `<function_name>`: <description>\n" +
+            "    - `<function_name>` (`<function_address>`): <description>\n" +
             "    - ...\n" +
             "\n" +
             "... (repeat for other categories)\n" +
@@ -200,7 +200,7 @@ public class kingaidra_auto extends GhidraScript {
         if (decom_str == null) {
             return report_prompt;
         }
-        report_prompt += String.format("%s\n\n", decom_str);
+        report_prompt += String.format("# Address %s\n\n```cpp\n%s\n```\n\n", func.getEntryPoint(), decom_str);
         if (report_prompt.split("\\R").length > MAX_PROMPT_LINE) {
             Conversation convo = chat_guess.guess(
                 "You are analyzing a group of decompiled functions from a piece of malware.\n" +
@@ -221,9 +221,9 @@ public class kingaidra_auto extends GhidraScript {
                 "   - Anti-Analysis\n" +
                 "   - Others (freely add if needed)\n" +
                 "\n" +
-                "2. For each category, explain the observed behavior and list the corresponding function names. Function names are indicated by comments like // Function: <function_name> at the top of each function.\n" +
+                "2. For each category, explain the observed behavior and list the corresponding function names and addresses.\n" +
                 "\n" +
-                "3. Format your output in the following **Markdown structure**:\n" +
+                "3. Format your output in the following **Markdown structure** for malware analysts:\n" +
                 "\n" +
                 "---\n" +
                 "\n" +
@@ -231,14 +231,14 @@ public class kingaidra_auto extends GhidraScript {
                 "\n" +
                 "### C2 Communication\n" +
                 "- **Description**: Brief explanation...\n" +
-                "- **Function Names**:\n" +
-                "    - `<function_name>`: <description>\n" +
+                "- **Functions**:\n" +
+                "    - `<function_name>` (`<function_address>`): <description>\n" +
                 "    - ...\n" +
                 "\n" +
                 "### Encryption\n" +
                 "- **Description**: ...\n" +
-                "- **Function Names**:\n" +
-                "    - `<function_name>`: <description>\n" +
+                "- **Functions**:\n" +
+                "    - `<function_name>` (`<function_address>`): <description>\n" +
                 "    - ...\n" +
                 "\n" +
                 "... (repeat for other categories)\n" +
