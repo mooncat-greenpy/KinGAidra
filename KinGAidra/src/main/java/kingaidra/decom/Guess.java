@@ -48,7 +48,8 @@ public class Guess {
 
     private boolean guess_func_param_var(DecomDiff diff) {
         Conversation convo = new Conversation(ConversationType.SYSTEM_DECOM, diff.get_model());
-        String msg = String.format("Please improve the readability of the following code by renaming the functions, parameters, and variables with more descriptive and meaningful names. The new names should better reflect the purpose of the functions and the role of each variable in the code.\n" +
+        String msg = String.format("Please improve the readability of the following code by renaming the functions, parameters, and variables with more descriptive and meaningful names. The new names should clearly reflect the purpose and behavior of the function and the role of every parameter and variable.\n" +
+                        "Since this function is processed in isolation and naming collisions may occur in a larger context, generate a function name that is uniquely descriptive based on what the function actually does. Include context clues in the name (e.g., related data, behavior, action performed) to help ensure uniqueness when aggregated with other renamed functions.\n" +
                         "```\n" +
                         "<code>\n" +
                         "```\n" +
