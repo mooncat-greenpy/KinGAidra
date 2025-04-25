@@ -200,7 +200,7 @@ public class kingaidra_auto extends GhidraScript {
         if (decom_str == null) {
             return report_prompt;
         }
-        report_prompt += String.format("# Address %s\n\n```cpp\n%s\n```\n\n", func.getEntryPoint(), decom_str);
+        report_prompt += String.format("# Address %s\n\n```cpp\n%s\n```\n\n", func.getEntryPoint(), decom_str).replace("KAI: ", "");
         if (report_prompt.split("\\R").length > MAX_PROMPT_LINE) {
             Conversation convo = chat_guess.guess(
                 "You are analyzing a group of decompiled functions from a piece of malware.\n" +
