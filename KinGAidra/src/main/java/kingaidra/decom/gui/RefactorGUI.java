@@ -98,7 +98,7 @@ public class RefactorGUI extends JPanel {
     private JLabel info_label;
     private JCheckBox rename_chkbox;
     private JCheckBox retype_chkbox;
-    private JCheckBox datatype_checkbox;
+    private JCheckBox datatype_chkbox;
     private Refactor refactor;
     private JTabbedPane tabbed_panel;
 
@@ -121,15 +121,16 @@ public class RefactorGUI extends JPanel {
         retype_chkbox = new JCheckBox("Retype");
         retype_chkbox.setSelected(false);
         retype_chkbox.setToolTipText("Enabling this option may cause some variable operations to fail.");
-        datatype_checkbox = new JCheckBox("Resolve datatype");
-        datatype_checkbox.setSelected(false);
+        datatype_chkbox = new JCheckBox("Resolve datatype");
+        datatype_chkbox.setSelected(false);
+        datatype_chkbox.setToolTipText("Enabling this option may result in incorrect data types being added.");
         JPanel panel = new JPanel();
         panel.setLayout(new BoxLayout(panel, BoxLayout.X_AXIS));
         panel.add(info_label);
         panel.add(rename_chkbox);
         panel.add(retype_chkbox);
         // A lot of noise
-        // panel.add(datatype_checkbox);
+        panel.add(datatype_chkbox);
 
         tabbed_panel = new JTabbedPane();
         add(panel, BorderLayout.NORTH);
@@ -150,7 +151,7 @@ public class RefactorGUI extends JPanel {
         name = diff.get_name().get_var_name();
         rename_chkbox.setSelected(true);
         retype_chkbox.setSelected(false);
-        datatype_checkbox.setSelected(false);
+        datatype_chkbox.setSelected(false);
         set_info_label();
 
         DiffTableModel tableModel = new DiffTableModel();
@@ -206,7 +207,7 @@ public class RefactorGUI extends JPanel {
         DecomDiff diff = model.get_diff(rename_chkbox.isSelected(), retype_chkbox.isSelected());
 
         try {
-            refactor.refact(diff, datatype_checkbox.isSelected());
+            refactor.refact(diff, datatype_chkbox.isSelected());
         } finally {
             reset();
         }
