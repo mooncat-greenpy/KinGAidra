@@ -10,6 +10,8 @@ MODEL = "" # "gpt-4o-mini"
 API_KEY = ""
 POST_MSG = "" # "Please respond in XXXX."
 TOOLS_FLAG = True
+OPTIONAL_HEADERS = {}
+OPTIONAL_DATA = {}
 
 
 # Only modify the code above this comment.
@@ -404,14 +406,17 @@ def main():
         data["messages"][-1]["content"] += POST_MSG
 
     while True:
+        headers = {
+            "Content-Type": "application/json",
+            "Authorization": "Bearer " + API_KEY,
+            "User-Agent": "Python",
+        }
+        headers.update(OPTIONAL_HEADERS)
+        data.update(OPTIONAL_DATA)
         req = urllib2.Request(
             URL,
             json.dumps(data),
-            {
-                "Content-Type": "application/json",
-                "Authorization": "Bearer " + API_KEY,
-                "User-Agent": "Python",
-            }
+            headers
         )
 
         try:
