@@ -37,6 +37,7 @@ import kingaidra.ghidra.GhidraUtilImpl;
 public class kingaidra_auto extends GhidraScript {
 
     private static final int DEFAULT_INTERVAL_MILLISECOND = 1000 * 60;
+    private static final boolean DEFAULT_ALL_FUNC = false;
     private static final int DEFAULT_CALLED_RECURSIVE_COUNT = 4;
     private static final int DEFAULT_CALLING_RECURSIVE_COUNT = 4;
     private static final int DEFAULT_FUNCTION_COUNT_THRESHOLD = 500;
@@ -45,6 +46,7 @@ public class kingaidra_auto extends GhidraScript {
     private static final String DEFAULT_REPORT_NAME = "report.md";
 
     private int interval_millisecond = DEFAULT_INTERVAL_MILLISECOND;
+    private boolean all_func = DEFAULT_ALL_FUNC;
     private int called_recursive_count = DEFAULT_CALLED_RECURSIVE_COUNT;
     private int calling_recursive_count = DEFAULT_CALLING_RECURSIVE_COUNT;
     private int function_count_threshold = DEFAULT_FUNCTION_COUNT_THRESHOLD;
@@ -192,16 +194,16 @@ public class kingaidra_auto extends GhidraScript {
             return;
         }
         String msg = convo.get_msg(convo.get_msgs_len() - 1);
-        create_file(report_name, msg);
+        create_file(currentProgram.getName() + "_" + report_name, msg);
     }
 
-    private String report_funcs(Function func, String report_prompt, List<String> report_list) {
+    private String report_funcs(Function func, String report_prompt, List<String> report_list, boolean run_request) {
         String decom_str = ghidra.get_decom(func.getEntryPoint());
         if (decom_str == null) {
             return report_prompt;
         }
         report_prompt += String.format("# Address %s\n\n```cpp\n%s\n```\n\n", func.getEntryPoint(), decom_str).replace("KAI: ", "");
-        if (report_prompt.split("\\R").length > MAX_PROMPT_LINE) {
+        if (report_prompt.split("\\R").length > MAX_PROMPT_LINE || run_request) {
             Conversation convo = chat_guess.guess(
                 "You are analyzing a group of decompiled functions from a piece of malware.\n" +
                 "\n" +
@@ -280,6 +282,11 @@ public class kingaidra_auto extends GhidraScript {
                 continue;
             }
 
+            if (key.equals("-a")) {
+                all_func = true;
+                continue;
+            }
+
             if (i + 1 >= args.length) {
                 continue;
             }
@@ -318,7 +325,7 @@ public class kingaidra_auto extends GhidraScript {
         }
     }
 
-    private void analyze_function_auto() throws Exception {
+    private List<Function> list_analyze_function_from_str() throws Exception {
         List<Function> analyze_func_list = new LinkedList();
 
         Data[] str_data_list = keyfunc_guess.guess_string_data();
@@ -346,6 +353,26 @@ public class kingaidra_auto extends GhidraScript {
                 add_calling_func_recur(analyze_func_list, func, calling_recursive_count);
             }
         }
+        return analyze_func_list;
+    }
+
+    private List<Function> list_all_analyze_function() throws Exception {
+        List<Function> analyze_func_list = new LinkedList();
+        FunctionIterator itr = currentProgram.getListing().getFunctions(true);
+        while (itr.hasNext()) {
+            add_func(analyze_func_list, itr.next());
+        }
+        return analyze_func_list;
+    }
+
+    private void analyze_function_auto() throws Exception {
+        List<Function> analyze_func_list;
+        if (all_func) {
+            analyze_func_list = list_all_analyze_function();
+        } else {
+            analyze_func_list = list_analyze_function_from_str();
+        }
+
         println(String.format("functions: %d", analyze_func_list.size()));
         if (analyze_func_list.size() > function_count_threshold) {
             println("Function count exceeds threshold, stopping analysis.");
@@ -361,7 +388,7 @@ public class kingaidra_auto extends GhidraScript {
         List<String> report_list = new LinkedList<>();
         FunctionIterator itr = currentProgram.getListing().getFunctions(true);
         while (itr.hasNext()) {
-            report_prompt = report_funcs(itr.next(), report_prompt, report_list);
+            report_prompt = report_funcs(itr.next(), report_prompt, report_list, !itr.hasNext());
         }
         summarize_report_funcs(report_list);
     }
