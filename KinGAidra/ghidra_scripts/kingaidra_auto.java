@@ -36,7 +36,7 @@ import kingaidra.ghidra.GhidraUtilImpl;
 
 public class kingaidra_auto extends GhidraScript {
 
-    private static final int DEFAULT_INTERVAL_MILLISECOND = 1000 * 60;
+    private static final int DEFAULT_INTERVAL_MILLISECOND = 1000;
     private static final boolean DEFAULT_ALL_FUNC = false;
     private static final int DEFAULT_CALLED_RECURSIVE_COUNT = 4;
     private static final int DEFAULT_CALLING_RECURSIVE_COUNT = 4;
@@ -87,8 +87,6 @@ public class kingaidra_auto extends GhidraScript {
     }
 
     private void analyze_func(Function func) throws Exception {
-        println("Refactoring: " + func.getName());
-
         if (!refactoring(func)) {
             Thread.sleep(interval_millisecond);
             if (!refactoring(func)) {
@@ -378,7 +376,9 @@ public class kingaidra_auto extends GhidraScript {
             println("Function count exceeds threshold, stopping analysis.");
             return;
         }
-        for (Function func : analyze_func_list) {
+        for (int i = 0; i < analyze_func_list.size(); i++) {
+            Function func = analyze_func_list.get(i);
+            println("Refactoring: " + func.getName() + String.format(" (%d/%d)", i + 1, analyze_func_list.size()));
             analyze_func(func);
         }
     }
