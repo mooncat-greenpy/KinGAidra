@@ -52,6 +52,8 @@ public class Guess {
 
         if (type == TaskType.CHAT_EXPLAIN_DECOM) {
             return ai.guess_explain_decom(m, addr);
+        } else if (type == TaskType.CHAT_EXPLAIN_ASM) {
+            return ai.guess_explain_asm(m, addr);
         } else if (type == TaskType.CHAT_DECOM_ASM) {
             return ai.guess_decom_asm(m, addr);
         } else if (type == TaskType.CHAT_EXPLAIN_STRINGS) {

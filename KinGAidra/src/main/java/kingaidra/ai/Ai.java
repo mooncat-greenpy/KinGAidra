@@ -279,6 +279,15 @@ public class Ai {
         return guess(TaskType.CHAT_EXPLAIN_DECOM, convo, msg, addr);
     }
 
+    public Conversation guess_explain_asm(Model m, Address addr) {
+        Conversation convo = new Conversation(ConversationType.USER_CHAT, m);
+        convo.set_model(m);
+        String msg = "Please explain what the following function does from its assembly listing. " +
+                        "Infer the calling convention, parameters, and return value; describe the stack frame and register usage; map the control flow (basic blocks, branches, loops); and highlight key instructions, memory reads/writes, constants, external calls, and side effects. Provide a concise step-by-step walkthrough (brief pseudocode if helpful) and end with a one-sentence summary of the function's purpose. Note any error paths or suspicious patterns.\n" +
+                        "```asm\n<asm>\n```";
+        return guess(TaskType.CHAT_EXPLAIN_DECOM, convo, msg, addr);
+    }
+
     public Conversation guess_decom_asm(Model m, Address addr) {
         Conversation convo = new Conversation(ConversationType.USER_CHAT, m);
         convo.set_model(m);

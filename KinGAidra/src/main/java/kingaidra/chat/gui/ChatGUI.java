@@ -250,6 +250,28 @@ public class ChatGUI extends JPanel {
                 }).popupMenuPath(new String[] {"Explain using AI"}).popupMenuGroup("KinGAidra")
                 .buildAndInstall(plugin);
 
+        new ActionBuilder("Explain asm with AI", provider.getName())
+                .withContext(ProgramLocationActionContext.class).enabledWhen(context -> {
+                    var func = context.getProgram().getFunctionManager()
+                            .getFunctionContaining(context.getAddress());
+                    return func != null;
+                }).onAction(context -> {
+                    var func = context.getProgram().getFunctionManager()
+                            .getFunctionContaining(context.getAddress());
+                    if (func == null) {
+                        logger.append_message("Function not found");
+                        return;
+                    }
+
+                    provider.setVisible(true);
+                    provider.toFront();
+                    provider.change_tab("Chat");
+
+                    reset(null);
+                    guess(TaskType.CHAT_EXPLAIN_ASM, ghidra.get_current_addr());
+                }).popupMenuPath(new String[] {"Explain asm with AI"}).popupMenuGroup("KinGAidra")
+                .buildAndInstall(plugin);
+
         new ActionBuilder("Decompile with AI", provider.getName())
                 .withContext(ProgramLocationActionContext.class).enabledWhen(context -> {
                     var func = context.getProgram().getFunctionManager()
