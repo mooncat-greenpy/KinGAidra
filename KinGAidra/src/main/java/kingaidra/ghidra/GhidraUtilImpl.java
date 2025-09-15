@@ -109,6 +109,18 @@ public class GhidraUtilImpl implements GhidraUtil {
         return ret;
     }
 
+    public List<Function> get_caller(Function func) {
+        Set<Function> callee_set = func.getCallingFunctions(monitor);
+        List<Function> callee_list = new ArrayList<>(callee_set);
+        return callee_list;
+    }
+
+    public List<Function> get_callee(Function func) {
+        Set<Function> callee_set = func.getCalledFunctions(monitor);
+        List<Function> callee_list = new ArrayList<>(callee_set);
+        return callee_list;
+    }
+
     public void get_root_func(List<Function> root) {
         FunctionIterator itr = program_listing.getFunctions(true);
         while (itr.hasNext()) {
@@ -121,12 +133,12 @@ public class GhidraUtilImpl implements GhidraUtil {
             return;
         }
         visited.add(target);
-        Set<Function> calling_set = target.getCallingFunctions(monitor);
-        if (calling_set.isEmpty() && !root.contains(target)) {
+        List<Function> calling_list = get_caller(target);
+        if (calling_list.isEmpty() && !root.contains(target)) {
             root.add(target);
             return;
         }
-        for (Function calling : calling_set) {
+        for (Function calling : calling_list) {
             add_root_func(calling, root, visited);
         }
         root.forEach(Function::getEntryPoint);
@@ -149,8 +161,7 @@ public class GhidraUtilImpl implements GhidraUtil {
 
             call_tree.append("    ".repeat(cur_indent)).append("- ").append(cur_func.getName()).append("\n");
 
-            Set<Function> called_set = cur_func.getCalledFunctions(monitor);
-            List<Function> called_list = new ArrayList<>(called_set);
+            List<Function> called_list = get_callee(cur_func);
             Collections.sort(called_list, new Comparator<Function>() {
                 @Override
                 public int compare(Function o1, Function o2) {
@@ -222,17 +233,31 @@ public class GhidraUtilImpl implements GhidraUtil {
     }
 
     public String get_strings_str() {
+        return get_strings_str(0, -1);
+    }
+
+    public String get_strings_str(long index, long num) {
         String ret = "";
         Data[] strs = get_strings();
-        for (Data data : strs) {
-            Address addr = data.getAddress();
-            String value = data.getDefaultValueRepresentation();
+        if (num < 0) {
+            num = strs.length;
+        }
+        for (int i = 0; i < strs.length; i++) {
+            if (i < index || i >= index + num) {
+                continue;
+            }
+            Address addr = strs[i].getAddress();
+            String value = strs[i].getDefaultValueRepresentation();
             ret += String.format("[%x]=%s\n", addr.getOffset(), value);
         }
         return ret;
     }
 
     public String get_asm(Address addr) {
+        return get_asm(addr, false);
+    }
+
+    public String get_asm(Address addr, boolean include_addr) {
         String result = "";
         Function func = get_func(addr);
         if (func == null) {
@@ -285,7 +310,7 @@ public class GhidraUtilImpl implements GhidraUtil {
             if (label_sym != null) {
                 result += label_sym.getName() + ":\n";
             }
-            result += "    " + asm + (comment.isEmpty()?"":(" ; " + comment)) + "\n";
+            result += (include_addr?inst.getAddress().toString():"") + "    " + asm + (comment.isEmpty()?"":(" ; " + comment)) + "\n";
 
             inst = program_listing.getInstructionAfter(inst.getAddress());
         }

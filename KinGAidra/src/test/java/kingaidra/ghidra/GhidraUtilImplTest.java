@@ -37,11 +37,28 @@ class GhidraUtilImplTest {
                 gu.get_decom(util.get_addr(program, 0x401002)).contains("int func_401000(void)"));
         assertEquals(gu.get_asm(util.get_addr(program, 0x401002)),
                 "func_401000:\n    PUSH EBP\n    MOV EBP,ESP\n    POP EBP\n    RET\n");
+        assertEquals(gu.get_asm(util.get_addr(program, 0x401002), true),
+                "func_401000:\n00401000    PUSH EBP\n00401001    MOV EBP,ESP\n00401003    POP EBP\n00401004    RET\n");
 
         List<Reference> refs = gu.get_ref_to(util.get_addr(program, 0x401000));
         assertEquals(refs.size(), 1);
         assertEquals(refs.get(0).getFromAddress(), util.get_addr(program, 0x403008));
         assertEquals(refs.get(0).getToAddress(), util.get_addr(program, 0x401000));
+    }
+
+    @Test
+    void test_callee_caller() throws Exception {
+        GhidraTestUtil util = new GhidraTestUtil();
+        Program program = util.create_program();
+        GhidraUtil gu = new GhidraUtilImpl(program, TaskMonitor.DUMMY);
+
+        Function func = gu.get_func(util.get_addr(program, 0x403000));
+        List<Function> caller = gu.get_caller(func);
+        assertEquals(caller.size(), 1);
+        assertEquals(caller.get(0).getEntryPoint().getOffset(), 0x404000);
+        List<Function> callee = gu.get_callee(func);
+        assertEquals(callee.size(), 2);
+        assertEquals(callee.get(0).getEntryPoint().getOffset() + callee.get(1).getEntryPoint().getOffset(), 0x401000 + 0x402000);
     }
 
     @Test
@@ -166,6 +183,17 @@ class GhidraUtilImplTest {
                                 "[40f200]=\"string3\"\n" +
                                 "[40f300]=\"string4\"\n" +
                                 "[40f400]=\"string5\"\n");
+        assertEquals(gu.get_strings_str(0, 4), "[40f000]=\"string1\"\n" +
+                                "[40f100]=\"string2\"\n" +
+                                "[40f200]=\"string3\"\n" +
+                                "[40f300]=\"string4\"\n");
+        assertEquals(gu.get_strings_str(1, -1), "[40f100]=\"string2\"\n" +
+                                "[40f200]=\"string3\"\n" +
+                                "[40f300]=\"string4\"\n" +
+                                "[40f400]=\"string5\"\n");
+        assertEquals(gu.get_strings_str(1, 3), "[40f100]=\"string2\"\n" +
+                                "[40f200]=\"string3\"\n" +
+                                "[40f300]=\"string4\"\n");
     }
 
     @Test

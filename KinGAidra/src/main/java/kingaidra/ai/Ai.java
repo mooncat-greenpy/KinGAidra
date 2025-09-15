@@ -122,6 +122,37 @@ public class Ai {
         });
     }
 
+    public String resolve_asm_code_with_addr(Conversation convo, String msg, Address addr) {
+        return resolve_placeholder(msg, addr, "aasm", new BiFunction<Long, Long, String>() {
+            @Override
+            public String apply(Long func_addr_value, Long depth) {
+                Address func_addr = null;
+                if (func_addr_value != null) {
+                    func_addr = ghidra.get_addr(func_addr_value);
+                }
+                if (func_addr == null) {
+                    return null;
+                }
+                String asm_code = ghidra.get_asm(func_addr, true);
+                if (asm_code == null) {
+                    return null;
+                }
+                Function match_func = ghidra.get_func(func_addr);
+                if (match_func != null) {
+                    convo.add_addr(match_func.getEntryPoint());
+                    if (depth != null) {
+                        List<Function> callee_list = get_callee_upto_depth(match_func, depth);
+                        for (Function cur_func : callee_list) {
+                            asm_code += "\n\n";
+                            asm_code += ghidra.get_asm(cur_func.getEntryPoint(), true);
+                        }
+                    }
+                }
+                return asm_code;
+            }
+        });
+    }
+
     public String resolve_src_code(Conversation convo, String msg, Address addr) {
         return resolve_placeholder(msg, addr, "code", new BiFunction<Long, Long, String>() {
             @Override
@@ -239,6 +270,7 @@ public class Ai {
     public Conversation guess(TaskType type, Conversation convo, String msg, Address addr) {
         msg = resolve_src_code(convo, msg, addr);
         msg = resolve_asm_code(convo, msg, addr);
+        msg = resolve_asm_code_with_addr(convo, msg, addr);
         msg = resolve_calltree(convo, msg, addr);
         msg = resolve_strings(convo, msg);
         convo.add_user_msg(msg);

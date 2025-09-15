@@ -21,6 +21,10 @@ public interface GhidraUtil {
 
     public List<Reference> get_ref_to(Address addr);
 
+    public List<Function> get_caller(Function func);
+
+    public List<Function> get_callee(Function func);
+
     public void get_root_func(List<Function> root);
 
     public String get_func_call_tree();
@@ -35,7 +39,11 @@ public interface GhidraUtil {
 
     public String get_strings_str();
 
+    public String get_strings_str(long index, long num);
+
     public String get_asm(Address addr);
+
+    public String get_asm(Address addr, boolean include_addr);
 
     public String get_decom(Address addr);
 
