@@ -42,6 +42,9 @@ public class kingaidra_auto extends GhidraScript {
     private static final int DEFAULT_CALLED_RECURSIVE_COUNT = 4;
     private static final int DEFAULT_CALLING_RECURSIVE_COUNT = 4;
     private static final int DEFAULT_FUNCTION_COUNT_THRESHOLD = 500;
+    private static final boolean DEFAULT_ENABLE_REFACTOR = true;
+    private static final boolean DEFAULT_ENABLE_ADD_COMMENTS = true;
+    private static final boolean DEFAULT_ENABLE_REPORT = true;
 
     private static final int MAX_PROMPT_LINE = 3000;
     private static final String DEFAULT_REPORT_NAME = "report.md";
@@ -51,6 +54,9 @@ public class kingaidra_auto extends GhidraScript {
     private int called_recursive_count = DEFAULT_CALLED_RECURSIVE_COUNT;
     private int calling_recursive_count = DEFAULT_CALLING_RECURSIVE_COUNT;
     private int function_count_threshold = DEFAULT_FUNCTION_COUNT_THRESHOLD;
+    private boolean enable_refactor = DEFAULT_ENABLE_REFACTOR;
+    private boolean enable_add_comments = DEFAULT_ENABLE_ADD_COMMENTS;
+    private boolean enable_report = DEFAULT_ENABLE_REPORT;
     private String report_name = DEFAULT_REPORT_NAME;
 
     private GhidraUtil ghidra;
@@ -88,20 +94,24 @@ public class kingaidra_auto extends GhidraScript {
     }
 
     private void analyze_func(Function func) throws Exception {
-        if (!refactoring(func)) {
-            Thread.sleep(interval_millisecond);
+        if (enable_refactor) {
             if (!refactoring(func)) {
-                return;
+                Thread.sleep(interval_millisecond);
+                if (!refactoring(func)) {
+                    return;
+                }
             }
         }
 
         Thread.sleep(interval_millisecond);
 
-        ghidra.clear_comments(func.getEntryPoint());
-        if (!add_comments(func)) {
-            Thread.sleep(interval_millisecond);
+        if (enable_add_comments) {
+            ghidra.clear_comments(func.getEntryPoint());
             if (!add_comments(func)) {
-                return;
+                Thread.sleep(interval_millisecond);
+                if (!add_comments(func)) {
+                    return;
+                }
             }
         }
 
@@ -386,7 +396,10 @@ public class kingaidra_auto extends GhidraScript {
         return true;
     }
 
-    private void report_function_auto() throws Exception {
+    private boolean report_function_auto() throws Exception {
+        if (!enable_report) {
+            return false;
+        }
         String report_prompt = "";
         List<String> report_list = new LinkedList<>();
         FunctionIterator itr = currentProgram.getListing().getFunctions(true);
@@ -395,6 +408,7 @@ public class kingaidra_auto extends GhidraScript {
             report_prompt = report_funcs(itr.next(), report_prompt, report_list, !itr.hasNext());
         }
         summarize_report_funcs(report_list);
+        return true;
     }
 
     public void run() throws Exception {
