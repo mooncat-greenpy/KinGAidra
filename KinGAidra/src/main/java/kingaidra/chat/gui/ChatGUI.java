@@ -38,6 +38,7 @@ import kingaidra.ai.model.Model;
 import kingaidra.ai.model.ModelByScript;
 import kingaidra.ai.model.ModelConf;
 import kingaidra.ai.task.KinGAidraChatTaskService;
+import kingaidra.ai.task.TaskType;
 import kingaidra.chat.Guess;
 import kingaidra.ghidra.GhidraUtil;
 import kingaidra.gui.MainProvider;
@@ -128,7 +129,7 @@ public class ChatGUI extends JPanel {
         submit_btn.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
-                guess(ghidra.get_current_addr());
+                guess(TaskType.CHAT, ghidra.get_current_addr());
             }
         });
         submit_btn.setPreferredSize(button_size);
@@ -245,12 +246,7 @@ public class ChatGUI extends JPanel {
                     provider.change_tab("Chat");
 
                     reset(null);
-                    input_area.setText(
-                            "Please explain what the following decompiled C function does. "
-                                    + "Break down its logic, and describe the purpose of each part of the function, including any key operations, conditionals, loops, and data structures involved. "
-                                    + "Providea step-by-step explanation of how the function works and what its expected behavior would be when executed.\n"
-                                    + "```cpp\n" + "<code>\n" + "```");
-                    submit_btn.doClick();
+                    guess(TaskType.CHAT_EXPLAIN_DECOM, ghidra.get_current_addr());
                 }).popupMenuPath(new String[] {"Explain using AI"}).popupMenuGroup("KinGAidra")
                 .buildAndInstall(plugin);
 
@@ -272,8 +268,7 @@ public class ChatGUI extends JPanel {
                     provider.change_tab("Chat");
 
                     reset(null);
-                    input_area.setText("Decompile the following assembly code into equivalent C code.\n```asm\n<asm>\n```");
-                    submit_btn.doClick();
+                    guess(TaskType.CHAT_DECOM_ASM, ghidra.get_current_addr());
                 }).popupMenuPath(new String[] {"Decompile using AI"}).popupMenuGroup("KinGAidra")
                 .buildAndInstall(plugin);
 
@@ -286,21 +281,7 @@ public class ChatGUI extends JPanel {
                     provider.change_tab("Chat");
 
                     reset(null);
-                    input_area.setText("Given a list of strings found within a malware sample, identify and list the strings that might be useful for further analysis. Focus on strings that could provide insight into the malware's functionality, its command-and-control server, or its intentions. Prioritize strings related to:\n" +
-                                                "\n" +
-                                                "1. URLs or IP addresses - Potential command-and-control servers, communication endpoints, or external resources.\n" +
-                                                "2. File paths or registry keys - Locations of potential artifacts, dropped files, or persistence mechanisms.\n" +
-                                                "3. Function names or API calls - Indications of specific malware behaviors or techniques.\n" +
-                                                "4. Encryption keys or sensitive data - Possible use of cryptography, encoding, or sensitive information handling.\n" +
-                                                "5. Error messages or logs - Clues to how the malware operates, crashes, or logs activity.\n" +
-                                                "6. Hardcoded credentials or authentication tokens - Useful for identifying compromised access methods.\n" +
-                                                "7. Strings associated with known malware families or threat actor tactics - Help in associating the sample with a specific threat group or malware variant.\n" +
-                                                "\n" +
-                                                "Filter out irrelevant or common strings such as system files, non-specific text, or internal programming strings. Focus on identifying strings that could reveal malicious actions or associations.\n" +
-                                                "\n" +
-                                                "Strings:\n" +
-                                                "<strings>");
-                    submit_btn.doClick();
+                    guess(TaskType.CHAT_EXPLAIN_STRINGS, ghidra.get_current_addr());
                 }).popupMenuPath(new String[] {"Explain strings (malware)"}).popupMenuGroup("KinGAidra")
                 .buildAndInstall(plugin);
 
@@ -395,7 +376,7 @@ public class ChatGUI extends JPanel {
         }
     }
 
-    public void guess(Address addr) {
+    public void guess(TaskType type, Address addr) {
         if (!check_and_set_busy(true)) {
             logger.append_message("Another process running");
             return;
@@ -409,9 +390,9 @@ public class ChatGUI extends JPanel {
             try {
                 if (addr != null) {
                     if (cur_convo == null) {
-                        cur_convo = ggui.run_guess(input_area.getText(), addr);
+                        cur_convo = ggui.run_guess(type, input_area.getText(), addr);
                     } else {
-                        cur_convo = ggui.run_guess(cur_convo, input_area.getText(), addr);
+                        cur_convo = ggui.run_guess(type, cur_convo, input_area.getText(), addr);
                     }
                     build_panel();
                 }

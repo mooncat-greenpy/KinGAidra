@@ -19,6 +19,8 @@ import ghidra.program.model.listing.Function;
 import ghidra.program.model.listing.Program;
 import kingaidra.ai.convo.Conversation;
 import kingaidra.ai.convo.ConversationContainer;
+import kingaidra.ai.convo.ConversationType;
+import kingaidra.ai.model.Model;
 import kingaidra.ai.task.KinGAidraChatTaskService;
 import kingaidra.ai.task.TaskType;
 import kingaidra.ghidra.GhidraUtil;
@@ -265,6 +267,43 @@ public class Ai {
                 return calltree;
             }
         });
+    }
+
+    public Conversation guess_explain_decom(Model m, Address addr) {
+        Conversation convo = new Conversation(ConversationType.USER_CHAT, m);
+        convo.set_model(m);
+        String msg = "Please explain what the following decompiled C function does. "
+                        + "Break down its logic, and describe the purpose of each part of the function, including any key operations, conditionals, loops, and data structures involved. "
+                        + "Providea step-by-step explanation of how the function works and what its expected behavior would be when executed.\n"
+                        + "```cpp\n" + "<code>\n" + "```";
+        return guess(TaskType.CHAT_EXPLAIN_DECOM, convo, msg, addr);
+    }
+
+    public Conversation guess_decom_asm(Model m, Address addr) {
+        Conversation convo = new Conversation(ConversationType.USER_CHAT, m);
+        convo.set_model(m);
+        String msg = "Decompile the following assembly code into equivalent C code.\n```asm\n<asm>\n```";
+        return guess(TaskType.CHAT_EXPLAIN_DECOM, convo, msg, addr);
+    }
+
+    public Conversation guess_explain_strings(Model m, Address addr) {
+        Conversation convo = new Conversation(ConversationType.USER_CHAT, m);
+        convo.set_model(m);
+        String msg = "Given a list of strings found within a malware sample, identify and list the strings that might be useful for further analysis. Focus on strings that could provide insight into the malware's functionality, its command-and-control server, or its intentions. Prioritize strings related to:\n" +
+                        "\n" +
+                        "1. URLs or IP addresses - Potential command-and-control servers, communication endpoints, or external resources.\n" +
+                        "2. File paths or registry keys - Locations of potential artifacts, dropped files, or persistence mechanisms.\n" +
+                        "3. Function names or API calls - Indications of specific malware behaviors or techniques.\n" +
+                        "4. Encryption keys or sensitive data - Possible use of cryptography, encoding, or sensitive information handling.\n" +
+                        "5. Error messages or logs - Clues to how the malware operates, crashes, or logs activity.\n" +
+                        "6. Hardcoded credentials or authentication tokens - Useful for identifying compromised access methods.\n" +
+                        "7. Strings associated with known malware families or threat actor tactics - Help in associating the sample with a specific threat group or malware variant.\n" +
+                        "\n" +
+                        "Filter out irrelevant or common strings such as system files, non-specific text, or internal programming strings. Focus on identifying strings that could reveal malicious actions or associations.\n" +
+                        "\n" +
+                        "Strings:\n" +
+                        "<strings>";
+        return guess(TaskType.CHAT_EXPLAIN_STRINGS, convo, msg, addr);
     }
 
     public Conversation guess(TaskType type, Conversation convo, String msg, Address addr) {

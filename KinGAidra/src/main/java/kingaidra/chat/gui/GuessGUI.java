@@ -8,6 +8,7 @@ import javax.swing.JPanel;
 
 import ghidra.program.model.address.Address;
 import kingaidra.ai.convo.Conversation;
+import kingaidra.ai.task.TaskType;
 import kingaidra.chat.Guess;
 import kingaidra.log.Logger;
 
@@ -21,12 +22,12 @@ public class GuessGUI extends JPanel {
         setLayout(new BoxLayout(this, BoxLayout.Y_AXIS));
     }
 
-    public Conversation run_guess(String msg, Address addr) {
-        return guess.guess(msg, addr);
+    public Conversation run_guess(TaskType type, String msg, Address addr) {
+        return guess.guess(type, msg, addr);
     }
 
-    public Conversation run_guess(Conversation convo, String msg, Address addr) {
-        return guess.guess(convo, msg, addr);
+    public Conversation run_guess(TaskType type, Conversation convo, String msg, Address addr) {
+        return guess.guess(type, convo, msg, addr);
     }
 
     public List<Map.Entry<String, String>> run_guess_src_code_comments(Address addr) {

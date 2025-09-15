@@ -346,7 +346,7 @@ struct PROCESSENTRY32W {
 10. **szExeFile**: A wide-character array holding the full path of the executable file associated with the process. The length of the array (260) is large enough to accommodate the maximum path length (commonly 260 characters in Windows).
 
 This structure corresponds to the 32-bit version, and the use of wide-character strings (`szExeFile`) suggests the use of Unicode. The `PROCESSENTRY32W` structure is used in the Windows API to retrieve information about a process in the system, typically via `CreateToolhelp32Snapshot`, `Process32First`, and `Process32Next`."""
-    elif type == kingaidra.ai.task.TaskType.KEYFUNC_STRING.toString() and "Given a list of strings found within a malware sample" in msg:
+    elif type == kingaidra.ai.task.TaskType.CHAT_EXPLAIN_STRINGS.toString() and "Given a list of strings found within a malware sample" in msg:
         data = """Here are the strings from the list that could potentially be useful for further analysis:
 
 ### 1. **URLs or IP addresses**

@@ -164,6 +164,6 @@ public class GuessTest {
         assertEquals(data[2].getValue(), "string3");
 
         Conversation convo = container.get_convo(container.get_ids()[0]);
-        assertEquals(convo.get_type(), ConversationType.SYSTEM_KEYFUNC);
+        assertEquals(convo.get_type(), ConversationType.USER_CHAT);
     }
 }

@@ -29,6 +29,7 @@ import kingaidra.ai.convo.ConversationContainer;
 import kingaidra.ai.convo.ConversationContainerGhidraProgram;
 import kingaidra.ai.model.ModelConfSingle;
 import kingaidra.ai.task.KinGAidraChatTaskService;
+import kingaidra.ai.task.TaskType;
 import kingaidra.decom.DecomDiff;
 import kingaidra.ghidra.ChatModelPreferences;
 import kingaidra.ghidra.GhidraUtil;
@@ -198,7 +199,7 @@ public class kingaidra_auto extends GhidraScript {
         for (int i = 0; i < report_list.size(); i++) {
             prompt += String.format("## chunk%d\n\n%s\n\n", i, report_list.get(i));
         }
-        Conversation convo = chat_guess.guess(prompt, null);
+        Conversation convo = chat_guess.guess(TaskType.CHAT, prompt, null);
         if (convo == null) {
             return;
         }
@@ -214,6 +215,7 @@ public class kingaidra_auto extends GhidraScript {
         report_prompt += String.format("# Address %s\n\n```cpp\n%s\n```\n\n", func.getEntryPoint(), decom_str).replace("KAI: ", "");
         if (report_prompt.split("\\R").length > MAX_PROMPT_LINE || run_request) {
             Conversation convo = chat_guess.guess(
+                TaskType.CHAT,
                 "You are analyzing a group of decompiled functions from a piece of malware.\n" +
                 "\n" +
                 "Please examine the code and generate a structured analysis in **Markdown format**, following these instructions:\n" +
@@ -369,7 +371,9 @@ public class kingaidra_auto extends GhidraScript {
         List<Function> analyze_func_list = new LinkedList();
         FunctionIterator itr = currentProgram.getListing().getFunctions(true);
         while (itr.hasNext()) {
-            add_func(analyze_func_list, itr.next());
+            Function func = itr.next();
+            add_called_func_recur(analyze_func_list, func, called_recursive_count);
+            add_func(analyze_func_list, func);
         }
         return analyze_func_list;
     }

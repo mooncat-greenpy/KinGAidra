@@ -33,25 +33,6 @@ public class Guess {
         return model_conf;
     }
 
-    public Conversation guess_by_strings(Conversation convo) {
-        String msg = "Given a list of strings found within a malware sample, identify and list the strings that might be useful for further analysis. Focus on strings that could provide insight into the malware's functionality, its command-and-control server, or its intentions. Prioritize strings related to:\n" +
-                                                "\n" +
-                                                "1. URLs or IP addresses - Potential command-and-control servers, communication endpoints, or external resources.\n" +
-                                                "2. File paths or registry keys - Locations of potential artifacts, dropped files, or persistence mechanisms.\n" +
-                                                "3. Function names or API calls - Indications of specific malware behaviors or techniques.\n" +
-                                                "4. Encryption keys or sensitive data - Possible use of cryptography, encoding, or sensitive information handling.\n" +
-                                                "5. Error messages or logs - Clues to how the malware operates, crashes, or logs activity.\n" +
-                                                "6. Hardcoded credentials or authentication tokens - Useful for identifying compromised access methods.\n" +
-                                                "7. Strings associated with known malware families or threat actor tactics - Help in associating the sample with a specific threat group or malware variant.\n" +
-                                                "\n" +
-                                                "Filter out irrelevant or common strings such as system files, non-specific text, or internal programming strings. Focus on identifying strings that could reveal malicious actions or associations.\n" +
-                                                "\n" +
-                                                "Strings:\n" +
-                                                "<strings>";
-        convo = ai.guess(TaskType.KEYFUNC_STRING, convo, msg, null);
-        return convo;
-    }
-
     public String[] guess_by_strings() {
         Model m = null;
         for (String name : model_conf.get_models()) {
@@ -64,9 +45,7 @@ public class Guess {
         if (m == null) {
             return new String[]{};
         }
-        Conversation convo = new Conversation(ConversationType.SYSTEM_KEYFUNC, m);
-        convo.set_model(m);
-        convo = guess_by_strings(convo);
+        Conversation convo = ai.guess_explain_strings(m, null);
         if (convo == null) {
             return new String[]{};
         }

@@ -9,7 +9,7 @@ URL = "" # "https://api.openai.com/v1/chat/completions"
 MODEL = "" # "gpt-4o-mini"
 API_KEY = ""
 POST_MSG = "" # "Please respond in XXXX."
-TOOLS_FLAG = True
+TOOLS_FLAG = False
 OPTIONAL_HEADERS = {}
 OPTIONAL_DATA = {}
 
@@ -402,7 +402,11 @@ def main():
     type = state.getEnvironmentVar("TYPE")
     data["messages"] = json.loads(state.getEnvironmentVar("MESSAGES"))
 
-    if type == kingaidra.ai.task.TaskType.CHAT.toString() or type == kingaidra.ai.task.TaskType.ADD_COMMENTS.toString():
+    if (type == kingaidra.ai.task.TaskType.CHAT.toString() or
+        type == kingaidra.ai.task.TaskType.CHAT_EXPLAIN_DECOM.toString() or
+        type == kingaidra.ai.task.TaskType.CHAT_DECOM_ASM.toString() or
+        type == kingaidra.ai.task.TaskType.CHAT_EXPLAIN_STRINGS.toString() or
+        type == kingaidra.ai.task.TaskType.ADD_COMMENTS.toString()):
         data["messages"][-1]["content"] += POST_MSG
 
     while True:

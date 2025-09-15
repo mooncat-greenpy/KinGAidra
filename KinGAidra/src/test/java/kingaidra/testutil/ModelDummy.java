@@ -248,7 +248,7 @@ public class ModelDummy implements Model, Serializable {
                         "    ]\n" +
                         "}\n" +
                         "```");
-        } else if (task_type == TaskType.KEYFUNC_STRING && convo.get_msg(convo.get_msgs_len() - 1).contains("strings")) {
+        } else if (task_type == TaskType.CHAT_EXPLAIN_STRINGS && convo.get_msg(convo.get_msgs_len() - 1).contains("strings")) {
             convo.add_assistant_msg("```json\n" +
                         "{\n" +
                         "    \"func\": [\n" +

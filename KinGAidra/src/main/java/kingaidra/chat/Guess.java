@@ -30,12 +30,12 @@ public class Guess {
         return model_conf;
     }
 
-    public Conversation guess(Conversation convo, String msg, Address addr) {
-        convo = ai.guess(TaskType.CHAT, convo, msg, addr);
+    public Conversation guess(TaskType type, Conversation convo, String msg, Address addr) {
+        convo = ai.guess(type, convo, msg, addr);
         return convo;
     }
 
-    public Conversation guess(String msg, Address addr) {
+    public Conversation guess(TaskType type, String msg, Address addr) {
         Model m = null;
         for (String name : model_conf.get_models()) {
             Model tmp = model_conf.get_model(name);
@@ -49,7 +49,15 @@ public class Guess {
         }
         Conversation convo = new Conversation(ConversationType.USER_CHAT, m);
         convo.set_model(m);
-        return guess(convo, msg, addr);
+
+        if (type == TaskType.CHAT_EXPLAIN_DECOM) {
+            return ai.guess_explain_decom(m, addr);
+        } else if (type == TaskType.CHAT_DECOM_ASM) {
+            return ai.guess_decom_asm(m, addr);
+        } else if (type == TaskType.CHAT_EXPLAIN_STRINGS) {
+            return ai.guess_explain_strings(m, addr);
+        }
+        return guess(type, convo, msg, addr);
     }
 
     public List<Map.Entry<String, String>> guess_src_code_comments(Address addr) {

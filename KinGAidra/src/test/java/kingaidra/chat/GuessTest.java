@@ -11,6 +11,7 @@ import kingaidra.ai.convo.ConversationContainerDummy;
 import kingaidra.ai.convo.ConversationType;
 import kingaidra.ai.model.Model;
 import kingaidra.ai.model.ModelConfSingle;
+import kingaidra.ai.task.TaskType;
 import kingaidra.ghidra.GhidraPreferences;
 import kingaidra.ghidra.GhidraUtil;
 import kingaidra.ghidra.GhidraUtilImpl;
@@ -116,13 +117,13 @@ public class GuessTest {
         pref.store("Dummy3", new ChatModelDummy("Dummy3", "dummy.py", false));
         ModelConfSingle model_conf = new ModelConfSingle("chat", pref);
         Guess guess = new Guess(ai, model_conf);
-        Conversation convo1 = guess.guess("msg", util.get_addr(program, 0x402000));
+        Conversation convo1 = guess.guess(TaskType.CHAT, "msg", util.get_addr(program, 0x402000));
         assertEquals(convo1.get_type(), ConversationType.USER_CHAT);
         assertEquals(convo1.get_msgs_len(), 2);
         assertEquals(convo1.get_msg(0), "msg");
         assertEquals(convo1.get_msg(1), "msgDummy2");
         assertEquals(convo1.get_addrs().length, 0);
-        guess.guess(convo1, "Explain\n<code>", util.get_addr(program, 0x402000));
+        guess.guess(TaskType.CHAT, convo1, "Explain\n<code>", util.get_addr(program, 0x402000));
         assertEquals(convo1.get_type(), ConversationType.USER_CHAT);
         assertEquals(convo1.get_msgs_len(), 4);
         assertEquals(convo1.get_msg(0), "msg");
@@ -132,8 +133,8 @@ public class GuessTest {
         assertEquals(convo1.get_addrs().length, 1);
         assertEquals(convo1.get_addrs()[0].getOffset(), 0x402000);
 
-        Conversation convo2 = guess.guess("msg", util.get_addr(program, 0x401000));
-        guess.guess(convo2, "Explain\n<asm>", util.get_addr(program, 0x401000));
+        Conversation convo2 = guess.guess(TaskType.CHAT, "msg", util.get_addr(program, 0x401000));
+        guess.guess(TaskType.CHAT, convo2, "Explain\n<asm>", util.get_addr(program, 0x401000));
         assertEquals(convo2.get_type(), ConversationType.USER_CHAT);
         assertEquals(convo2.get_msgs_len(), 4);
         assertEquals(convo2.get_msg(0), "msg");
@@ -144,8 +145,8 @@ public class GuessTest {
         assertEquals(convo2.get_addrs().length, 1);
         assertEquals(convo2.get_addrs()[0].getOffset(), 0x401000);
 
-        Conversation convo3 = guess.guess("msg", util.get_addr(program, 0x408000));
-        guess.guess(convo3, "Explain\n<calltree>", util.get_addr(program, 0x408000));
+        Conversation convo3 = guess.guess(TaskType.CHAT, "msg", util.get_addr(program, 0x408000));
+        guess.guess(TaskType.CHAT, convo3, "Explain\n<calltree>", util.get_addr(program, 0x408000));
         assertEquals(convo3.get_type(), ConversationType.USER_CHAT);
         assertEquals(convo3.get_msgs_len(), 4);
         assertEquals(convo3.get_msg(0), "msg");
