@@ -20,6 +20,7 @@ import ghidra.program.model.listing.Data;
 import ghidra.program.model.listing.Function;
 import ghidra.program.model.listing.FunctionIterator;
 import ghidra.program.model.symbol.Reference;
+import ghidra.util.exception.CancelledException;
 import ghidra.util.task.TaskMonitor;
 
 import kingaidra.ai.Ai;
@@ -363,7 +364,7 @@ public class kingaidra_auto extends GhidraScript {
         return analyze_func_list;
     }
 
-    private void analyze_function_auto() throws Exception {
+    private boolean analyze_function_auto() throws Exception {
         List<Function> analyze_func_list;
         if (all_func) {
             analyze_func_list = list_all_analyze_function();
@@ -374,13 +375,15 @@ public class kingaidra_auto extends GhidraScript {
         println(String.format("functions: %d", analyze_func_list.size()));
         if (analyze_func_list.size() > function_count_threshold) {
             println("Function count exceeds threshold, stopping analysis.");
-            return;
+            return false;
         }
         for (int i = 0; i < analyze_func_list.size(); i++) {
+            monitor.checkCancelled();
             Function func = analyze_func_list.get(i);
             println("Refactoring: " + func.getName() + String.format(" (%d/%d)", i + 1, analyze_func_list.size()));
             analyze_func(func);
         }
+        return true;
     }
 
     private void report_function_auto() throws Exception {
@@ -388,6 +391,7 @@ public class kingaidra_auto extends GhidraScript {
         List<String> report_list = new LinkedList<>();
         FunctionIterator itr = currentProgram.getListing().getFunctions(true);
         while (itr.hasNext()) {
+            monitor.checkCancelled();
             report_prompt = report_funcs(itr.next(), report_prompt, report_list, !itr.hasNext());
         }
         summarize_report_funcs(report_list);
@@ -426,8 +430,13 @@ public class kingaidra_auto extends GhidraScript {
             }
         }
 
-        analyze_function_auto();
+        try {
+            if (!analyze_function_auto()) {
+                return;
+            }
 
-        report_function_auto();
+            report_function_auto();
+        } catch (CancelledException e) {
+        }
     }
 }
