@@ -273,7 +273,7 @@ public class GhidraUtilImpl implements GhidraUtil {
         Address end_addr = func.getBody().getMaxAddress();
 
         Instruction inst = program_listing.getInstructionAt(func.getEntryPoint());
-        while (inst.getAddress().getOffset() <= end_addr.getOffset()) {
+        while (inst != null && inst.getAddress().getOffset() <= end_addr.getOffset()) {
             String asm = inst.toString();
             String comment = "";
 

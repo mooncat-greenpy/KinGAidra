@@ -402,8 +402,8 @@ def main():
     type = state.getEnvironmentVar("TYPE")
     data["messages"] = json.loads(state.getEnvironmentVar("MESSAGES"))
 
-    if (type == kingaidra.ai.task.TaskType.CHAT.toString() or
-        type == kingaidra.ai.task.TaskType.CHAT_EXPLAIN_DECOM.toString() or
+    if (type == kingaidra.ai.task.TaskType.CHAT_EXPLAIN_DECOM.toString() or
+        type == kingaidra.ai.task.TaskType.CHAT_EXPLAIN_ASM.toString() or
         type == kingaidra.ai.task.TaskType.CHAT_DECOM_ASM.toString() or
         type == kingaidra.ai.task.TaskType.CHAT_EXPLAIN_STRINGS.toString() or
         type == kingaidra.ai.task.TaskType.ADD_COMMENTS.toString()):
