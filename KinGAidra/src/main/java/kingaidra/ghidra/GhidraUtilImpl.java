@@ -144,7 +144,7 @@ public class GhidraUtilImpl implements GhidraUtil {
         root.forEach(Function::getEntryPoint);
     }
 
-    private void build_call_tree_str(Function func, int indent, Set<Long> visited, StringBuilder call_tree) {
+    private void build_call_tree_str(Function func, int indent, int depth_limit, Set<Long> visited, StringBuilder call_tree) {
         Stack<Function> func_stack = new Stack<>();
         Stack<Integer> indent_stack = new Stack<>();
         func_stack.push(func);
@@ -153,6 +153,9 @@ public class GhidraUtilImpl implements GhidraUtil {
         while (!func_stack.isEmpty()) {
             Function cur_func = func_stack.pop();
             int cur_indent = indent_stack.pop();
+            if (depth_limit > 0 && cur_indent > depth_limit) {
+                continue;
+            }
 
             if (visited.contains(cur_func.getEntryPoint().getOffset())) {
                 continue;
@@ -186,8 +189,12 @@ public class GhidraUtilImpl implements GhidraUtil {
     }
 
     public String get_func_call_tree(Function func) {
+        return get_func_call_tree(func, 0);
+    }
+
+    public String get_func_call_tree(Function func, int depth_limit) {
         StringBuilder call_tree = new StringBuilder();
-        build_call_tree_str(func, 0, new HashSet<>(), call_tree);
+        build_call_tree_str(func, 0, depth_limit, new HashSet<>(), call_tree);
         return call_tree.toString();
     }
 

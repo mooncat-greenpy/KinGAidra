@@ -78,6 +78,10 @@ class GhidraUtilImplTest {
                                 "- func_403000\n" +
                                 "    - func_401000\n" +
                                 "    - func_402000\n");
+        assertEquals(gu.get_func_call_tree(gu.get_func(util.get_addr(program, 0x404000)), 1),
+                                "- func_404000\n" +
+                                "    - func_403000\n" +
+                                "    - func_405000\n");
         assertEquals(gu.get_func_call_tree(), "- func_404000\n" +
                                 "    - func_403000\n" +
                                 "        - func_401000\n" +

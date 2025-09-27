@@ -10,6 +10,7 @@ import kingaidra.ai.convo.ConversationContainer;
 import kingaidra.ai.convo.ConversationContainerDummy;
 import kingaidra.ghidra.GhidraUtil;
 import kingaidra.ghidra.GhidraUtilImpl;
+import kingaidra.ghidra.PromptConf;
 import kingaidra.testutil.GhidraTestUtil;
 import kingaidra.testutil.ModelDummy;
 
@@ -25,7 +26,8 @@ public class RefactorTest {
         Program program = util.create_program();
         GhidraUtil gu = new GhidraUtilImpl(program, TaskMonitor.DUMMY);
         ConversationContainer container = new ConversationContainerDummy();
-        Ai ai = new Ai(null, program, gu, container, null);
+        PromptConf conf = new PromptConf();
+        Ai ai = new Ai(null, program, gu, container, null, conf);
         Refactor refactor = new Refactor(gu, ai, new Function<String, String>() {
             @Override
             public String apply(String msg) {

@@ -11,6 +11,7 @@ import kingaidra.ai.convo.ConversationType;
 import kingaidra.ai.task.TaskType;
 import kingaidra.ghidra.GhidraUtil;
 import kingaidra.ghidra.GhidraUtilImpl;
+import kingaidra.ghidra.PromptConf;
 import kingaidra.testutil.GhidraTestUtil;
 import kingaidra.testutil.ChatModelDummy;
 
@@ -26,7 +27,8 @@ public class AiTest {
         Program program = util.create_program();
         GhidraUtil gu = new GhidraUtilImpl(program, TaskMonitor.DUMMY);
         ConversationContainer container = new ConversationContainerDummy();
-        Ai ai = new Ai(null, program, gu, container, null);
+        PromptConf conf = new PromptConf();
+        Ai ai = new Ai(null, program, gu, container, null, conf);
         Conversation convo1 = new Conversation(ConversationType.SYSTEM_DECOM, new ChatModelDummy("Dummy", "dummy.py", true));
         String ret1 = ai.resolve_src_code(convo1, "Explain\n<code:401000>\nend",
                 util.get_addr(program, 0x402000));
@@ -79,7 +81,8 @@ public class AiTest {
         Program program = util.create_program();
         GhidraUtil gu = new GhidraUtilImpl(program, TaskMonitor.DUMMY);
         ConversationContainer container = new ConversationContainerDummy();
-        Ai ai = new Ai(null, program, gu, container, null);
+        PromptConf conf = new PromptConf();
+        Ai ai = new Ai(null, program, gu, container, null, conf);
         Conversation convo1 = new Conversation(ConversationType.SYSTEM_DECOM, new ChatModelDummy("Dummy", "dummy.py", true));
         String ret1 = ai.resolve_asm_code(convo1, "Explain\n<asm:401000>\nend",
                 util.get_addr(program, 0x402000));
@@ -135,7 +138,8 @@ public class AiTest {
         Program program = util.create_program();
         GhidraUtil gu = new GhidraUtilImpl(program, TaskMonitor.DUMMY);
         ConversationContainer container = new ConversationContainerDummy();
-        Ai ai = new Ai(null, program, gu, container, null);
+        PromptConf conf = new PromptConf();
+        Ai ai = new Ai(null, program, gu, container, null, conf);
         Conversation convo1 = new Conversation(ConversationType.SYSTEM_DECOM, new ChatModelDummy("Dummy", "dummy.py", true));
         String ret1 = ai.resolve_asm_code_with_addr(convo1, "Explain\n<aasm:401000>\nend",
                 util.get_addr(program, 0x402000));
@@ -191,7 +195,8 @@ public class AiTest {
         Program program = util.create_program();
         GhidraUtil gu = new GhidraUtilImpl(program, TaskMonitor.DUMMY);
         ConversationContainer container = new ConversationContainerDummy();
-        Ai ai = new Ai(null, program, gu, container, null);
+        PromptConf conf = new PromptConf();
+        Ai ai = new Ai(null, program, gu, container, null, conf);
         Conversation convo1 = new Conversation(ConversationType.SYSTEM_DECOM, new ChatModelDummy("Dummy", "dummy.py", true));
         String ret1 = ai.resolve_calltree(convo1, "Explain\n<calltree:404000>\nend",
                 util.get_addr(program, 0x408000));
@@ -225,10 +230,13 @@ public class AiTest {
         assertEquals(convo2.get_addrs()[1].getOffset(), 0x408000);
 
         Conversation convo3 = new Conversation(ConversationType.SYSTEM_DECOM, new ChatModelDummy("Dummy", "dummy.py", true));
-        String ret3 = ai.resolve_calltree(convo3, "Explain\n<calltree:404000>\nand\n<calltree>\nend",
+        String ret3 = ai.resolve_calltree(convo3, "Explain\n<calltree:404000:1>\nand\n<calltree>\nend",
                 util.get_addr(program, 0x408000));
         assertTrue(ret3.startsWith("Explain\n"));
         assertTrue(ret3.contains("- func_404000\n" +
+                                "    - func_403000\n" +
+                                "    - func_405000\n"));
+        assertFalse(ret3.contains("- func_404000\n" +
                                 "    - func_403000\n" +
                                 "        - func_401000\n" +
                                 "        - func_402000\n" +
@@ -269,7 +277,8 @@ public class AiTest {
         Program program = util.create_program();
         GhidraUtil gu = new GhidraUtilImpl(program, TaskMonitor.DUMMY);
         ConversationContainer container = new ConversationContainerDummy();
-        Ai ai = new Ai(null, program, gu, container, null);
+        PromptConf conf = new PromptConf();
+        Ai ai = new Ai(null, program, gu, container, null, conf);
         Conversation convo1 = new Conversation(ConversationType.SYSTEM_DECOM, new ChatModelDummy("Dummy", "dummy.py", true));
         String ret1 = ai.resolve_strings(convo1, "Explain\n<strings>\nend");
         assertTrue(ret1.startsWith("Explain\n"));
@@ -298,7 +307,8 @@ public class AiTest {
         Program program = util.create_program();
         GhidraUtil gu = new GhidraUtilImpl(program, TaskMonitor.DUMMY);
         ConversationContainer container = new ConversationContainerDummy();
-        Ai ai = new Ai(null, program, gu, container, null);
+        PromptConf conf = new PromptConf();
+        Ai ai = new Ai(null, program, gu, container, null, conf);
         Conversation convo1 = new Conversation(ConversationType.SYSTEM_DECOM, new ChatModelDummy("Dummy1", "dummy.py", true));
         convo1 = ai.guess(TaskType.CHAT, convo1, "msg", util.get_addr(program, 0x402000));
         assertEquals(convo1.get_msgs_len(), 2);

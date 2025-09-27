@@ -31,6 +31,8 @@ public interface GhidraUtil {
 
     public String get_func_call_tree(Function func);
 
+    public String get_func_call_tree(Function func, int depth_limit);
+
     public List<String> get_call_tree_parent(String call_tree, int depth, Function target);
 
     public List<String> get_call_tree_parent(String call_tree, int depth, String target);

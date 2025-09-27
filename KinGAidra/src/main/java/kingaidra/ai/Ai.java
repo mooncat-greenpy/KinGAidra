@@ -246,7 +246,11 @@ public class Ai {
                     calltree = ghidra.get_func_call_tree();
                 } else {
                     Function match_func = ghidra.get_func(func_addr);
-                    calltree = ghidra.get_func_call_tree(match_func);
+                    if (depth != null) {
+                        calltree = ghidra.get_func_call_tree(match_func, depth.intValue());
+                    } else {
+                        calltree = ghidra.get_func_call_tree(match_func);
+                    }
                     if (calltree != null) {
                         convo.add_addr(match_func.getEntryPoint());
                     }
