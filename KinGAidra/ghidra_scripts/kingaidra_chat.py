@@ -6,7 +6,7 @@
 
 
 URL = "" # "https://api.openai.com/v1/chat/completions"
-MODEL = "" # "gpt-4o-mini"
+MODEL = "" # "gpt-5-mini"
 API_KEY = ""
 POST_MSG = "" # "Please respond in XXXX."
 TOOLS_FLAG = False

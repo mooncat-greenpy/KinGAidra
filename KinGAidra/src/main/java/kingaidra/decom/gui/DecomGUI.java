@@ -28,6 +28,7 @@ import kingaidra.ai.model.Model;
 import kingaidra.ai.model.ModelByScript;
 import kingaidra.ai.model.ModelConf;
 import kingaidra.ai.task.KinGAidraChatTaskService;
+import kingaidra.ghidra.PromptConf;
 import kingaidra.ghidra.GhidraUtil;
 import kingaidra.gui.MainProvider;
 import kingaidra.log.Logger;
@@ -42,7 +43,8 @@ public class DecomGUI extends JPanel {
     private PluginTool plugin;
     private KinGAidraChatTaskService srv;
     private GhidraUtil ghidra;
-    private ModelConf conf;
+    private ModelConf model_conf;
+    private PromptConf conf;
     private Ai ai;
     private Logger logger;
     private GuessGUI ggui;
@@ -51,12 +53,13 @@ public class DecomGUI extends JPanel {
     private boolean busy;
 
     public DecomGUI(MainProvider provider, Tool dockingTool, Program program, Plugin plugin,
-            String owner, KinGAidraChatTaskService srv, GhidraUtil ghidra, ModelConf conf, Ai ai, Logger logger) {
+            String owner, KinGAidraChatTaskService srv, GhidraUtil ghidra, ModelConf model_conf, PromptConf conf, Ai ai, Logger logger) {
         super();
         this.program = program;
         this.plugin = plugin.getTool();
         this.srv = srv;
         this.ghidra = ghidra;
+        this.model_conf = model_conf;
         this.conf = conf;
         this.ai = ai;
         this.logger = logger;
@@ -69,7 +72,7 @@ public class DecomGUI extends JPanel {
     }
 
     private void buildPanel() {
-        Guess guess = new Guess(ghidra, ai, conf);
+        Guess guess = new Guess(ghidra, ai, model_conf, conf);
         Refactor refactor = new Refactor(ghidra, ai, new Function<String, String>() {
             @Override
             public String apply(String msg) {

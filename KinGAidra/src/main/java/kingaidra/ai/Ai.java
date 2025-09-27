@@ -23,6 +23,7 @@ import kingaidra.ai.convo.ConversationType;
 import kingaidra.ai.model.Model;
 import kingaidra.ai.task.KinGAidraChatTaskService;
 import kingaidra.ai.task.TaskType;
+import kingaidra.ghidra.PromptConf;
 import kingaidra.ghidra.GhidraUtil;
 
 public class Ai {
@@ -32,14 +33,16 @@ public class Ai {
     private ConversationContainer container;
     private KinGAidraChatTaskService service;
     private GhidraState state;
+    private PromptConf conf;
 
     public Ai(PluginTool tool, Program program, GhidraUtil ghidra, ConversationContainer container,
-            KinGAidraChatTaskService service) {
+            KinGAidraChatTaskService service, PromptConf conf) {
         this.tool = tool;
         this.program = program;
         this.ghidra = ghidra;
         this.container = container;
         this.service = service;
+        this.conf = conf;
         this.state = null;
     }
 
@@ -270,49 +273,39 @@ public class Ai {
     }
 
     public Conversation guess_explain_decom(Model m, Address addr) {
+        TaskType task = TaskType.CHAT_EXPLAIN_DECOM;
         Conversation convo = new Conversation(ConversationType.USER_CHAT, m);
         convo.set_model(m);
-        String msg = "Please explain what the following decompiled C function does. "
-                        + "Break down its logic, and describe the purpose of each part of the function, including any key operations, conditionals, loops, and data structures involved. "
-                        + "Providea step-by-step explanation of how the function works and what its expected behavior would be when executed.\n"
-                        + "```cpp\n" + "<code>\n" + "```";
-        return guess(TaskType.CHAT_EXPLAIN_DECOM, convo, msg, addr);
+        convo.add_system_msg(conf.get_system_prompt(task, m.get_name()));
+        String msg = conf.get_user_prompt(task, m.get_name());
+        return guess(task, convo, msg, addr);
     }
 
     public Conversation guess_explain_asm(Model m, Address addr) {
+        TaskType task = TaskType.CHAT_EXPLAIN_ASM;
         Conversation convo = new Conversation(ConversationType.USER_CHAT, m);
         convo.set_model(m);
-        String msg = "Please explain what the following function does from its assembly listing. " +
-                        "Infer the calling convention, parameters, and return value; describe the stack frame and register usage; map the control flow (basic blocks, branches, loops); and highlight key instructions, memory reads/writes, constants, external calls, and side effects. Provide a concise step-by-step walkthrough (brief pseudocode if helpful) and end with a one-sentence summary of the function's purpose. Note any error paths or suspicious patterns.\n" +
-                        "```asm\n<asm>\n```";
-        return guess(TaskType.CHAT_EXPLAIN_DECOM, convo, msg, addr);
+        convo.add_system_msg(conf.get_system_prompt(task, m.get_name()));
+        String msg = conf.get_user_prompt(task, m.get_name());
+        return guess(task, convo, msg, addr);
     }
 
     public Conversation guess_decom_asm(Model m, Address addr) {
+        TaskType task = TaskType.CHAT_DECOM_ASM;
         Conversation convo = new Conversation(ConversationType.USER_CHAT, m);
         convo.set_model(m);
-        String msg = "Decompile the following assembly code into equivalent C code.\n```asm\n<asm>\n```";
-        return guess(TaskType.CHAT_EXPLAIN_DECOM, convo, msg, addr);
+        convo.add_system_msg(conf.get_system_prompt(task, m.get_name()));
+        String msg = conf.get_user_prompt(task, m.get_name());
+        return guess(task, convo, msg, addr);
     }
 
     public Conversation guess_explain_strings(Model m, Address addr) {
+        TaskType task = TaskType.CHAT_EXPLAIN_STRINGS;
         Conversation convo = new Conversation(ConversationType.USER_CHAT, m);
         convo.set_model(m);
-        String msg = "Given a list of strings found within a malware sample, identify and list the strings that might be useful for further analysis. Focus on strings that could provide insight into the malware's functionality, its command-and-control server, or its intentions. Prioritize strings related to:\n" +
-                        "\n" +
-                        "1. URLs or IP addresses - Potential command-and-control servers, communication endpoints, or external resources.\n" +
-                        "2. File paths or registry keys - Locations of potential artifacts, dropped files, or persistence mechanisms.\n" +
-                        "3. Function names or API calls - Indications of specific malware behaviors or techniques.\n" +
-                        "4. Encryption keys or sensitive data - Possible use of cryptography, encoding, or sensitive information handling.\n" +
-                        "5. Error messages or logs - Clues to how the malware operates, crashes, or logs activity.\n" +
-                        "6. Hardcoded credentials or authentication tokens - Useful for identifying compromised access methods.\n" +
-                        "7. Strings associated with known malware families or threat actor tactics - Help in associating the sample with a specific threat group or malware variant.\n" +
-                        "\n" +
-                        "Filter out irrelevant or common strings such as system files, non-specific text, or internal programming strings. Focus on identifying strings that could reveal malicious actions or associations.\n" +
-                        "\n" +
-                        "Strings:\n" +
-                        "<strings>";
-        return guess(TaskType.CHAT_EXPLAIN_STRINGS, convo, msg, addr);
+        convo.add_system_msg(conf.get_system_prompt(task, m.get_name()));
+        String msg = conf.get_user_prompt(task, m.get_name());
+        return guess(task, convo, msg, addr);
     }
 
     public Conversation guess(TaskType type, Conversation convo, String msg, Address addr) {

@@ -15,15 +15,18 @@ import kingaidra.ai.task.TaskType;
 import kingaidra.decom.extractor.CommentJson;
 import kingaidra.decom.extractor.CommentListJson;
 import kingaidra.decom.extractor.JsonExtractor;
+import kingaidra.ghidra.PromptConf;
 
 public class Guess {
     private Ai ai;
     private ModelConf model_conf;
+    private PromptConf conf;
 
-    public Guess(Ai ai, ModelConf conf) {
+    public Guess(Ai ai, ModelConf model_conf, PromptConf conf) {
         this.ai = ai;
 
-        model_conf = conf;
+        this.model_conf = model_conf;
+        this.conf = conf;
     }
 
     public ModelConf get_model_conf() {
@@ -77,28 +80,10 @@ public class Guess {
             return comments;
         }
 
+        TaskType task = TaskType.ADD_COMMENTS;
         Conversation convo = new Conversation(ConversationType.SYSTEM_COMMENT, m);
-        String msg = "Please add comments to the following C language function to explain its purpose and logic. The comments should be concise but clear, and should describe the function, parameters, logic, and any important details for each part of the code. Return the results in the following format:\n" +
-                        "\n" +
-                        "```json\n" +
-                        "[\n" +
-                        "    {\n" +
-                        "        \"source\": \"source code line A\",\n" +
-                        "        \"comment\": \"comment A\"\n" +
-                        "    },\n" +
-                        "    {\n" +
-                        "        \"source\": \"source code line B\",\n" +
-                        "        \"comment\": \"comment B\"\n" +
-                        "    },\n" +
-                        "    ...\n" +
-                        "]\n" +
-                        "```\n" +
-                        "\n" +
-                        "Here is the C code:\n" +
-                        "\n" +
-                        "```cpp\n" +
-                        "<code>\n" +
-                        "```";
+        convo.add_system_msg(conf.get_system_prompt(task, m.get_name()));
+        String msg = conf.get_user_prompt(task, m.get_name());
 
         convo = ai.guess(TaskType.ADD_COMMENTS, convo, msg, addr);
         if (convo == null) {

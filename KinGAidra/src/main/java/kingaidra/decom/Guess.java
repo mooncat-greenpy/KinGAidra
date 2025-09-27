@@ -16,18 +16,21 @@ import kingaidra.decom.extractor.FuncParamVarJson;
 import kingaidra.decom.extractor.JsonExtractor;
 import kingaidra.decom.extractor.ParamJson;
 import kingaidra.decom.extractor.VarJson;
+import kingaidra.ghidra.PromptConf;
 import kingaidra.ghidra.GhidraUtil;
 
 public class Guess {
     private GhidraUtil ghidra;
     private Ai ai;
     private ModelConf model_conf;
+    private PromptConf conf;
 
-    public Guess(GhidraUtil ghidra, Ai ai, ModelConf conf) {
+    public Guess(GhidraUtil ghidra, Ai ai, ModelConf model_conf, PromptConf conf) {
         this.ghidra = ghidra;
         this.ai = ai;
 
-        model_conf = conf;
+        this.model_conf = model_conf;
+        this.conf = conf;
     }
 
     public ModelConf get_model_conf() {
@@ -47,34 +50,11 @@ public class Guess {
     }
 
     private boolean guess_func_param_var(DecomDiff diff) {
+        TaskType task = TaskType.DECOM_REFACTOR_FUNC_PARAM_VAR;
         Conversation convo = new Conversation(ConversationType.SYSTEM_DECOM, diff.get_model());
-        String msg = String.format("Please improve the readability of the following code by renaming the functions, parameters, and variables with more descriptive and meaningful names. The new names should clearly reflect the purpose and behavior of the function and the role of every parameter and variable.\n" +
-                        "Since this function is processed in isolation and naming collisions may occur in a larger context, generate a function name that is uniquely descriptive based on what the function actually does. Include context clues in the name (e.g., related data, behavior, action performed) to help ensure uniqueness when aggregated with other renamed functions.\n" +
-                        "```\n" +
-                        "<code>\n" +
-                        "```\n" +
-                        "Output should absolutely be JSON only.\n" +
-                        "No additional explanation is needed.\n" +
-                        "The format is as follows.\n" +
-                        "```json\n" +
-                        "{\n" +
-                        "    \"new_func_name\": \"new function name\",\n" +
-                        "    \"orig_func_name\": \"original function name\",\n" +
-                        "    \"parameters\": [\n" +
-                        "        {\n" +
-                        "            \"new_param_name\": \"new parameter name\",\n" +
-                        "            \"orig_param_name\": \"original parameter name\"\n" +
-                        "        },\n" +
-                        "    ],\n" +
-                        "    \"variables\": [\n" +
-                        "        {\n" +
-                        "            \"new_var_name\": \"new variable name\",\n" +
-                        "            \"orig_var_name\": \"original variable name\"\n" +
-                        "        }\n" +
-                        "    ]\n" +
-                        "}\n" +
-                        "```");
-        convo = ai.guess(TaskType.DECOM_REFACTOR_FUNC_PARAM_VAR, convo, msg, diff.get_addr());
+        convo.add_system_msg(conf.get_system_prompt(task, diff.get_model().get_name()));
+        String msg = conf.get_user_prompt(task, diff.get_model().get_name());
+        convo = ai.guess(task, convo, msg, diff.get_addr());
         if (convo == null) {
             return false;
         }
@@ -95,23 +75,11 @@ public class Guess {
     }
 
     private boolean guess_datatype(DecomDiff diff) {
+        TaskType task = TaskType.DECOM_REFACTOR_DATATYPE;
         Conversation convo = new Conversation(ConversationType.SYSTEM_DECOM, diff.get_model());
-        String msg = String.format("I have decompiled C code that contains various data type issues due to the decompilation process. I need your help to review the code and make the necessary corrections to the data types. Please go over the code and make these adjustments to improve the accuracy of the data types.\n" +
-                        "```cpp\n" +
-                        "<code>\n" +
-                        "```\n" +
-                        "The changes should be output in JSON format.\n" +
-                        "```json\n" +
-                        "[\n" +
-                        "    {\n" +
-                        "        \"new_datatype\": \"new datatype name\",\n" +
-                        "        \"orig_datatype\": \"original datatype name\",\n" +
-                        "        \"var_name\": \"variable name\"\n" +
-                        "    },\n" +
-                        "    ...\n" +
-                        "]\n" +
-                        "```");
-        convo = ai.guess(TaskType.DECOM_REFACTOR_DATATYPE, convo, msg, diff.get_addr());
+        convo.add_system_msg(conf.get_system_prompt(task, diff.get_model().get_name()));
+        String msg = conf.get_user_prompt(task, diff.get_model().get_name());
+        convo = ai.guess(task, convo, msg, diff.get_addr());
         if (convo == null) {
             return false;
         }

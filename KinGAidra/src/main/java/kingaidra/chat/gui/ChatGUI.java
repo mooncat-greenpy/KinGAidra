@@ -40,6 +40,7 @@ import kingaidra.ai.model.ModelConf;
 import kingaidra.ai.task.KinGAidraChatTaskService;
 import kingaidra.ai.task.TaskType;
 import kingaidra.chat.Guess;
+import kingaidra.ghidra.PromptConf;
 import kingaidra.ghidra.GhidraUtil;
 import kingaidra.gui.MainProvider;
 import kingaidra.log.Logger;
@@ -66,7 +67,8 @@ public class ChatGUI extends JPanel {
     private PluginTool plugin;
     private KinGAidraChatTaskService srv;
     private GhidraUtil ghidra;
-    private ModelConf conf;
+    private ModelConf model_conf;
+    private PromptConf conf;
     private ConversationContainer container;
     private Ai ai;
     private Logger logger;
@@ -78,12 +80,13 @@ public class ChatGUI extends JPanel {
     private boolean add_comments_busy;
 
     public ChatGUI(MainProvider provider, Tool dockingTool, Program program, Plugin plugin,
-            String owner, KinGAidraChatTaskService srv, GhidraUtil ghidra, ModelConf conf, ConversationContainer container, Ai ai, Logger logger) {
+            String owner, KinGAidraChatTaskService srv, GhidraUtil ghidra, ModelConf model_conf, PromptConf conf, ConversationContainer container, Ai ai, Logger logger) {
         super();
         this.program = program;
         this.plugin = plugin.getTool();
         this.srv = srv;
         this.ghidra = ghidra;
+        this.model_conf = model_conf;
         this.conf = conf;
         this.container = container;
         this.ai = ai;
@@ -203,7 +206,7 @@ public class ChatGUI extends JPanel {
     }
 
     private void init_panel() {
-        Guess guess = new Guess(ai, conf);
+        Guess guess = new Guess(ai, model_conf, conf);
 
         Model chatgptlike_model =
                 new ModelByScript("ChatGPTLike", "kingaidra_chat.py", true);

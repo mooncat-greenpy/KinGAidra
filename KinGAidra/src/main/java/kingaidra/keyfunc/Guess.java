@@ -13,6 +13,7 @@ import kingaidra.ai.model.Model;
 import kingaidra.ai.model.ModelConf;
 import kingaidra.ai.task.TaskType;
 import kingaidra.decom.extractor.JsonExtractor;
+import kingaidra.ghidra.PromptConf;
 import kingaidra.ghidra.GhidraUtil;
 import kingaidra.keyfunc.extractor.FunctionJson;
 import kingaidra.keyfunc.extractor.MarkupExtractor;
@@ -21,12 +22,14 @@ public class Guess {
     private GhidraUtil ghidra;
     private Ai ai;
     private ModelConf model_conf;
+    private PromptConf conf;
 
-    public Guess(GhidraUtil ghidra ,Ai ai, ModelConf conf) {
+    public Guess(GhidraUtil ghidra ,Ai ai, ModelConf model_conf, PromptConf conf) {
         this.ghidra = ghidra;
         this.ai = ai;
 
-        model_conf = conf;
+        this.model_conf = model_conf;
+        this.conf = conf;
     }
 
     public ModelConf get_model_conf() {
