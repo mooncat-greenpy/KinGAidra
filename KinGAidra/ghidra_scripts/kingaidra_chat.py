@@ -80,14 +80,14 @@ def add_tools(data):
         {
             "type": "function",
             "function": {
-                "name": "get_called_function",
+                "name": "get_callee_function",
                 "description": "Retrieve functions that are called by the specified function and return their names and addresses.",
                 "parameters": {
                     "type": "object",
                     "properties": {
-                        "address": {"type": "number"},
+                        "func_name": {"type": "string"},
                     },
-                    "required": ["address"],
+                    "required": ["func_name"],
                     "additionalProperties": False
                 },
                 "strict": True
@@ -96,12 +96,28 @@ def add_tools(data):
         {
             "type": "function",
             "function": {
-                "name": "get_calling_function",
+                "name": "get_caller_function",
                 "description": "Retrieve functions that call the specified function and return their names and addresses.",
                 "parameters": {
                     "type": "object",
                     "properties": {
-                        "address": {"type": "number"},
+                        "func_name": {"type": "string"},
+                    },
+                    "required": ["func_name"],
+                    "additionalProperties": False
+                },
+                "strict": True
+            }
+        },
+        {
+            "type": "function",
+            "function": {
+                "name": "get_asm_by_address",
+                "description": "Retrieve the assembly code of the specified function.",
+                "parameters": {
+                    "type": "object",
+                    "properties": {
+                        "address": {"type": "string", "description": "hex string"},
                     },
                     "required": ["address"],
                     "additionalProperties": False
@@ -117,9 +133,9 @@ def add_tools(data):
                 "parameters": {
                     "type": "object",
                     "properties": {
-                        "address": {"type": "number"},
+                        "func_name": {"type": "string"},
                     },
-                    "required": ["address"],
+                    "required": ["func_name"],
                     "additionalProperties": False
                 },
                 "strict": True
@@ -128,14 +144,14 @@ def add_tools(data):
         {
             "type": "function",
             "function": {
-                "name": "get_asm_by_name",
-                "description": "Retrieve the assembly code of the specified function.",
+                "name": "get_decompiled_code_by_address",
+                "description": "Retrieve the decompiled code of the specified function in C language.",
                 "parameters": {
                     "type": "object",
                     "properties": {
-                        "name": {"type": "string"},
+                        "address": {"type": "string", "description": "hex string"},
                     },
-                    "required": ["name"],
+                    "required": ["address"],
                     "additionalProperties": False
                 },
                 "strict": True
@@ -149,25 +165,9 @@ def add_tools(data):
                 "parameters": {
                     "type": "object",
                     "properties": {
-                        "address": {"type": "number"},
+                        "func_name": {"type": "string"},
                     },
-                    "required": ["address"],
-                    "additionalProperties": False
-                },
-                "strict": True
-            }
-        },
-        {
-            "type": "function",
-            "function": {
-                "name": "get_decompiled_code_by_name",
-                "description": "Retrieve the decompiled code of the specified function in C language.",
-                "parameters": {
-                    "type": "object",
-                    "properties": {
-                        "name": {"type": "string"},
-                    },
-                    "required": ["name"],
+                    "required": ["func_name"],
                     "additionalProperties": False
                 },
                 "strict": True
@@ -181,7 +181,7 @@ def add_tools(data):
                 "parameters": {
                     "type": "object",
                     "properties": {
-                        "address": {"type": "number"},
+                        "address": {"type": "string", "description": "hex string"},
                         "new_func_name": {"type": "string"},
                         "params": {
                             "type": "array",
@@ -224,7 +224,7 @@ def add_tools(data):
                 "parameters": {
                     "type": "object",
                     "properties": {
-                        "address": {"type": "number"},
+                        "address": {"type": "string", "description": "hex string"},
                         "comments": {
                             "type": "array",
                             "items": {
@@ -266,7 +266,7 @@ def add_tools(data):
                 "parameters": {
                     "type": "object",
                     "properties": {
-                        "address": {"type": "number"},
+                        "address": {"type": "string", "description": "hex string"},
                     },
                     "required": ["address"],
                     "additionalProperties": False
@@ -280,7 +280,7 @@ def handle_tool_call(tool_call, ghidra):
     func_name = tool_call["function"]["name"]
     args = json.loads(tool_call["function"]["arguments"])
     if func_name == "get_current_address":
-        content = "%d" % (ghidra.get_current_addr().getOffset())
+        content = "%#x" % (ghidra.get_current_addr().getOffset())
     elif func_name == "get_function_address_by_name":
         same_name_funcs = ghidra.get_func(args["name"])
         if not same_name_funcs:
@@ -288,61 +288,77 @@ def handle_tool_call(tool_call, ghidra):
             return content
         content = "Addresses list.\n"
         for func in same_name_funcs:
-            content += "- %d\n" % (func.getEntryPoint().getOffset())
+            content += "- %x\n" % (func.getEntryPoint().getOffset())
     elif func_name == "get_function_list":
         func_itr = currentProgram.getListing().getFunctions(True)
         content = "Functions list.\n"
         while func_itr.hasNext():
             func = func_itr.next()
-            content += "- [%d]: %s\n" % (func.getEntryPoint().getOffset(), func.getName())
-    elif func_name == "get_called_function":
-        func = ghidra.get_func(ghidra.get_addr(args["address"]))
-        if not func:
-            content = "Invalid address"
+            content += "- [%#x]: %s\n" % (func.getEntryPoint().getOffset(), func.getName())
+    elif func_name == "get_callee_function":
+        func_list = ghidra.get_func(args["func_name"])
+        if not len(func_list):
+            content = "Invalid function name"
             return content
-        called_func_list = func.getCalledFunctions(TaskMonitor.DUMMY)
-        if not called_func_list:
-            content = "None"
+        content = ""
+        for func in func_list:
+            callee_func_list = ghidra.get_callee(func)
+            content += "%s\n" % func.getName()
+            for callee_func in callee_func_list:
+                content += "- [%#x]: %s\n" % (callee_func.getEntryPoint().getOffset(), callee_func.getName())
+            content += "\n"
+    elif func_name == "get_caller_function":
+        func_list = ghidra.get_func(args["func_name"])
+        if not len(func_list):
+            content = "Invalid function name"
             return content
-        content = "Functions list.\n"
-        for called_func in called_func_list:
-            content += "- [%d]: %s\n" % (called_func.getEntryPoint().getOffset(), called_func.getName())
-    elif func_name == "get_calling_function":
-        func = ghidra.get_func(ghidra.get_addr(args["address"]))
-        if not func:
-            content = "Invalid address"
-            return content
-        calling_func_list = func.getCallingFunctions(TaskMonitor.DUMMY)
-        if not calling_func_list:
-            content = "None"
-            return content
-        content = "Functions list.\n"
-        for calling_func in calling_func_list:
-            content += "- [%d]: %s\n" % (calling_func.getEntryPoint().getOffset(), calling_func.getName())
-    elif func_name == "get_asm_by_name":
-        same_name_funcs = ghidra.get_func(args["name"])
+        content = ""
+        for func in func_list:
+            caller_func_list = ghidra.get_caller(func)
+            content += "%s\n" % func.getName()
+            for caller_func in caller_func_list:
+                content += "- [%#x]: %s\n" % (caller_func.getEntryPoint().getOffset(), caller_func.getName())
+            content += "\n"
+    elif func_name == "get_asm":
+        same_name_funcs = ghidra.get_func(args["func_name"])
         if not len(same_name_funcs) == 1:
             content = "Failed"
             return content
-        content = ghidra.get_asm(same_name_funcs[0].getEntryPoint())
-    elif func_name == "get_asm":
-        content = ghidra.get_asm(ghidra.get_addr(args["address"]))
+        content = ""
+        for func in same_name_funcs:
+            content += ghidra.get_asm(func.getEntryPoint(), True) + "\n\n"
+    elif func_name == "get_asm_by_address":
+        try:
+            addr = int(args["address"], 16)
+        except ValueError:
+            return "Invalid address format"
+        content = ghidra.get_asm(ghidra.get_addr(addr))
         if not content:
             content = "Invalid address"
             return content
-    elif func_name == "get_decompiled_code_by_name":
-        same_name_funcs = ghidra.get_func(args["name"])
+    elif func_name == "get_decompiled_code":
+        same_name_funcs = ghidra.get_func(args["func_name"])
         if not len(same_name_funcs) == 1:
             content = "Failed"
             return content
-        content = ghidra.get_decom(same_name_funcs[0].getEntryPoint())
-    elif func_name == "get_decompiled_code":
-        content = ghidra.get_decom(ghidra.get_addr(args["address"]))
+        content = ""
+        for func in same_name_funcs:
+            content += ghidra.get_decom(func.getEntryPoint()) + "\n\n"
+    elif func_name == "get_decompiled_code_by_address":
+        try:
+            addr = int(args["address"], 16)
+        except ValueError:
+            return "Invalid address format"
+        content = ghidra.get_decom(ghidra.get_addr(addr))
         if not content:
             content = "Invalid address"
             return content
     elif func_name == "refactoring":
-        diff = ghidra.get_decomdiff(ghidra.get_addr(args["address"]))
+        try:
+            addr = int(args["address"], 16)
+        except ValueError:
+            return "Invalid address format"
+        diff = ghidra.get_decomdiff(ghidra.get_addr(addr))
         if not diff:
             content = "Invalid address"
             return content
@@ -358,7 +374,11 @@ def handle_tool_call(tool_call, ghidra):
         else:
             content = "Failed"
     elif func_name == "add_comments":
-        addr = ghidra.get_addr(args["address"])
+        try:
+            addr = int(args["address"], 16)
+        except ValueError:
+            return "Invalid address format"
+        addr = ghidra.get_addr(addr)
         if not addr:
             content = "Invalid address"
             return content
@@ -377,9 +397,13 @@ def handle_tool_call(tool_call, ghidra):
             return
         content = "Strings list.\n"
         for data in data_list:
-            content += "- [%d]: %s\n" % (data.getAddress().getOffset(), data.getDefaultValueRepresentation())
+            content += "- [%#x]: %s\n" % (data.getAddress().getOffset(), data.getDefaultValueRepresentation())
     elif func_name == "get_ref_to":
-        ref_list = ghidra.get_ref_to(ghidra.get_addr(args["address"]))
+        try:
+            addr = int(args["address"], 16)
+        except ValueError:
+            return "Invalid address format"
+        ref_list = ghidra.get_ref_to(ghidra.get_addr(addr))
         if not ref_list:
             content = "None"
             return
