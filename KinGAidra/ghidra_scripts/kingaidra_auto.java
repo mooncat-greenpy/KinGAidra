@@ -34,6 +34,7 @@ import kingaidra.decom.DecomDiff;
 import kingaidra.ghidra.ChatModelPreferences;
 import kingaidra.ghidra.GhidraUtil;
 import kingaidra.ghidra.GhidraUtilImpl;
+import kingaidra.ghidra.PromptConf;
 
 
 public class kingaidra_auto extends GhidraScript {
@@ -422,14 +423,15 @@ public class kingaidra_auto extends GhidraScript {
         PluginTool tool = state.getTool();
         ghidra = new GhidraUtilImpl(currentProgram, TaskMonitor.DUMMY);
         ConversationContainer container = new ConversationContainerGhidraProgram(currentProgram, ghidra);
-        Ai ai = new Ai(tool, currentProgram, ghidra, container, srv);
+        PromptConf conf = new PromptConf();
+        Ai ai = new Ai(tool, currentProgram, ghidra, container, srv, conf);
         ai.set_ghidra_state(state);
         ModelConfSingle chat_model_conf = new ModelConfSingle("Chat and others",
                 new ChatModelPreferences("chat"));
 
-        chat_guess = new kingaidra.chat.Guess(ai, chat_model_conf);
+        chat_guess = new kingaidra.chat.Guess(ai, chat_model_conf, conf);
 
-        decom_guess = new kingaidra.decom.Guess(ghidra, ai, chat_model_conf);
+        decom_guess = new kingaidra.decom.Guess(ghidra, ai, chat_model_conf, conf);
         refactor = new kingaidra.decom.Refactor(ghidra, ai, new java.util.function.Function<String, String>() {
             @Override
             public String apply(String msg) {
@@ -437,7 +439,7 @@ public class kingaidra_auto extends GhidraScript {
             }
         });
 
-        keyfunc_guess = new kingaidra.keyfunc.Guess(ghidra, ai, chat_model_conf);
+        keyfunc_guess = new kingaidra.keyfunc.Guess(ghidra, ai, chat_model_conf, conf);
 
         if (verbose) {
             for (String model_name : chat_model_conf.get_models()) {
