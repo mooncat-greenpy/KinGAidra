@@ -43,10 +43,10 @@ public class kingaidra_auto extends GhidraScript {
     private static final boolean DEFAULT_ALL_FUNC = false;
     private static final int DEFAULT_CALLED_RECURSIVE_COUNT = 4;
     private static final int DEFAULT_CALLING_RECURSIVE_COUNT = 4;
-    private static final int DEFAULT_FUNCTION_COUNT_THRESHOLD = 500;
+    private static final int DEFAULT_FUNCTION_COUNT_THRESHOLD = 1000;
     private static final boolean DEFAULT_ENABLE_REFACTOR = true;
-    private static final boolean DEFAULT_ENABLE_ADD_COMMENTS = true;
-    private static final boolean DEFAULT_ENABLE_REPORT = true;
+    private static final boolean DEFAULT_ENABLE_ADD_COMMENTS = false;
+    private static final boolean DEFAULT_ENABLE_REPORT = false;
 
     private static final int MAX_PROMPT_LINE = 3000;
     private static final String DEFAULT_REPORT_NAME = "report.md";

@@ -36,7 +36,7 @@ public class PromptConf {
         String prompt = "";
         switch (task) {
             case DECOM_REFACTOR_FUNC_PARAM_VAR: {
-                prompt = String.format("Please improve the readability of the following code by renaming the functions, parameters, and variables with more descriptive and meaningful names. The new names should clearly reflect the purpose and behavior of the function and the role of every parameter and variable.\n" +
+                prompt = String.format("Please improve the readability of the following code by renaming the functions, parameters, and variables with more descriptive and meaningful names. The new names should clearly reflect the purpose and behavior of the function and the role of every parameter and variable. Use snake_case for all function and variable names.\n" +
                         "Since this function is processed in isolation and naming collisions may occur in a larger context, generate a function name that is uniquely descriptive based on what the function actually does. Include context clues in the name (e.g., related data, behavior, action performed) to help ensure uniqueness when aggregated with other renamed functions.\n" +
                         "```\n" +
                         "<code>\n" +
