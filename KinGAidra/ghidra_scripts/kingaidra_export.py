@@ -9,10 +9,16 @@ import os
 import json
 import time
 import codecs
+import re
+
+from jarray import zeros
 
 from ghidra.framework import Application
 
 from kingaidra.ghidra import GhidraUtilImpl
+
+
+SEGMENT_HEXDUMP_CHUNK = 0x10000
 
 
 def _make_dir(p):
@@ -76,11 +82,107 @@ def collect_exports_json(prog):
 
     return exports
 
+def _sanitize_file_name(name):
+    return re.sub(r"[^0-9A-Za-z_]+", "_", name)
+
+def _hexdump_char(b):
+    return chr(b) if 32 <= b <= 126 else "."
+
+def format_hexdump(buf, base_offset=0):
+    WIDTH = 16
+    lines = []
+
+    for i in range(0, len(buf), WIDTH):
+        chunk = buf[i:i + WIDTH]
+        hex_bytes = ["{:02x}".format(chunk[j]) if j < len(chunk) else "  " for j in range(WIDTH)]
+        hex_part = " ".join(hex_bytes[:8]) + "  " + " ".join(hex_bytes[8:])
+
+        ascii_part = "".join(_hexdump_char(b) for b in chunk)
+        lines.append("{:08x}  {}  |{}|".format(base_offset + i, hex_part, ascii_part))
+
+    return "\n".join(lines)
+
+def hexdump_memory(addr, size):
+    if size <= 0:
+        return ""
+
+    mem = currentProgram.getMemory()
+    buf = zeros(size, 'b')
+
+    try:
+        read = mem.getBytes(addr, buf)
+    except Exception:
+        read = -1
+
+    py_buf = bytearray((b & 0xff) for b in buf)
+
+    if read < size:
+        py_buf = py_buf[:max(read, 0)]
+
+    return format_hexdump(py_buf, base_offset=addr.getOffset())
+
+
+def dump_memory_segments(mem, hexdump_dir, base_dir, chunk_size=SEGMENT_HEXDUMP_CHUNK):
+    manifest = []
+
+    blocks = mem.getBlocks()
+    for block in blocks:
+        block_size = int(block.getSize())
+        if block_size <= 0:
+            continue
+
+        block_name = block.getName()
+        safe_name = _sanitize_file_name(block_name)
+        block_dir = os.path.join(hexdump_dir, "segment_%s" % safe_name)
+        _make_dir(block_dir)
+
+        block_entry = {
+            "segment": block_name,
+            "start": _addr_to_str(block.getStart()),
+            "end": _addr_to_str(block.getEnd()),
+            "size": block_size,
+            "initialized": bool(block.isInitialized()),
+            "chunks": []
+        }
+
+        if not block.isInitialized():
+            manifest.append(block_entry)
+            continue
+
+        offset = 0
+        while offset < block_size:
+            chunk_len = min(chunk_size, block_size - offset)
+            if chunk_len <= 0:
+                break
+
+            start_addr = block.getStart().add(offset)
+            end_addr = start_addr.add(chunk_len - 1)
+            chunk_filename = "chunk_%s_%s.hex" % (start_addr.toString(), end_addr.toString())
+            chunk_path = os.path.join(block_dir, chunk_filename)
+
+            dump = hexdump_memory(start_addr, chunk_len)
+            write_text(chunk_path, dump)
+
+            block_entry["chunks"].append({
+                "start": _addr_to_str(start_addr),
+                "end": _addr_to_str(end_addr),
+                "path": os.path.relpath(chunk_path, base_dir),
+                "length": chunk_len
+            })
+
+            offset += chunk_len
+
+        manifest.append(block_entry)
+
+    return manifest
 
 def run():
     args = getScriptArgs() or ["./"]
     if not args:
         raise RuntimeError("Usage: kingaidra_export.py <OUT_DIR>")
+    has_hexdump = False
+    if "--hexdump" in args:
+        has_hexdump = True
 
     out_root = os.path.abspath(args[0])
 
@@ -89,10 +191,14 @@ def run():
     base_dir = os.path.join(out_root, pname)
     decomp_dir = os.path.join(base_dir, "decomp")
     asm_dir = os.path.join(base_dir, "asm")
+    if has_hexdump:
+        hexdump_dir = os.path.join(base_dir, "hexdumps")
 
     _make_dir(base_dir)
     _make_dir(decomp_dir)
     _make_dir(asm_dir)
+    if has_hexdump:
+        _make_dir(hexdump_dir)
 
     kai = GhidraUtilImpl(prog, monitor);
 
@@ -107,6 +213,15 @@ def run():
         "generated_utc": time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime())
     }
     write_json(os.path.join(base_dir, "manifest.json"), manifest)
+
+    # hexdump
+    if has_hexdump:
+        mem = prog.getMemory()
+        hexdump_manifest = dump_memory_segments(mem, hexdump_dir, base_dir)
+        hexdump_manifest_path = os.path.join(hexdump_dir, "hexdump.json")
+        write_json(hexdump_manifest_path, {
+            "segments": hexdump_manifest
+        })
 
     # strings
     str_ref = {}
@@ -183,8 +298,6 @@ def run():
         write_text(functions_meta_path, "".join(meta_lines))
     else:
         write_text(functions_meta_path, "")
-
-    print(str_ref)
 
     # xrefs
     if edges:
