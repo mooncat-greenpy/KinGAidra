@@ -13,6 +13,7 @@ import re
 
 from jarray import zeros
 
+from ghidra.app.decompiler import DecompInterface
 from ghidra.framework import Application
 
 from kingaidra.ghidra import GhidraUtilImpl
@@ -81,6 +82,13 @@ def collect_exports_json(prog):
             pass
 
     return exports
+
+
+def make_decompiler(prog):
+    dif = DecompInterface()
+    dif.openProgram(prog)
+    return dif
+
 
 def _sanitize_file_name(name):
     return re.sub(r"[^0-9A-Za-z_]+", "_", name)
@@ -255,15 +263,21 @@ def run():
     functions_meta_path = os.path.join(base_dir, "functions.jsonl")
     meta_lines = []
     itr = currentProgram.getListing().getFunctions(True)
+    dif = make_decompiler(prog)
     while itr.hasNext() and not monitor.isCancelled():
         try:
             f = itr.next()
             faddr = f.getEntryPoint()
 
             # decompile
-            decomp = kai.get_decom(faddr)
+            decomp_func = dif.decompileFunction(f, 0, monitor).getDecompiledFunction()
+            if decomp_func:
+                decomp = decomp_func.getC()
+            else:
+                decomp = "/* decompilation failed or empty */\n"
+
             c_path = os.path.join(decomp_dir, "func_%s.c" % faddr.toString())
-            write_text(c_path, decomp if decomp else "/* decompilation failed or empty */\n")
+            write_text(c_path, decomp)
 
             # asm
             asm_path = os.path.join(asm_dir, "func_%s.asm" % faddr.toString())
