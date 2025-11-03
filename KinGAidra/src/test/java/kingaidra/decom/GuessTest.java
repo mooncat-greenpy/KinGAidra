@@ -95,7 +95,7 @@ public class GuessTest {
         pref.store("Dummy", new ModelDummy("Dummy", "dummy.py", true));
         ModelConfMultiple model_conf = new ModelConfMultiple("decom", pref);
         Guess guess = new Guess(gu, ai, model_conf, conf);
-        DecomDiff diff = guess.guess(guess.get_model_conf().get_models()[0], util.get_addr(program, 0x402000));
+        DecomDiff diff = guess.guess(guess.get_model_conf().get_models()[0], util.get_addr(program, 0x402000), false);
         assertEquals(diff.get_name().get_new_name(), "func_402000Dummy");
         for (DiffPair pair : diff.get_params()) {
             assertEquals(pair.get_new_name().substring(pair.get_new_name().length() - 5), "Dummy");

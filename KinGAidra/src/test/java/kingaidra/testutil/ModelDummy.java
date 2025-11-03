@@ -114,6 +114,8 @@ public class ModelDummy implements Model, Serializable {
                         "        }\n" +
                         "    ]\n" +
                         "}");
+        } else if (task_type == TaskType.DECOM_REFACTOR_FUNC_PARAM_VAR && convo.get_msg(convo.get_msgs_len() - 1).contains("Please explain") && (convo.get_msg(convo.get_msgs_len() - 1).contains("func_401000") || convo.get_msg(convo.get_msgs_len() - 1).contains("func_402000"))) {
+            convo.add_assistant_msg("The function is a simple function that returns 0.");
         } else if (task_type == TaskType.DECOM_REFACTOR_DATATYPE && convo.get_msg(convo.get_msgs_len() - 1).contains("func_401000") && convo.get_msg(convo.get_msgs_len() - 1).contains("new_datatype")) {
             convo.add_assistant_msg("[\n" +
                                 "    {\n" +
@@ -165,6 +167,8 @@ public class ModelDummy implements Model, Serializable {
                                 "        \"var_name\": \"in_stack_00000004\"\n" +
                                 "    }\n" +
                                 "]");
+        } else if (task_type == TaskType.DECOM_REFACTOR_DATATYPE && convo.get_msg(convo.get_msgs_len() - 1).contains("Please explain") && (convo.get_msg(convo.get_msgs_len() - 1).contains("func_401000") || convo.get_msg(convo.get_msgs_len() - 1).contains("func_402000"))) {
+            convo.add_assistant_msg("The function is a simple function that returns 0.");
         } else if (task_type == TaskType.DECOM_RESOLVE_DATATYPE && convo.get_msg(convo.get_msgs_len() - 1).contains(" PROCESSENTRY32W.")) {
             convo.add_assistant_msg("Here is the PROCESSENTRY32W structure in C language, along with its dependent data types and structures, for 32-bit systems:\n" +
                                 "```\n" +

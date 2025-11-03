@@ -64,6 +64,33 @@ public class PromptConf {
                         "```");
                 break;
             }
+            case REVIEW_DECOM_REFACTOR_FUNC_PARAM_VAR: {
+                prompt = "Please review the following refactoring proposal and determine if it should be applied.\n" +
+                        "- Is the refactoring result correct?\n" +
+                        "- Is the refactoring result useful for analysis?\n" +
+                        "Based on facts, please respond only using information that can be verified.\n" +
+                        "# Refactoring target\n" +
+                        "```\n" +
+                        "<code>\n" +
+                        "```\n" +
+                        "\n" +
+                        "# Refactoring Proposal\n" +
+                        "```\n" +
+                        "%s\n" +
+                        "```\n" +
+                        "\n" +
+                        "Output should absolutely be JSON only.\n" +
+                        "No additional explanation is needed.\n" +
+                        "The format is as follows.\n" +
+                        "```json\n" +
+                        "{\n" +
+                        "    \"detail\": \"Description of the refactoring proposal\",\n" +
+                        "    \"result\": true/false (Whether the refactoring proposal should be applied),\n" +
+                        "    \"confidence\": \"Confidence (0.0-1.0)\"\n" +
+                        "}\n" +
+                        "```";
+                break;
+            }
             case DECOM_REFACTOR_DATATYPE: {
                 prompt = String.format("I have decompiled C code that contains various data type issues due to the decompilation process. I need your help to review the code and make the necessary corrections to the data types. Please go over the code and make these adjustments to improve the accuracy of the data types.\n" +
                         "```cpp\n" +
@@ -80,6 +107,33 @@ public class PromptConf {
                         "    ...\n" +
                         "]\n" +
                         "```");
+                break;
+            }
+            case REVIEW_DECOM_REFACTOR_DATATYPE: {
+                prompt = "Please review the following refactoring proposal and determine if it should be applied.\n" +
+                        "- Is the refactoring result correct?\n" +
+                        "- Is the refactoring result useful for analysis?\n" +
+                        "Based on facts, please respond only using information that can be verified.\n" +
+                        "# Refactoring target\n" +
+                        "```\n" +
+                        "<code>\n" +
+                        "```\n" +
+                        "\n" +
+                        "# Refactoring Proposal\n" +
+                        "```\n" +
+                        "%s\n" +
+                        "```\n" +
+                        "\n" +
+                        "Output should absolutely be JSON only.\n" +
+                        "No additional explanation is needed.\n" +
+                        "The format is as follows.\n" +
+                        "```json\n" +
+                        "{\n" +
+                        "    \"detail\": \"Description of the refactoring proposal\",\n" +
+                        "    \"result\": true/false (Whether the refactoring proposal should be applied),\n" +
+                        "    \"confidence\": \"Confidence (0.0-1.0)\"\n" +
+                        "}\n" +
+                        "```";
                 break;
             }
             case CHAT: {

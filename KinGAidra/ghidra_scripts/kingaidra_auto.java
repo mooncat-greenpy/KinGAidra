@@ -71,7 +71,7 @@ public class kingaidra_auto extends GhidraScript {
 
     private boolean refactoring(Function func) {
         try {
-            DecomDiff[] diff_arr = decom_guess.guess_selected(func.getEntryPoint());
+            DecomDiff[] diff_arr = decom_guess.guess_selected(func.getEntryPoint(), true);
             if (diff_arr.length < 1) {
                 return false;
             }
