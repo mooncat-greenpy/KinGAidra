@@ -1,3 +1,4 @@
+#@runtime Jython
 #@author mooncat-greenpy
 #@category KinGAidra
 #@keybinding 
