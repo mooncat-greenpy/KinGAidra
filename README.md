@@ -97,3 +97,53 @@ You can use the OpenAI API or similar APIs as the LLM API. For example, services
 You can also copy `kingaidra_chat.py` and configure each copy with different API endpoints, models, or prompts. This allows you to switch between multiple LLMs or customize responses for different use cases. You can add scripts to KinGAidra through the settings screen shown in the image below. Additionally, you can select which scripts to use for whitch functions.
 
 ![Configuration Models](./img/conf_models.png)
+
+
+## Usage: without API key
+This section describes how to use KinGAidra when you don't have an API key (e.g., for the OpenAI API).
+Most of KinGAidra's features (AI chat, refactoring, commenting, and key function identification) require an LLM API.
+Without an API key, use this workflow with a web UI such as ChatGPT.
+
+### Analyzing a code snippet
+Use placeholders to extract assembly or decompiled code that you can paste into a web UI.
+You can also recursively include the specified function and the functions it calls.
+For the placeholder syntax, see [Chat](#Chat).
+
+1. Open the KinGAidra configuration (gear icon) and enable only `CopyTextGen` (`kingaidra_gen_copy_text.py`).
+
+![](img/copy_conf.png)
+
+2. In the Chat tab, enter `<code:FUN_401000:1>` (the decompiled code of `FUN_401000` and the functions it calls) and click **Submit**.
+
+![](img/copy_input.png)
+
+3. The decompiled code will be shown—copy it.
+
+![](img/copy_output.png)
+
+4. In ChatGPT (or another web UI), write your instructions and paste the decompiled code.
+The screenshots below show an example prompt, pasted code, and the response.
+
+![ChatGPT example: prompt](img/copy_chat_1.png)
+
+![ChatGPT example: response1](img/copy_chat_2.png)
+
+![ChatGPT example: response2](img/copy_chat_3.png)
+
+### Exporting and analyzing the whole program
+Export the assembly and/or decompiled code for all functions, compress it into a ZIP file, and attach it to a web UI.
+
+1. Run `kingaidra_export.py` from the Script Manager (or similar).
+
+![](img/export_script.png)
+
+2. A directory (e.g., `sample_exported/`) will be created in the current working directory where you executed `ghidraRun`. Zip the generated directory.
+
+![](img/export_zip.png)
+
+3. Attach the zipped file to ChatGPT (or another web UI) and write your instructions.
+The screenshots below show an example of attaching the ZIP and giving instructions.
+
+![ChatGPT example: attach ZIP and prompt](img/export_chat_1.png)
+
+![ChatGPT example: response](img/export_chat_2.png)
