@@ -395,7 +395,7 @@ def handle_tool_call(tool_call, ghidra):
         data_list = ghidra.get_strings()
         if not data_list:
             content = "None"
-            return
+            return content
         content = "Strings list.\n"
         for data in data_list:
             content += "- [%#x]: %s\n" % (data.getAddress().getOffset(), data.getDefaultValueRepresentation())
@@ -407,7 +407,7 @@ def handle_tool_call(tool_call, ghidra):
         ref_list = ghidra.get_ref_to(ghidra.get_addr(addr))
         if not ref_list:
             content = "None"
-            return
+            return content
         content = "Reference address.\n"
         for ref in ref_list:
             content += "- %d\n" % (ref.getFromAddress().getOffset())

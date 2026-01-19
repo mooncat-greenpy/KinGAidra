@@ -19,6 +19,7 @@ public class ChatModelPreferences implements GhidraPreferences<Model> {
             remove_all();
         }
         Preferences.setProperty(PATH.substring(0, PATH.length() - 1), VERSION);
+        Preferences.store();
     }
 
     private Model get_model(String path) {
@@ -95,5 +96,6 @@ public class ChatModelPreferences implements GhidraPreferences<Model> {
             }
             Preferences.removeProperty(path);
         }
+        Preferences.store();
     }
 }

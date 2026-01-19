@@ -62,7 +62,7 @@ The History feature in KinGAidra allows users to save chat logs for future refer
 Default scripts.
 
 - `kingaidra_gen_copy_text.py`: Displays prompts with placeholders resolved, ready to copy into a UI such as ChatGPT.
-- `kingaidra_auto.py`: Automatically analyzes multiple functions.
+- `kingaidra_auto.java`: Automatically analyzes multiple functions.
 - `kingaidra_chat.py`: Provides a customizable interface for sending and receiving queries to LLMs within KinGAidra.
 
 ## Installation
@@ -94,7 +94,7 @@ You can use the OpenAI API or similar APIs as the LLM API. For example, services
 
 ![Configuration Script](./img/conf_script.png)
 
-You can also copy `kingaidra_chat.py` and configure each copy with different API endpoints, models, or prompts. This allows you to switch between multiple LLMs or customize responses for different use cases. You can add scripts to KinGAidra through the settings screen shown in the image below. Additionally, you can select which scripts to use for whitch functions.
+You can also copy `kingaidra_chat.py` and configure each copy with different API endpoints, models, or prompts. This allows you to switch between multiple LLMs or customize responses for different use cases. You can add scripts to KinGAidra through the settings screen shown in the image below. Additionally, you can select which scripts to use for which functions.
 
 ![Configuration Models](./img/conf_models.png)
 
@@ -104,7 +104,7 @@ This section describes how to use KinGAidra when you don't have an API key (e.g.
 Most of KinGAidra's features (AI chat, refactoring, commenting, and key function identification) require an LLM API.
 Without an API key, use this workflow with a web UI such as ChatGPT.
 
-### Analyzing a code snippet
+### Analyzing a code
 Use placeholders to extract assembly or decompiled code that you can paste into a web UI.
 You can also recursively include the specified function and the functions it calls.
 For the placeholder syntax, see [Chat](#Chat).
