@@ -169,6 +169,7 @@ public class PromptConf {
                         "7. Strings associated with known malware families or threat actor tactics - Help in associating the sample with a specific threat group or malware variant.\n" +
                         "\n" +
                         "Filter out irrelevant or common strings such as system files, non-specific text, or internal programming strings. Focus on identifying strings that could reveal malicious actions or associations.\n" +
+                        "All strings in the output must be wrapped in backticks (`).\n" +
                         "\n" +
                         "Strings:\n" +
                         "<strings>";
