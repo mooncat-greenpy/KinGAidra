@@ -17,6 +17,7 @@ import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 import javax.swing.JScrollPane;
 import javax.swing.JTextArea;
+import javax.swing.SwingWorker;
 import javax.swing.border.Border;
 import javax.swing.border.LineBorder;
 
@@ -410,31 +411,38 @@ public class ChatGUI extends JPanel {
         submit_btn.setEnabled(false);
         delete_btn.setEnabled(false);
         info_label.setText("Working ...");
-        // TODO: Need to be fixed
-        Thread th = new Thread(() -> {
-            try {
-                if (addr != null) {
-                    if (cur_convo == null) {
-                        cur_convo = ggui.run_guess(type, input_area.getText(), addr);
-                    } else {
-                        cur_convo = ggui.run_guess(type, cur_convo, input_area.getText(), addr);
-                    }
-                    build_panel();
+        SwingWorker<Conversation, Void> worker = new SwingWorker<>() {
+            @Override
+            protected Conversation doInBackground() {
+                if (addr == null) {
+                    return cur_convo;
+                 }
+                 if (cur_convo == null) {
+                    return ggui.run_guess(type, input_area.getText(), addr);
                 }
-            } finally {
-                if (cur_convo == null) {
-                    info_label.setText("Failed!");
-                } else {
-                    info_label.setText("Finished!");
-                }
-                restart_btn.setEnabled(true);
-                submit_btn.setEnabled(true);
-                delete_btn.setEnabled(true);
-                check_and_set_busy(false);
-                validate();
+                return ggui.run_guess(type, cur_convo, input_area.getText(), addr);
             }
-        });
-        th.start();
+
+            @Override
+            protected void done() {
+                try {
+                    cur_convo = get();
+                    build_panel();
+                    info_label.setText(cur_convo == null ? "Failed!" : "Finished!");
+                } catch (Exception e) {
+                    cur_convo = null;
+                     info_label.setText("Failed!");
+                } finally {
+                    restart_btn.setEnabled(true);
+                    submit_btn.setEnabled(true);
+                    delete_btn.setEnabled(true);
+                    check_and_set_busy(false);
+                    validate();
+                    repaint();
+                 }
+             }
+        };
+        worker.execute();
 
         validate();
     }

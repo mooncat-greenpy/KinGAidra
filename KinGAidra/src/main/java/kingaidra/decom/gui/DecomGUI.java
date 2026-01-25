@@ -12,6 +12,7 @@ import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 import javax.swing.JScrollPane;
 import javax.swing.JTextArea;
+import javax.swing.SwingWorker;
 
 import docking.Tool;
 import docking.action.builder.ActionBuilder;
@@ -144,36 +145,41 @@ public class DecomGUI extends JPanel {
                 guess_btn.setEnabled(false);
                 refact_btn.setEnabled(false);
                 info_label.setText("Working ...");
-                // TODO: Need to be fixed
-                Thread th = new Thread(() -> {
-                    Address addr = null;
-                    DecomDiff[] diffs = null;
-                    try {
-                        addr = ghidra.get_current_addr();
-                        if (addr != null) {
-                            diffs = ggui.run_guess(addr);
-
-                            for (DecomDiff d : diffs) {
-                                rgui.add_tab(d.get_model().get_name(), d);
-                            }
+                SwingWorker<DecomDiff[], Void> worker = new SwingWorker<>() {
+                    @Override
+                    protected DecomDiff[] doInBackground() {
+                        Address addr = ghidra.get_current_addr();
+                        if (addr == null) {
+                            return null;
                         }
-                    } finally {
-                        if (diffs == null || diffs.length == 0) {
-                            info_label.setText("Failed!");
-                            restart_btn.setEnabled(true);
-                            guess_btn.setEnabled(true);
-                            refact_btn.setEnabled(false);
-                        } else {
-                            info_label.setText("Finished!");
-                            restart_btn.setEnabled(true);
-                            guess_btn.setEnabled(true);
-                            refact_btn.setEnabled(true);
-                        }
-                        check_and_set_busy(false);
-                        validate();
+                        return ggui.run_guess(addr);
                     }
-                });
-                th.start();
+
+                    @Override
+                    protected void done() {
+                        DecomDiff[] diffs = null;
+                        try {
+                            diffs = get();
+                            if (diffs != null) {
+                                for (DecomDiff d : diffs) {
+                                    rgui.add_tab(d.get_model().get_name(), d);
+                                }
+                            }
+                        } catch (Exception e) {
+                            diffs = null;
+                        } finally {
+                            boolean ok = diffs != null && diffs.length > 0;
+                            info_label.setText(ok ? "Finished!" : "Failed!");
+                            restart_btn.setEnabled(true);
+                            guess_btn.setEnabled(true);
+                            refact_btn.setEnabled(ok);
+                            check_and_set_busy(false);
+                            validate();
+                            repaint();
+                        }
+                    }
+                };
+                worker.execute();
 
                 validate();
             }
