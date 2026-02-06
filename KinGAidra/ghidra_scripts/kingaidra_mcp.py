@@ -17,11 +17,14 @@ from mcp.server.fastmcp import FastMCP
 import kingaidra
 import ghidra.util.task.TaskMonitor as TaskMonitor
 
+import java.util.AbstractMap as AbstractMap
+import java.util.LinkedList as LinkedList
+
 import logging
 logging.disable(logging.CRITICAL)
 
-HOST = "127.0.0.1"
-PORT = 8801
+DEFAULT_HOST = "127.0.0.1"
+DEFAULT_PORT = 8000
 
 
 class RefactorParam(BaseModel):
@@ -52,10 +55,33 @@ def build_server(binary_id: str) -> FastMCP:
     ghidra = kingaidra.ghidra.GhidraUtilImpl(currentProgram, TaskMonitor.DUMMY)
 
     mcp = FastMCP(
-        name=f"BinaryMCP-{binary_id}",
+        name=f"{binary_id}",
         json_response=True,
         stateless_http=True,
     )
+
+    @mcp.tool()
+    def get_current_address() -> str:
+        """Returns the user's selected address."""
+        try:
+            addr = ghidra.get_current_addr()
+            return "%#x" % (addr.getOffset())
+        except Exception:
+            return "Failed"
+
+    @mcp.tool()
+    def get_function_address_by_name(name: str) -> str:
+        """Retrieve the address of a function by its name. If multiple functions have the same name, return a list of addresses."""
+        try:
+            same_name_funcs = ghidra.get_func(name)
+            if not same_name_funcs:
+                return "None"
+            out = "Addresses list.\n"
+            for f in same_name_funcs:
+                out += "- %#x\n" % (f.getEntryPoint().getOffset())
+            return out
+        except Exception:
+            return "Failed"
 
     @mcp.tool()
     def get_function_list() -> str:
@@ -199,6 +225,26 @@ def build_server(binary_id: str) -> FastMCP:
             return "Failed"
 
     @mcp.tool()
+    def add_comments(address: str, comments: List[CodeComment]) -> str:
+        """Adds comments to the specified function based on the provided list."""
+        try:
+            addr_int = _parse_hex_address(address)
+            addr = ghidra.get_addr(addr_int)
+            if not addr:
+                return "Invalid address"
+            ghidra.clear_comments(addr)
+
+            comments_list = LinkedList()
+            for cmt in comments:
+                comments_list.add(AbstractMap.SimpleEntry(cmt.source_code_line, cmt.comment))
+
+            return "Success" if ghidra.add_comments(addr, comments_list) else "Failed"
+        except ValueError:
+            return "Invalid address format"
+        except Exception:
+            return "Failed"
+
+    @mcp.tool()
     def get_strings() -> str:
         """Retrieve strings in the binary and their addresses."""
         try:
@@ -303,8 +349,8 @@ def main() -> None:
         host = args[0]
         port = args[1]
     else:
-        host = HOST
-        port = PORT
+        host = DEFAULT_HOST
+        port = DEFAULT_PORT
 
     anyio.run(serve, currentProgram.getName(), host, port)
 
