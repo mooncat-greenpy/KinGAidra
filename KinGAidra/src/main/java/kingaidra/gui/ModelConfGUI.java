@@ -104,7 +104,7 @@ public class ModelConfGUI extends JPanel {
         var pud = program.getProgramUserData();
         system_prompt = conf.get_default_system_prompt();
         JPanel sys_prompt_panel = new JPanel();
-        JLabel sys_prompt_label = new JLabel("System prompt(no save)");
+        JLabel sys_prompt_label = new JLabel("System prompt (Tool option)");
         JTextField sys_prompt_field = new JTextField(system_prompt, 30);
         debounce = new javax.swing.Timer(500, e -> {
             conf.set_default_system_prompt(system_prompt);

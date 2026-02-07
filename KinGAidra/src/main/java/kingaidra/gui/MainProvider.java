@@ -38,12 +38,11 @@ public class MainProvider extends ComponentProvider {
     private KeyFuncGUI keyfunc_panel;
 
     public MainProvider(Program program, Plugin plugin, String owner,
-            KinGAidraChatTaskService srv, Logger logger) {
+            KinGAidraChatTaskService srv, Logger logger, PromptConf conf) {
         super(plugin.getTool(), owner, owner);
 
         GhidraUtil ghidra = new GhidraUtilImpl(program, TaskMonitor.DUMMY);
         ConversationContainer container = new ConversationContainerGhidraProgram(program, ghidra);
-        PromptConf conf = new PromptConf();
         Ai ai = new Ai(plugin.getTool(), program, ghidra, container, srv, conf);
 
         ModelConfSingle chat_model_conf = new ModelConfSingle("Chat and others",
