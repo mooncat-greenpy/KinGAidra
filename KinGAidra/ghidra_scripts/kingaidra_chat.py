@@ -262,6 +262,34 @@ def add_tools(data):
         {
             "type": "function",
             "function": {
+                "name": "get_imports",
+                "description": "Retrieve imported functions and their addresses.",
+                "parameters": {
+                    "type": "object",
+                    "properties": {
+                    },
+                    "additionalProperties": False
+                },
+                "strict": True
+            }
+        },
+        {
+            "type": "function",
+            "function": {
+                "name": "get_exports",
+                "description": "Retrieve exported functions and their addresses.",
+                "parameters": {
+                    "type": "object",
+                    "properties": {
+                    },
+                    "additionalProperties": False
+                },
+                "strict": True
+            }
+        },
+        {
+            "type": "function",
+            "function": {
                 "name": "get_ref_to",
                 "description": "Returns a list of reference source addresses to the specified address.",
                 "parameters": {
@@ -399,6 +427,39 @@ def handle_tool_call(tool_call, ghidra):
         content = "Strings list.\n"
         for data in data_list:
             content += "- [%#x]: %s\n" % (data.getAddress().getOffset(), data.getDefaultValueRepresentation())
+    elif func_name == "get_imports":
+        fm = currentProgram.getFunctionManager()
+        itr = fm.getExternalFunctions()
+        content = "Imports list.\n"
+        has_any = False
+        while itr.hasNext():
+            f = itr.next()
+            name = f.getName()
+            ns = f.getParentNamespace()
+            if ns:
+                content += "- %s (%s)\n" % (name, ns.getName())
+            else:
+                content += "- %s\n\n" % (name)
+            has_any = True
+        if not has_any:
+            content = "None"
+            return content
+    elif func_name == "get_exports":
+        symtab = currentProgram.getSymbolTable()
+        itr = symtab.getExternalEntryPointIterator()
+        content = "Exports list.\n"
+        has_any = False
+        while itr.hasNext():
+            addr = itr.next()
+            sym = symtab.getPrimarySymbol(addr)
+            if sym is None:
+                continue
+            name = sym.getName()
+            content += "- [%#x]: %s\n" % (addr.getOffset(), name)
+            has_any = True
+        if not has_any:
+            content = "None"
+            return content
     elif func_name == "get_ref_to":
         try:
             addr = int(args["address"], 16)
@@ -410,7 +471,7 @@ def handle_tool_call(tool_call, ghidra):
             return content
         content = "Reference address.\n"
         for ref in ref_list:
-            content += "- %d\n" % (ref.getFromAddress().getOffset())
+            content += "- %#x\n" % (ref.getFromAddress().getOffset())
     if not content:
         content = "Failed"
     return content

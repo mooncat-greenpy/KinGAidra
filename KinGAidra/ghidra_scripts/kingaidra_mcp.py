@@ -259,6 +259,47 @@ def build_server(binary_id: str) -> FastMCP:
             return "Failed"
 
     @mcp.tool()
+    def get_imports() -> str:
+        """Retrieve imported functions and their addresses."""
+        try:
+            fm = currentProgram.getFunctionManager()
+            itr = fm.getExternalFunctions()
+            content = "Imports list.\n"
+            has_any = False
+            while itr.hasNext():
+                f = itr.next()
+                name = f.getName()
+                ns = f.getParentNamespace()
+                if ns:
+                    content += "- %s (%s)\n" % (name, ns.getName())
+                else:
+                    content += "- %s\n\n" % (name)
+                has_any = True
+            return content if has_any else "None"
+        except Exception:
+            return "Failed"
+
+    @mcp.tool()
+    def get_exports() -> str:
+        """Retrieve exported functions and their addresses."""
+        try:
+            symtab = currentProgram.getSymbolTable()
+            itr = symtab.getExternalEntryPointIterator()
+            content = "Exports list.\n"
+            has_any = False
+            while itr.hasNext():
+                addr = itr.next()
+                sym = symtab.getPrimarySymbol(addr)
+                if sym is None:
+                    continue
+                name = sym.getName()
+                content += "- [%#x]: %s\n" % (addr.getOffset(), name)
+                has_any = True
+            return content if has_any else "None"
+        except Exception:
+            return "Failed"
+
+    @mcp.tool()
     def get_ref_to(address: str) -> str:
         """Returns a list of reference source addresses to the specified address."""
         try:
@@ -273,7 +314,7 @@ def build_server(binary_id: str) -> FastMCP:
 
             out = "Reference address.\n"
             for r in ref_list:
-                out += "- %d\n" % (r.getFromAddress().getOffset())
+                out += "- %#x\n" % (r.getFromAddress().getOffset())
             return out
 
         except ValueError:
