@@ -493,7 +493,7 @@ def main():
         type == kingaidra.ai.task.TaskType.CHAT_DECOM_ASM.toString() or
         type == kingaidra.ai.task.TaskType.CHAT_EXPLAIN_STRINGS.toString() or
         type == kingaidra.ai.task.TaskType.ADD_COMMENTS.toString()):
-        data["messages"][-1]["content"] += POST_MSG
+        data["messages"][-1]["content"] += "\n\n" + POST_MSG
 
     while True:
         headers = {
