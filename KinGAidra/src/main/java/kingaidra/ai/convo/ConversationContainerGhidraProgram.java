@@ -165,10 +165,11 @@ public class ConversationContainerGhidraProgram implements ConversationContainer
         }
         String created = record.getString(RECORD_CREATED_INDEX_V1);
         String updated = record.getString(RECORD_UPDATED_INDEX_V1);
-        Message[] msgs = (Message[]) bytes_to_obj(record.getBinaryData(RECORD_MESSAGES_INDEX_V1));
-        if (msgs == null) {
+        Object msgs_obj = bytes_to_obj(record.getBinaryData(RECORD_MESSAGES_INDEX_V1));
+        if (!(msgs_obj instanceof Message[])) {
             return null;
         }
+        Message[] msgs = (Message[]) msgs_obj;
         Long[] addrs_value = (Long[]) bytes_to_obj(record.getBinaryData(RECORD_ADDRESSES_INDEX_V1));
         if (addrs_value == null) {
             return null;
@@ -201,11 +202,15 @@ public class ConversationContainerGhidraProgram implements ConversationContainer
             record.setBinaryData(RECORD_MODEL_INDEX_V1, model_byte);
             record.setString(RECORD_CREATED_INDEX_V1, convo.get_created());
             record.setString(RECORD_UPDATED_INDEX_V1, convo.get_updated());
-            List<Message> msgs = new ArrayList<>(convo.get_msgs_len());
+            Message[] msgs = new Message[convo.get_msgs_len()];
             for (int i = 0; i < convo.get_msgs_len(); i++) {
-                msgs.add(new Message(convo.get_role(i), convo.get_msg(i)));
+                msgs[i] = new Message(
+                        convo.get_role(i),
+                        convo.get_msg(i),
+                        convo.get_tool_call_id(i),
+                        convo.get_tool_calls(i));
             }
-            byte[] msgs_byte = obj_to_bytes(msgs.toArray(new Message[] {}));
+            byte[] msgs_byte = obj_to_bytes(msgs);
             if (msgs_byte == null) {
                 return;
             }
@@ -244,4 +249,5 @@ public class ConversationContainerGhidraProgram implements ConversationContainer
             program.endTransaction(tid, true);
         }
     }
+
 }

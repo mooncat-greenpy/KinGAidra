@@ -4,8 +4,11 @@ import java.io.PrintWriter;
 import java.io.Serializable;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Map;
 import java.util.Random;
 
+import com.fasterxml.jackson.annotation.JsonInclude;
+import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
 import generic.jar.ResourceFile;
@@ -17,7 +20,6 @@ import ghidra.util.task.TaskMonitor;
 import kingaidra.ai.convo.Conversation;
 import kingaidra.ai.convo.Message;
 import kingaidra.ai.task.KinGAidraChatTaskService;
-import kingaidra.ai.task.TaskStatus;
 import kingaidra.ai.task.TaskType;
 import kingaidra.log.Logger;
 
@@ -108,6 +110,7 @@ public class ModelByScript implements Model, Serializable {
             return null;
         }
         String assistant_response = null;
+        boolean appended_from_script = false;
         try {
             GhidraState state;
             if (tool == null) {
@@ -117,10 +120,16 @@ public class ModelByScript implements Model, Serializable {
             }
 
             ObjectMapper obj_mapper = new ObjectMapper();
+            obj_mapper.setSerializationInclusion(JsonInclude.Include.NON_NULL);
             List<Message> msgs = new LinkedList<>();
             for (int i = 0; i < convo.get_msgs_len(); i++) {
-                msgs.add(new Message(convo.get_role(i), convo.get_msg(i)));
+                String role = convo.get_role(i);
+                String content = convo.get_msg(i);
+                String tool_call_id = convo.get_tool_call_id(i);
+                List<Map<String, Object>> tool_calls = convo.get_tool_calls(i);
+                msgs.add(new Message(role, content, tool_call_id, tool_calls));
             }
+            int sent_count = msgs.size();
             state.addEnvironmentVar("KEY", key);
             state.addEnvironmentVar("TYPE", task_type.toString());
             state.addEnvironmentVar("MESSAGES", obj_mapper.writeValueAsString(msgs));
@@ -130,6 +139,10 @@ public class ModelByScript implements Model, Serializable {
             script.runScript(script_file, args);
 
             assistant_response = (String) state.getEnvironmentVar("RESPONSE");
+            String messages_out = (String) state.getEnvironmentVar("MESSAGES_OUT");
+            if (messages_out != null && !messages_out.isEmpty()) {
+                appended_from_script = append_messages_from_script(convo, messages_out, sent_count, obj_mapper);
+            }
         } catch (Exception e) {
             logger.append_message(String.format("Failed to run script \"%s\"", script_file));
             return null;
@@ -138,7 +151,33 @@ public class ModelByScript implements Model, Serializable {
         if (assistant_response == null) {
             return null;
         }
-        convo.add_msg(Conversation.ASSISTANT_ROLE, assistant_response);
+        if (convo.get_msgs_len() == 0 || !Conversation.ASSISTANT_ROLE.equals(convo.get_role(convo.get_msgs_len() - 1))) {
+            convo.add_raw_msg(new Message(Conversation.ASSISTANT_ROLE, assistant_response));
+        }
         return convo;
+    }
+
+    private static boolean append_messages_from_script(Conversation convo, String messages_out, int sent_count,
+            ObjectMapper obj_mapper) {
+        List<Map<String, Object>> out_msgs;
+        try {
+            out_msgs = obj_mapper.readValue(messages_out, new TypeReference<List<Map<String, Object>>>() {});
+        } catch (Exception e) {
+            return false;
+        }
+        if (out_msgs == null || out_msgs.size() <= sent_count) {
+            return false;
+        }
+        boolean appended = false;
+        for (int i = sent_count; i < out_msgs.size(); i++) {
+            Map<String, Object> msg = out_msgs.get(i);
+            Message parsed = Message.from_map(msg);
+            if (parsed == null || parsed.get_role() == null) {
+                continue;
+            }
+            convo.add_raw_msg(parsed);
+            appended = true;
+        }
+        return appended;
     }
 }

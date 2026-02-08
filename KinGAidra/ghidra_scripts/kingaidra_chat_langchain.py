@@ -4,7 +4,7 @@
 #@menupath
 #@toolbar
 
-# pyghidraRun + pip install langchain langchain-mcp-adapters langchain-openai
+# pyghidraRun + pip install langchain langchain-mcp-adapters langchain-openai langgraph
 
 import kingaidra
 
@@ -14,6 +14,8 @@ import asyncio
 from langchain_openai import ChatOpenAI
 from langchain_mcp_adapters.client import MultiServerMCPClient
 from langchain.agents import create_agent
+from langchain_core.messages import convert_to_messages, messages_to_dict
+from langgraph.checkpoint.memory import InMemorySaver
 
 
 URL = "" # "https://api.openai.com/v1"
@@ -56,6 +58,12 @@ def _init_mcp_tools():
     )
     return asyncio.run(client.get_tools())
 
+def _create_agent(model, tools, thread_id):
+    checkpointer = InMemorySaver()
+    agent = create_agent(model, tools=tools, checkpointer=checkpointer)
+    config = {"configurable": {"thread_id": thread_id}}
+    return agent, config
+
 
 # Only modify the code above this comment.
 # Do not modify the code below this comment.
@@ -87,14 +95,19 @@ def main():
         model.http_client = httpx.Client(headers=OPTIONAL_HEADERS)
         model.http_async_client = httpx.AsyncClient(headers=OPTIONAL_HEADERS)
 
-    agent = create_agent(model, tools=tools)
+    thread_id = state.getEnvironmentVar("KEY") or "kingaidra"
+    agent, agent_config = _create_agent(model, tools, thread_id)
 
-    resp = tools = asyncio.run(agent.ainvoke({"messages": data["messages"]}))
-
+    input_messages = convert_to_messages(data["messages"])
+    if agent_config is None:
+        resp = asyncio.run(agent.ainvoke({"messages": input_messages}))
+    else:
+        resp = asyncio.run(agent.ainvoke({"messages": input_messages}, agent_config))
 
     result = resp["messages"][-1].content
 
     state.addEnvironmentVar("RESPONSE", result)
+    state.addEnvironmentVar("MESSAGES_OUT", json.dumps(messages_to_dict(resp["messages"]), default=str))
 
 
 if __name__ == "__main__":

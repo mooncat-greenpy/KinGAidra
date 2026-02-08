@@ -6,6 +6,7 @@ import java.time.format.DateTimeFormatter;
 import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 import java.util.UUID;
 
@@ -18,13 +19,14 @@ public class Conversation implements Serializable {
     public static final String SYSTEM_ROLE = "system";
     public static final String USER_ROLE = "user";
     public static final String ASSISTANT_ROLE = "assistant";
+    public static final String TOOL_ROLE = "tool";
 
     private final UUID uuid;
     private ConversationType type;
     private Model model;
     private String created;
     private String updated;
-    private List<Message> msgs;
+    private List<Message> messages;
     private Set<Address> addrs;
 
     public Conversation(ConversationType type, Model model) {
@@ -33,7 +35,7 @@ public class Conversation implements Serializable {
         this.model = model;
         created = LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss"));
         updated = created;
-        msgs = new LinkedList<>();
+        messages = new LinkedList<>();
         addrs = new HashSet<>();
     }
 
@@ -42,11 +44,11 @@ public class Conversation implements Serializable {
         this.type = type;
         this.model = model;
         this.created = created;
-        this.msgs = new LinkedList<>();
+        this.messages = new LinkedList<>();
         this.addrs = new HashSet<>();
 
         for (Message msg : msgs) {
-            this.add_msg(msg.get_role(), msg.get_content());
+            this.add_raw_msg(msg);
         }
         for (Address addr : addrs) {
             this.add_addr(addr);
@@ -88,29 +90,43 @@ public class Conversation implements Serializable {
     }
 
     public String get_role(int idx) {
-        if (idx >= msgs.size()) {
+        if (idx >= messages.size()) {
             return null;
         }
-        return msgs.get(idx).get_role();
+        return messages.get(idx).get_role();
     }
 
     public String get_msg(int idx) {
-        if (idx >= msgs.size()) {
+        if (idx >= messages.size()) {
             return null;
         }
-        return msgs.get(idx).get_content();
+        return messages.get(idx).get_content();
     }
 
     public int get_msgs_len() {
-        return msgs.size();
+        return messages.size();
+    }
+
+    public String get_tool_call_id(int idx) {
+        if (idx >= messages.size()) {
+            return null;
+        }
+        return messages.get(idx).get_tool_call_id();
+    }
+
+    public List<Map<String, Object>> get_tool_calls(int idx) {
+        if (idx >= messages.size()) {
+            return null;
+        }
+        return messages.get(idx).get_tool_calls();
     }
 
     public boolean add_system_msg(String content) {
-        if (!msgs.isEmpty()) {
+        if (!messages.isEmpty()) {
             return false;
         }
         update_time();
-        msgs.add(new Message(SYSTEM_ROLE, content));
+        messages.add(new Message(SYSTEM_ROLE, content));
         return true;
     }
 
@@ -121,25 +137,54 @@ public class Conversation implements Serializable {
             return add_user_msg(content);
         } else if (role.equals(ASSISTANT_ROLE)) {
             return add_assistant_msg(content);
+        } else if (role.equals(TOOL_ROLE)) {
+            return add_tool_msg(content);
         }
         return false;
     }
 
     public boolean add_user_msg(String content) {
-        if (!msgs.isEmpty() && msgs.get(get_msgs_len() - 1).get_role().equals(USER_ROLE)) {
+        if (!messages.isEmpty() && messages.get(get_msgs_len() - 1).get_role().equals(USER_ROLE)) {
             return false;
         }
         update_time();
-        msgs.add(new Message(USER_ROLE, content));
+        messages.add(new Message(USER_ROLE, content));
         return true;
     }
 
     public boolean add_assistant_msg(String content) {
-        if (msgs.isEmpty() || !msgs.get(get_msgs_len() - 1).get_role().equals(USER_ROLE)) {
+        if (messages.isEmpty() || !messages.get(get_msgs_len() - 1).get_role().equals(USER_ROLE)) {
             return false;
         }
         update_time();
-        msgs.add(new Message(ASSISTANT_ROLE, content));
+        messages.add(new Message(ASSISTANT_ROLE, content));
+        return true;
+    }
+
+    public boolean add_tool_msg(String content) {
+        update_time();
+        messages.add(new Message(TOOL_ROLE, content));
+        return true;
+    }
+
+    public boolean add_tool_msg(String tool_call_id, String content) {
+        update_time();
+        messages.add(new Message(TOOL_ROLE, content, tool_call_id, null));
+        return true;
+    }
+
+    public boolean add_raw_msg(Message msg) {
+        if (msg == null) {
+            return false;
+        }
+        update_time();
+        messages.add(msg);
+        return true;
+    }
+
+    public boolean add_raw_msg(String role, String content) {
+        update_time();
+        messages.add(new Message(role, content));
         return true;
     }
 

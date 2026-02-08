@@ -28,7 +28,7 @@ public class RefactorTest {
         ConversationContainer container = new ConversationContainerDummy();
         PromptConf conf = new PromptConf();
         Ai ai = new Ai(null, program, gu, container, null, conf);
-        Refactor refactor = new Refactor(gu, ai, new Function<String, String>() {
+        Refactor refactor = new Refactor(gu, ai, conf, new Function<String, String>() {
             @Override
             public String apply(String msg) {
                 return msg;

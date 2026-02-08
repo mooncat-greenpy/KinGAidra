@@ -109,6 +109,53 @@ public class ChatGUI extends JPanel {
         return renderer.render(parser.parse(markdown));
     }
 
+    private String format_tool_calls(List<Map<String, Object>> tool_calls) {
+        if (tool_calls == null || tool_calls.isEmpty()) {
+            return null;
+        }
+        StringBuilder content = new StringBuilder();
+        content.append("Tool call(s):");
+        for (Map<String, Object> call : tool_calls) {
+            if (call == null) {
+                continue;
+            }
+            Object func_obj = call.get("function");
+            String name = null;
+            String args = null;
+            if (func_obj instanceof Map) {
+                Map<?, ?> func = (Map<?, ?>) func_obj;
+                Object name_obj = func.get("name");
+                Object args_obj = func.get("arguments");
+                name = name_obj == null ? null : name_obj.toString();
+                args = args_obj == null ? null : args_obj.toString();
+            }
+            content.append("\n- ");
+            content.append(name == null ? "tool_call" : name);
+            if (args != null && !args.isEmpty()) {
+                content.append(": ").append(args);
+            }
+        }
+        return content.toString();
+    }
+
+    private String get_display_text(String role, String content, String tool_call_id,
+            List<Map<String, Object>> tool_calls) {
+        if (content != null && !content.isEmpty()) {
+            return content;
+        }
+        String tool_calls_text = format_tool_calls(tool_calls);
+        if (tool_calls_text != null && !tool_calls_text.isEmpty()) {
+            return tool_calls_text;
+        }
+        if (Conversation.TOOL_ROLE.equals(role)) {
+            if (tool_call_id != null && !tool_call_id.isEmpty()) {
+                return "Tool result (" + tool_call_id + "): (empty)";
+            }
+            return "Tool result: (empty)";
+        }
+        return "";
+    }
+
     private void build_panel() {
         removeAll();
 
@@ -170,7 +217,11 @@ public class ChatGUI extends JPanel {
                 msg_panel.setLayout(new BoxLayout(msg_panel, BoxLayout.X_AXIS));
                 msg_panel.setBorder(line_border);
 
+                String role = cur_convo.get_role(i);
                 String text = cur_convo.get_msg(i);
+                String tool_call_id = cur_convo.get_tool_call_id(i);
+                List<Map<String, Object>> tool_calls = cur_convo.get_tool_calls(i);
+                text = get_display_text(role, text, tool_call_id, tool_calls);
                 JEditorPane edit_panel = new JEditorPane();
                 if (md_chk.isSelected()) {
                     text = convert_md_to_html(text);
@@ -179,10 +230,10 @@ public class ChatGUI extends JPanel {
                 edit_panel.setText(text);
                 edit_panel.setEditable(false);
 
-                JLabel role_label = new JLabel(cur_convo.get_role(i));
+                JLabel role_label = new JLabel(role);
                 role_label.setPreferredSize(new Dimension(50, 0));
 
-                if (cur_convo.get_role(i).equals(Conversation.USER_ROLE)) {
+                if (Conversation.USER_ROLE.equals(role)) {
                     msg_panel.add(role_label);
                     msg_panel.add(edit_panel);
                 } else {

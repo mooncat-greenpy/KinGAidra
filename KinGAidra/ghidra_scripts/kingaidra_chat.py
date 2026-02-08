@@ -529,6 +529,7 @@ def main():
     result = response["choices"][0]["message"]["content"]
 
     state.addEnvironmentVar("RESPONSE", result)
+    state.addEnvironmentVar("MESSAGES_OUT", json.dumps(data["messages"]))
 
 if __name__ == "__main__":
     TOOLS_FLAG = globals().get("TOOLS_FLAG", True)
