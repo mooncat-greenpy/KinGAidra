@@ -7,10 +7,10 @@
 
 
 URL = "" # "https://api.openai.com/v1/chat/completions"
-MODEL = "" # "gpt-5-mini"
+MODEL = "" # "gpt-5.2"
 API_KEY = ""
 POST_MSG = "" # "Please respond in XXXX."
-TOOLS_FLAG = False
+TOOLS_FLAG = True
 OPTIONAL_HEADERS = {}
 OPTIONAL_DATA = {}
 
@@ -495,6 +495,7 @@ def main():
         type == kingaidra.ai.task.TaskType.ADD_COMMENTS.toString()):
         data["messages"][-1]["content"] += "\n\n" + POST_MSG
 
+    fail_count = 0
     while True:
         headers = {
             "Content-Type": "application/json",
@@ -515,6 +516,10 @@ def main():
             printerr(str(e))
             printerr(e.read())
             exit()
+
+        if fail_count < 5 and response["choices"][0]["finish_reason"] == "stop" and response["choices"][0]["message"]["content"] is None:
+            fail_count += 1
+            continue
 
         data["messages"].append(response["choices"][0]["message"])
         if response["choices"][0]["finish_reason"] == "tool_calls":
