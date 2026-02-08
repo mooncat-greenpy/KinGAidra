@@ -19,37 +19,24 @@ import javax.swing.JPanel;
 import javax.swing.JScrollPane;
 import javax.swing.JTable;
 import javax.swing.JTextField;
-import javax.swing.event.DocumentEvent;
-import javax.swing.event.DocumentListener;
-import java.awt.event.FocusAdapter;
-import java.awt.event.FocusEvent;
 import javax.swing.event.TableModelEvent;
 import javax.swing.event.TableModelListener;
 import javax.swing.table.DefaultTableModel;
 
 import kingaidra.ai.model.Model;
 import kingaidra.ai.model.ModelConf;
-import kingaidra.ghidra.PromptConf;
 import kingaidra.log.Logger;
-
-import ghidra.program.model.listing.Program;
 
 public class ModelConfGUI extends JPanel {
     private static int NAME_COLUMN_IDX = 0;
     private static int SCRIPT_COLUMN_IDX = 1;
     private static int ONOFF_COLUMN_BASE_IDX = 2;
 
-    private Program program;
-    private final javax.swing.Timer debounce;
-    private String system_prompt;
-
     private List<ModelConf> model_conf_list;
-    private PromptConf conf;
     private Logger logger;
 
-    public ModelConfGUI(List<ModelConf> model_conf_list, PromptConf conf, Logger logger, Program program) {
+    public ModelConfGUI(List<ModelConf> model_conf_list, Logger logger) {
         this.model_conf_list = model_conf_list;
-        this.conf = conf;
         this.logger = logger;
         setLayout(new BoxLayout(this, BoxLayout.Y_AXIS));
 
@@ -100,37 +87,6 @@ public class ModelConfGUI extends JPanel {
             table.getColumnModel().getColumn(ONOFF_COLUMN_BASE_IDX + i)
                     .setCellEditor(new DefaultCellEditor(new JCheckBox()));
         }
-
-        var pud = program.getProgramUserData();
-        system_prompt = conf.get_default_system_prompt();
-        JPanel sys_prompt_panel = new JPanel();
-        JLabel sys_prompt_label = new JLabel("System prompt (Tool option)");
-        JTextField sys_prompt_field = new JTextField(system_prompt, 30);
-        debounce = new javax.swing.Timer(500, e -> {
-            conf.set_default_system_prompt(system_prompt);
-        });
-        debounce.setRepeats(false);
-        sys_prompt_field.getDocument().addDocumentListener(new DocumentListener() {
-            private void changed() {
-                system_prompt = sys_prompt_field.getText();
-                debounce.restart();
-                conf.set_default_system_prompt(system_prompt);
-            }
-            @Override public void insertUpdate(DocumentEvent e) { changed(); }
-            @Override public void removeUpdate(DocumentEvent e) { changed(); }
-            @Override public void changedUpdate(DocumentEvent e) { changed(); }
-        });
-        sys_prompt_field.addActionListener(e -> {
-            conf.set_default_system_prompt(system_prompt);
-        });
-        sys_prompt_field.addFocusListener(new FocusAdapter() {
-            @Override public void focusLost(FocusEvent e) {
-                conf.set_default_system_prompt(system_prompt);
-            }
-        });
-        sys_prompt_panel.add(sys_prompt_label, BorderLayout.WEST);
-        sys_prompt_panel.add(sys_prompt_field, BorderLayout.CENTER);
-        add(sys_prompt_panel);
 
         add(new JScrollPane(table));
 

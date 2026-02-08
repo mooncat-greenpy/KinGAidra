@@ -7,8 +7,21 @@ import ghidra.framework.options.Options;
 import kingaidra.ai.task.TaskType;
 
 public class PromptConf {
-    public static final String OPTION_SYSTEM_PROMPT = "Prompt.System";
-    public static final String OPTION_USER_PROMPT_PREFIX = "Prompt.User.";
+    public static final String PROMPT_OPTIONS_ROOT = "Prompts";
+
+    public static final String PROMPT_GROUP_CHAT = "Chat";
+    public static final String PROMPT_GROUP_DECOM = "Decom";
+    public static final String PROMPT_GROUP_KEYFUNC = "KeyFunc";
+    public static final String PROMPT_GROUP_OTHER = "Other";
+
+    public static final String PROMPT_CHAT_GROUP_CHAT_TEMPLATE = "Chat Template";
+    public static final String PROMPT_CHAT_GROUP_EXPLAIN_WITH_AI = "Explain with AI";
+    public static final String PROMPT_CHAT_GROUP_EXPLAIN_ASM_WITH_AI = "Explain asm with AI";
+    public static final String PROMPT_CHAT_GROUP_DECOMPILE_WITH_AI = "Decompile with AI";
+    public static final String PROMPT_CHAT_GROUP_EXPLAIN_STRINGS_MALWARE = "Explain strings (malware)";
+    public static final String PROMPT_CHAT_GROUP_ADD_COMMENTS_WITH_AI = "Add comments using AI";
+
+    public static final String OPTION_SYSTEM_PROMPT = "Default System Prompt";
 
     private static final String DEFAULT_SYSTEM_PROMPT = "You are a malware analysis expert.";
 
@@ -29,7 +42,104 @@ public class PromptConf {
     }
 
     public static String get_user_prompt_option_name(TaskType task) {
-        return OPTION_USER_PROMPT_PREFIX + task.name();
+        return get_user_prompt_label(task);
+    }
+
+    public static String[] get_user_prompt_group_path(TaskType task) {
+        switch (task) {
+            case CHAT:
+                return new String[] { PROMPT_GROUP_CHAT, PROMPT_CHAT_GROUP_CHAT_TEMPLATE };
+            case CHAT_EXPLAIN_DECOM:
+                return new String[] { PROMPT_GROUP_CHAT, PROMPT_CHAT_GROUP_EXPLAIN_WITH_AI };
+            case CHAT_EXPLAIN_ASM:
+                return new String[] { PROMPT_GROUP_CHAT, PROMPT_CHAT_GROUP_EXPLAIN_ASM_WITH_AI };
+            case CHAT_DECOM_ASM:
+                return new String[] { PROMPT_GROUP_CHAT, PROMPT_CHAT_GROUP_DECOMPILE_WITH_AI };
+            case CHAT_EXPLAIN_STRINGS:
+                return new String[] { PROMPT_GROUP_CHAT, PROMPT_CHAT_GROUP_EXPLAIN_STRINGS_MALWARE };
+            case ADD_COMMENTS:
+                return new String[] { PROMPT_GROUP_CHAT, PROMPT_CHAT_GROUP_ADD_COMMENTS_WITH_AI };
+            case DECOM_REFACTOR_FUNC_PARAM_VAR:
+            case REVIEW_DECOM_REFACTOR_FUNC_PARAM_VAR:
+            case DECOM_REFACTOR_DATATYPE:
+            case REVIEW_DECOM_REFACTOR_DATATYPE:
+            case DECOM_RESOLVE_DATATYPE:
+                return new String[] { PROMPT_GROUP_DECOM };
+            case KEYFUNC_CALLTREE:
+                return new String[] { PROMPT_GROUP_KEYFUNC };
+            default:
+                return new String[] { PROMPT_GROUP_OTHER };
+        }
+    }
+
+    public static String get_user_prompt_label(TaskType task) {
+        switch (task) {
+            case CHAT:
+                return "1: Chat Template (manual)";
+            case CHAT_EXPLAIN_DECOM:
+                return "1: Action: Explain with AI";
+            case CHAT_EXPLAIN_ASM:
+                return "1: Action: Explain asm with AI";
+            case CHAT_DECOM_ASM:
+                return "1: Action: Decompile with AI";
+            case CHAT_EXPLAIN_STRINGS:
+                return "1: Action: Explain strings (malware)";
+            case ADD_COMMENTS:
+                return "1: Action: Add comments using AI";
+            case DECOM_REFACTOR_FUNC_PARAM_VAR:
+                return "1: Refactor Names";
+            case REVIEW_DECOM_REFACTOR_FUNC_PARAM_VAR:
+                return "2: Review Refactor Names";
+            case DECOM_REFACTOR_DATATYPE:
+                return "3: Refactor Data Types";
+            case REVIEW_DECOM_REFACTOR_DATATYPE:
+                return "4: Review Refactor Data Types";
+            case DECOM_RESOLVE_DATATYPE:
+                return "5: Resolve Struct Definitions";
+            case KEYFUNC_CALLTREE:
+                return "1: Call Tree Prioritization";
+            default:
+                return task.name();
+        }
+    }
+
+    public static String get_user_prompt_description(TaskType task) {
+        switch (task) {
+            case CHAT:
+                return "Prompt used for chat messages in the Chat tab.";
+            case CHAT_EXPLAIN_DECOM:
+                return "Prompt used by \"Explain with AI\" for decompiled C code.";
+            case CHAT_EXPLAIN_ASM:
+                return "Prompt used by \"Explain asm with AI\".";
+            case CHAT_DECOM_ASM:
+                return "Prompt used by \"Decompile with AI\".";
+            case CHAT_EXPLAIN_STRINGS:
+                return "Prompt used by \"Explain strings (malware)\".";
+            case ADD_COMMENTS:
+                return "Prompt used by \"Add comments using AI\".";
+            case DECOM_REFACTOR_FUNC_PARAM_VAR:
+                return "Decom prompt for renaming functions, parameters, and variables.";
+            case REVIEW_DECOM_REFACTOR_FUNC_PARAM_VAR:
+                return "Decom prompt for reviewing rename proposals.";
+            case DECOM_REFACTOR_DATATYPE:
+                return "Decom prompt for refactoring data types.";
+            case REVIEW_DECOM_REFACTOR_DATATYPE:
+                return "Decom prompt for reviewing data type refactoring proposals.";
+            case DECOM_RESOLVE_DATATYPE:
+                return "Decom prompt for resolving missing struct definitions. <datatype_name> is replaced with the target struct name, and <bit_size> is replaced with the program bit width.";
+            case KEYFUNC_CALLTREE:
+                return "KeyFunc prompt for prioritizing functions from the call tree.";
+            default:
+                return "Unused task prompt.";
+        }
+    }
+
+    public static Options get_group_options(Options root, String[] path) {
+        Options current = root;
+        for (String part : path) {
+            current = current.getOptions(part);
+        }
+        return current;
     }
 
     public String get_default_system_prompt_base() {
@@ -40,13 +150,15 @@ public class PromptConf {
         if (options == null) {
             return system_prompt;
         }
-        return options.getString(OPTION_SYSTEM_PROMPT, system_prompt);
+        Options prompt_root = options.getOptions(PROMPT_OPTIONS_ROOT);
+        return prompt_root.getString(OPTION_SYSTEM_PROMPT, system_prompt);
     }
 
     public void set_default_system_prompt(String data) {
         system_prompt = (data == null) ? "" : data;
         if (options != null) {
-            options.setString(OPTION_SYSTEM_PROMPT, system_prompt);
+            Options prompt_root = options.getOptions(PROMPT_OPTIONS_ROOT);
+            prompt_root.setString(OPTION_SYSTEM_PROMPT, system_prompt);
         }
     }
 
@@ -71,7 +183,9 @@ public class PromptConf {
     public String get_user_prompt(TaskType task, String model_name) {
         String default_prompt = get_default_user_prompt(task);
         if (options != null) {
-            return options.getString(get_user_prompt_option_name(task), default_prompt);
+            Options prompt_root = options.getOptions(PROMPT_OPTIONS_ROOT);
+            Options group_options = get_group_options(prompt_root, get_user_prompt_group_path(task));
+            return group_options.getString(get_user_prompt_option_name(task), default_prompt);
         }
         String override = user_prompt_overrides.get(task);
         return override == null ? default_prompt : override;
@@ -79,7 +193,9 @@ public class PromptConf {
 
     public void set_user_prompt(TaskType task, String model_name, String system_prompt) {
         if (options != null) {
-            options.setString(get_user_prompt_option_name(task), system_prompt == null ? "" : system_prompt);
+            Options prompt_root = options.getOptions(PROMPT_OPTIONS_ROOT);
+            Options group_options = get_group_options(prompt_root, get_user_prompt_group_path(task));
+            group_options.setString(get_user_prompt_option_name(task), system_prompt == null ? "" : system_prompt);
             return;
         }
         if (system_prompt == null || system_prompt.isEmpty()) {
@@ -243,7 +359,23 @@ public class PromptConf {
                 "<code>\n" +
                 "```");
 
-        default_user_prompts.put(TaskType.DECOM_RESOLVE_DATATYPE, "");
-        default_user_prompts.put(TaskType.KEYFUNC_CALLTREE, "");
+        default_user_prompts.put(TaskType.DECOM_RESOLVE_DATATYPE,
+                "Write only the C struct definition for a struct named <datatype_name>. " +
+                "Do not include typedefs, includes, defines, example code, initialization, or comments. " +
+                "Use fixed-width types like unsigned long and wchar_t directly. " +
+                "It is for <bit_size>-bit.");
+        default_user_prompts.put(TaskType.KEYFUNC_CALLTREE,
+                "Done, please list which functions would be good to analyze first to get the big picture of this program.\n" +
+                "Output format.\n" +
+                "```json\n" +
+                "{\n" +
+                "    \"func\": [\n" +
+                "        \"Function1\",\n" +
+                "        \"Function2\",\n" +
+                "        \"Function3\",\n" +
+                "        ...\n" +
+                "    ]\n" +
+                "}\n" +
+                "```");
     }
 }

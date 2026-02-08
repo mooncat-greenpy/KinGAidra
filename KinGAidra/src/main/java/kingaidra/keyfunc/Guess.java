@@ -98,19 +98,9 @@ public class Guess {
         convo.add_user_msg(one_msg);
         convo.add_assistant_msg("Understood");
 
-        String ask_msg = "Done, please list which functions would be good to analyze first to get the big picture of this program.\n" +
-                        "Output format.\n" +
-                        "```json\n" +
-                        "{\n" +
-                        "    \"func\": [\n" +
-                        "        \"Function1\",\n" +
-                        "        \"Function2\",\n" +
-                        "        \"Function3\",\n" +
-                        "        ...\n" +
-                        "    ]\n" +
-                        "}\n" +
-                        "```";
-        convo = ai.guess(TaskType.KEYFUNC_CALLTREE, convo, ask_msg, addr);
+        TaskType task = TaskType.KEYFUNC_CALLTREE;
+        String ask_msg = conf.get_user_prompt(task, convo.get_model().get_name());
+        convo = ai.guess(task, convo, ask_msg, addr);
         return convo;
     }
 
@@ -126,8 +116,10 @@ public class Guess {
         if (m == null) {
             return null;
         }
+        TaskType task = TaskType.KEYFUNC_CALLTREE;
         Conversation convo = new Conversation(ConversationType.SYSTEM_KEYFUNC, m);
         convo.set_model(m);
+        convo.add_system_msg(conf.get_system_prompt(task, m.get_name()));
         convo = guess(convo, call_tree, addr);
         if (convo == null) {
             return null;

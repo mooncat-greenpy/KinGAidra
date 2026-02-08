@@ -74,7 +74,7 @@ public class DecomGUI extends JPanel {
 
     private void buildPanel() {
         Guess guess = new Guess(ghidra, ai, model_conf, conf);
-        Refactor refactor = new Refactor(ghidra, ai, new Function<String, String>() {
+        Refactor refactor = new Refactor(ghidra, ai, conf, new Function<String, String>() {
             @Override
             public String apply(String msg) {
                 JTextArea text = new JTextArea(30, 100);

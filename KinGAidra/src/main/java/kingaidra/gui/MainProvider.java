@@ -98,7 +98,7 @@ public class MainProvider extends ComponentProvider {
                 List<ModelConf> model_conf_list = new LinkedList<>();
                 model_conf_list.add(chat_model_conf);
                 model_conf_list.add(refactor_model_conf);
-                ModelConfGUI conf_panel = new ModelConfGUI(model_conf_list, conf, logger, program);
+                ModelConfGUI conf_panel = new ModelConfGUI(model_conf_list, logger);
                 p.add(conf_panel);
 
                 JOptionPane.showMessageDialog(null, p, "Configure", JOptionPane.PLAIN_MESSAGE);

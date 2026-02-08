@@ -121,22 +121,27 @@ public class KinGAidraPlugin extends ProgramPlugin implements KinGAidraChatTaskS
     }
 
     private void register_prompt_options(Options options) {
-        options.registerOption(
+        Options prompt_root = options.getOptions(PromptConf.PROMPT_OPTIONS_ROOT);
+        prompt_root.registerOption(
             PromptConf.OPTION_SYSTEM_PROMPT,
             OptionType.STRING_TYPE,
             prompts.get_default_system_prompt_base(),
             null,
-            "System prompt",
+            "System prompt used for all tasks.",
             () -> new MultiLineStringPropertyEditor()
         );
 
         for (TaskType task : TaskType.values()) {
-            options.registerOption(
+            Options group_options = PromptConf.get_group_options(
+                prompt_root,
+                PromptConf.get_user_prompt_group_path(task)
+            );
+            group_options.registerOption(
                 PromptConf.get_user_prompt_option_name(task),
                 OptionType.STRING_TYPE,
                 prompts.get_default_user_prompt(task),
                 null,
-                "User prompt for " + task.name(),
+                PromptConf.get_user_prompt_description(task),
                 () -> new MultiLineStringPropertyEditor()
             );
         }

@@ -14,26 +14,32 @@ import kingaidra.ai.model.Model;
 import kingaidra.ai.task.TaskType;
 import kingaidra.decom.extractor.ClangExtractor;
 import kingaidra.ghidra.GhidraUtil;
+import kingaidra.ghidra.PromptConf;
 
 public class Refactor {
     private GhidraUtil ghidra;
     private Ai ai;
+    private PromptConf conf;
     private Function<String, String> fix_func;
 
-    public Refactor(GhidraUtil ghidra, Ai ai, Function<String, String> fix_func) {
+    public Refactor(GhidraUtil ghidra, Ai ai, PromptConf conf, Function<String, String> fix_func) {
         this.ghidra = ghidra;
         this.ai = ai;
+        this.conf = conf;
         this.fix_func = fix_func;
     }
 
     public DataType resolve_datatype(String datatype_name, Model model) {
+        TaskType task = TaskType.DECOM_RESOLVE_DATATYPE;
         Conversation convo = new Conversation(ConversationType.SYSTEM_DECOM, model);
-        String msg = String.format("Write only the C struct definition for a struct named %s. " +
-                        "Do not include typedefs, includes, defines, example code, initialization, or comments. " +
-                        "Use fixed-width types like unsigned long and wchar_t directly. " +
-                        "It is for %d-bit.", datatype_name, ghidra.get_addr(0).getSize());
+        convo.add_system_msg(conf.get_system_prompt(task, model.get_name()));
 
-        convo = ai.guess(TaskType.DECOM_RESOLVE_DATATYPE, convo, msg, null);
+        String msg_template = conf.get_user_prompt(task, model.get_name());
+        String msg = msg_template
+                .replace("<datatype_name>", datatype_name)
+                .replace("<bit_size>", String.format("%d", ghidra.get_addr(0).getSize()));
+
+        convo = ai.guess(task, convo, msg, null);
         if (convo == null) {
             return null;
         }
