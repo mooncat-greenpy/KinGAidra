@@ -1,6 +1,7 @@
 package kingaidra.chat.gui;
 
 import java.awt.Dimension;
+import java.awt.FlowLayout;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.util.AbstractMap;
@@ -159,7 +160,8 @@ public class ChatGUI extends JPanel {
     private void build_panel() {
         removeAll();
 
-        btn_panel = new JPanel();
+        btn_panel = new JPanel(new FlowLayout(FlowLayout.LEFT));
+        btn_panel.setAlignmentX(LEFT_ALIGNMENT);
         info_label = new JLabel();
         info_label.setPreferredSize(new Dimension(0, 40));
         restart_btn = new JButton("Clean");
@@ -265,6 +267,12 @@ public class ChatGUI extends JPanel {
         if (!guess.get_model_conf().exist_model(chatgptlike_model.get_name())) {
             guess.get_model_conf().add_model(chatgptlike_model.get_name(), chatgptlike_model.get_script());
             guess.get_model_conf().set_model_status(chatgptlike_model.get_name(), chatgptlike_model.get_active());
+        }
+        Model langchain_model =
+                new ModelByScript("LangChain", "kingaidra_chat_langchain.py", false);
+        if (!guess.get_model_conf().exist_model(langchain_model.get_name())) {
+            guess.get_model_conf().add_model(langchain_model.get_name(), langchain_model.get_script());
+            guess.get_model_conf().set_model_status(langchain_model.get_name(), langchain_model.get_active());
         }
         Model gencopytext_model =
                 new ModelByScript("CopyTextGen", "kingaidra_gen_copy_text.py", false);
