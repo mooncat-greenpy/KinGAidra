@@ -1,5 +1,9 @@
 package kingaidra.ghidra;
 
+import java.io.IOException;
+import java.io.PrintWriter;
+import java.io.StringWriter;
+import java.io.Writer;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
@@ -13,6 +17,7 @@ import java.util.Stack;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+import generic.jar.ResourceFile;
 import ghidra.app.decompiler.component.DecompilerUtils;
 import ghidra.app.decompiler.ClangLine;
 import ghidra.app.decompiler.ClangToken;
@@ -20,9 +25,17 @@ import ghidra.app.decompiler.ClangTokenGroup;
 import ghidra.app.decompiler.DecompInterface;
 import ghidra.app.decompiler.DecompileResults;
 import ghidra.app.decompiler.DecompiledFunction;
+import ghidra.app.script.GhidraScript;
+import ghidra.app.script.GhidraScriptProvider;
+import ghidra.app.script.GhidraScriptUtil;
+import ghidra.app.script.GhidraState;
 import ghidra.app.services.CodeViewerService;
+import ghidra.app.services.ConsoleService;
 import ghidra.app.util.cparser.C.CParser;
+import ghidra.framework.model.Project;
 import ghidra.framework.plugintool.PluginTool;
+import ghidra.jython.GhidraJythonInterpreter;
+import ghidra.jython.JythonScriptProvider;
 import ghidra.program.model.address.Address;
 import ghidra.program.model.address.AddressSetView;
 import ghidra.program.model.data.Category;
@@ -49,6 +62,7 @@ import ghidra.program.model.symbol.RefType;
 import ghidra.program.model.symbol.SourceType;
 import ghidra.program.model.symbol.Symbol;
 import ghidra.program.model.symbol.SymbolTable;
+import ghidra.program.util.ProgramLocation;
 import ghidra.util.exception.DuplicateNameException;
 import ghidra.util.exception.InvalidInputException;
 import ghidra.util.task.TaskMonitor;
@@ -630,11 +644,146 @@ public class GhidraUtilImpl implements GhidraUtil {
         return true;
     }
 
+    public ScriptRunResult run_script(String script_file) {
+        return run_script(script_file, new String[]{});
+    }
+
+    public ScriptRunResult run_script(String script_file, String[] args) {
+        if (script_file == null || script_file.isEmpty()) {
+            return new ScriptRunResult(false, "", "");
+        }
+        ResourceFile file = GhidraScriptUtil.findScriptByName(script_file);
+        if (file == null) {
+            return new ScriptRunResult(false, "", "");
+        }
+        GhidraScriptProvider provider = GhidraScriptUtil.getProvider(file);
+        if (provider == null) {
+            return new ScriptRunResult(false, "", "");
+        }
+        if ("ghidra.pyghidra.PyGhidraScriptProvider".equals(provider.getClass().getName())) {
+            provider = new JythonScriptProvider();
+        }
+
+        PluginTool tool = null;
+        for (Object obj : program.getConsumerList()) {
+            if (obj instanceof PluginTool) {
+                tool = (PluginTool) obj;
+                break;
+            }
+        }
+        CodeViewerService service = null;
+        ConsoleService console = null;
+        Project project = null;
+        if (tool != null) {
+            service = tool.getService(CodeViewerService.class);
+            console = tool.getService(ConsoleService.class);
+            project = tool.getProject();
+        }
+        ProgramLocation location = null;
+        if (service != null) {
+            location = service.getCurrentLocation();
+        }
+        StringWriter stdout_capture = new StringWriter();
+        StringWriter stderr_capture = new StringWriter();
+        PrintWriter stdout_writer = new PrintWriter(
+                new DualWriter(getConsoleWriter(console, true), stdout_capture), true);
+        PrintWriter stderr_writer = new PrintWriter(
+                new DualWriter(getConsoleWriter(console, false), stderr_capture), true);
+
+        GhidraScript script;
+        try {
+            script = provider.getScriptInstance(file, stdout_writer);
+        } catch (Exception e) {
+            return new ScriptRunResult(false, "", e.toString());
+        }
+        GhidraState state = new GhidraState(
+                tool,
+                project,
+                program,
+                location,
+                null,
+                null);
+        GhidraJythonInterpreter interpreter = GhidraJythonInterpreter.get();
+        if (interpreter != null) {
+            interpreter.setOut(stdout_writer);
+            interpreter.setErr(stderr_writer);
+            state.addEnvironmentVar("ghidra.jython.interpreter", interpreter);
+        }
+        Exception run_exception = null;
+        try {
+            String[] script_args = new String[]{};
+            if (args != null) {
+                script_args = args;
+            }
+            script.setScriptArgs(script_args);
+            script.execute(state, monitor, stdout_writer);
+        } catch (Exception e) {
+            run_exception = e;
+        }
+        stdout_writer.flush();
+        stderr_writer.flush();
+        String stdout = stdout_capture.toString();
+        String stderr = stderr_capture.toString();
+        if (run_exception != null && stderr.isEmpty()) {
+            stderr = run_exception.toString();
+        }
+        if (interpreter != null) {
+            interpreter.cleanup();
+        }
+        return new ScriptRunResult(run_exception == null, stdout, stderr);
+    }
+
     public Data get_data(Address addr) {
         try {
             return program_listing.getDataAt(addr);
         } catch (Exception e) {
             return null;
         }
+    }
+
+    private static final class DualWriter extends Writer {
+        private final Writer left;
+        private final Writer right;
+
+        private DualWriter(Writer left, Writer right) {
+            this.left = left;
+            this.right = right;
+        }
+
+        @Override
+        public void write(char[] cbuf, int off, int len) throws IOException {
+            left.write(cbuf, off, len);
+            right.write(cbuf, off, len);
+        }
+
+        @Override
+        public void flush() throws IOException {
+            left.flush();
+            right.flush();
+        }
+
+        @Override
+        public void close() throws IOException {
+            flush();
+        }
+    }
+
+    private static PrintWriter getConsoleWriter(ConsoleService console, boolean stdout) {
+        PrintWriter writer = null;
+        if (console != null) {
+            if (stdout) {
+                writer = console.getStdOut();
+            } else {
+                writer = console.getStdErr();
+            }
+        }
+        if (writer == null) {
+            if (stdout) {
+                writer = new PrintWriter(System.out, true);
+            } else {
+                writer = new PrintWriter(System.err, true);
+            }
+        }
+        return writer;
     }
 }

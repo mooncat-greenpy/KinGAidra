@@ -62,4 +62,8 @@ public interface GhidraUtil {
     public void clear_comments(Address addr);
 
     public boolean add_comments(Address addr, List<Map.Entry<String, String>> comments);
+
+    public ScriptRunResult run_script(String script_file);
+
+    public ScriptRunResult run_script(String script_file, String[] args);
 }
