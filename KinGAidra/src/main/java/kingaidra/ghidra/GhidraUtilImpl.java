@@ -29,6 +29,7 @@ import ghidra.app.script.GhidraScript;
 import ghidra.app.script.GhidraScriptProvider;
 import ghidra.app.script.GhidraScriptUtil;
 import ghidra.app.script.GhidraState;
+import ghidra.app.script.ScriptControls;
 import ghidra.app.services.CodeViewerService;
 import ghidra.app.services.ConsoleService;
 import ghidra.app.util.cparser.C.CParser;
@@ -660,10 +661,6 @@ public class GhidraUtilImpl implements GhidraUtil {
         if (provider == null) {
             return new ScriptRunResult(false, "", "");
         }
-        if ("ghidra.pyghidra.PyGhidraScriptProvider".equals(provider.getClass().getName())) {
-            provider = new JythonScriptProvider();
-        }
-
         PluginTool tool = null;
         for (Object obj : program.getConsumerList()) {
             if (obj instanceof PluginTool) {
@@ -694,7 +691,17 @@ public class GhidraUtilImpl implements GhidraUtil {
         try {
             script = provider.getScriptInstance(file, stdout_writer);
         } catch (Exception e) {
-            return new ScriptRunResult(false, "", e.toString());
+            if ("ghidra.pyghidra.PyGhidraScriptProvider".equals(provider.getClass().getName())
+                    && file.getName().endsWith(".py")) {
+                try {
+                    provider = new JythonScriptProvider();
+                    script = provider.getScriptInstance(file, stdout_writer);
+                } catch (Exception e2) {
+                    return new ScriptRunResult(false, "", e.toString());
+                }
+            } else {
+                return new ScriptRunResult(false, "", e.toString());
+            }
         }
         GhidraState state = new GhidraState(
                 tool,
@@ -716,7 +723,7 @@ public class GhidraUtilImpl implements GhidraUtil {
                 script_args = args;
             }
             script.setScriptArgs(script_args);
-            script.execute(state, monitor, stdout_writer);
+            script.execute(state, new ScriptControls(stdout_writer, stderr_writer, monitor));
         } catch (Exception e) {
             run_exception = e;
         }
