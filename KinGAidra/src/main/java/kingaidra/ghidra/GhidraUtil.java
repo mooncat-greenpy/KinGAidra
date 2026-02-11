@@ -66,4 +66,8 @@ public interface GhidraUtil {
     public ScriptRunResult run_script(String script_file);
 
     public ScriptRunResult run_script(String script_file, String[] args);
+
+    public ScriptRunResult run_script(String script_file, String script_code);
+
+    public ScriptRunResult run_script(String script_file, String[] args, String script_code);
 }

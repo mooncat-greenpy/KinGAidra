@@ -1,9 +1,13 @@
 package kingaidra.ghidra;
 
+import java.io.File;
 import java.io.IOException;
 import java.io.PrintWriter;
 import java.io.StringWriter;
 import java.io.Writer;
+import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
@@ -14,6 +18,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.Stack;
+import java.util.UUID;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -740,6 +745,34 @@ public class GhidraUtilImpl implements GhidraUtil {
         return new ScriptRunResult(run_exception == null, stdout, stderr);
     }
 
+    public ScriptRunResult run_script(String script_file, String script_code) {
+        return run_script(script_file, new String[]{}, script_code);
+    }
+
+    public ScriptRunResult run_script(String script_file, String[] args, String script_code) {
+        if (script_file == null || script_file.isEmpty() || script_code == null) {
+            return new ScriptRunResult(false, "", "");
+        }
+        Path script_dir = new File(GhidraScriptUtil.USER_SCRIPTS_DIR).toPath();
+        Path run_path = null;
+        try {
+            Files.createDirectories(script_dir);
+            run_path = createRandomScriptPath(script_dir, script_file);
+            Files.write(run_path, script_code.getBytes(StandardCharsets.UTF_8));
+            return run_script(run_path.getFileName().toString(), args);
+        } catch (Exception e) {
+            return new ScriptRunResult(false, "", e.toString());
+        } finally {
+            if (run_path != null) {
+                try {
+                    Files.deleteIfExists(run_path);
+                } catch (Exception e) {
+                    run_path.toFile().deleteOnExit();
+                }
+            }
+        }
+    }
+
     public Data get_data(Address addr) {
         try {
             return program_listing.getDataAt(addr);
@@ -792,5 +825,23 @@ public class GhidraUtilImpl implements GhidraUtil {
             }
         }
         return writer;
+    }
+
+    private static Path createRandomScriptPath(Path parent_dir, String base_name) throws IOException {
+        String suffix = "";
+        if (base_name != null) {
+            int dot = base_name.lastIndexOf('.');
+            if (dot >= 0) {
+                suffix = base_name.substring(dot);
+            }
+        }
+        for (int i = 0; i < 8; i++) {
+            String name = UUID.randomUUID().toString().replace("-", "") + suffix;
+            Path candidate = parent_dir.resolve(name);
+            if (!Files.exists(candidate)) {
+                return candidate;
+            }
+        }
+        return Files.createTempFile(parent_dir, "kai_", suffix);
     }
 }
