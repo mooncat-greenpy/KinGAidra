@@ -2,22 +2,24 @@ package kingaidra.chat.gui;
 
 import java.awt.Dimension;
 import java.awt.FlowLayout;
+import java.awt.image.BufferedImage;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
-import java.util.AbstractMap;
-import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 
 import javax.swing.BoxLayout;
 import javax.swing.JButton;
 import javax.swing.JCheckBox;
+import javax.swing.JComponent;
 import javax.swing.JEditorPane;
+import javax.swing.ImageIcon;
 import javax.swing.JLabel;
 import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 import javax.swing.JScrollPane;
 import javax.swing.JTextArea;
+import javax.swing.SwingConstants;
 import javax.swing.SwingWorker;
 import javax.swing.border.Border;
 import javax.swing.border.LineBorder;
@@ -47,11 +49,6 @@ import kingaidra.ghidra.GhidraUtil;
 import kingaidra.gui.MainProvider;
 import kingaidra.log.Logger;
 import resources.Icons;
-import resources.ResourceManager;
-
-import com.vladsch.flexmark.parser.Parser;
-import com.vladsch.flexmark.util.data.MutableDataSet;
-import com.vladsch.flexmark.html.HtmlRenderer;
 
 public class ChatGUI extends JPanel {
 
@@ -77,6 +74,8 @@ public class ChatGUI extends JPanel {
     private GuessGUI ggui;
     private LogGUI lgui;
     private Conversation cur_convo;
+    private MarkdownHtmlRenderer md_html_renderer;
+    private MarkdownPlantUmlExtractor md_plantuml_extractor;
 
     private boolean busy;
     private boolean add_comments_busy;
@@ -96,18 +95,97 @@ public class ChatGUI extends JPanel {
         check_and_set_busy(false);
         check_and_set_add_comments_busy(false);
         setLayout(new BoxLayout(this, BoxLayout.Y_AXIS));
+        init_md_viewer();
 
         init_panel();
 
         setVisible(true);
     }
 
-    private String convert_md_to_html(String markdown) {
-        MutableDataSet options = new MutableDataSet();
-        Parser parser = Parser.builder(options).build();
-        HtmlRenderer renderer = HtmlRenderer.builder(options).build();
+    private void init_md_viewer() {
+        md_html_renderer = new MarkdownHtmlRenderer();
+        md_plantuml_extractor = new MarkdownPlantUmlExtractor();
+    }
 
-        return renderer.render(parser.parse(markdown));
+    private JComponent build_plain_text_component(String text) {
+        JEditorPane edit_panel = new JEditorPane();
+        edit_panel.setText(text);
+        edit_panel.setEditable(false);
+        return edit_panel;
+    }
+
+    private JComponent build_markdown_text_component(String markdown) {
+        JEditorPane edit_panel = new JEditorPane();
+        edit_panel.setContentType("text/html");
+        edit_panel.setText("<html><body>" + md_html_renderer.render(markdown) + "</body></html>");
+        edit_panel.setEditable(false);
+        return edit_panel;
+    }
+
+    private String escape_html(String src) {
+        if (src == null) {
+            return "";
+        }
+        return src.replace("&", "&amp;")
+                .replace("<", "&lt;")
+                .replace(">", "&gt;");
+    }
+
+    private JComponent build_plantuml_component(String plantuml_src) {
+        try {
+            BufferedImage img = PlantUmlRenderer.render_plantuml_png(plantuml_src);
+            JLabel label = new JLabel(new ImageIcon(img));
+            label.setVerticalAlignment(SwingConstants.TOP);
+            label.setHorizontalAlignment(SwingConstants.LEFT);
+            label.setAlignmentX(LEFT_ALIGNMENT);
+
+            JPanel wrapper = new JPanel(new FlowLayout(FlowLayout.LEFT, 0, 0));
+            wrapper.setAlignmentX(LEFT_ALIGNMENT);
+            wrapper.add(label);
+            return wrapper;
+        } catch (Exception e) {
+            logger.append_message("PlantUML render failed: " + e.getMessage());
+            String html = "<html><body><b>PlantUML render failed.</b><pre>"
+                    + escape_html(plantuml_src) + "</pre></body></html>";
+            JEditorPane edit_panel = new JEditorPane();
+            edit_panel.setContentType("text/html");
+            edit_panel.setText(html);
+            edit_panel.setEditable(false);
+            return edit_panel;
+        }
+    }
+
+    private JComponent build_markdown_component(String markdown) {
+        JPanel panel = new JPanel();
+        panel.setLayout(new BoxLayout(panel, BoxLayout.Y_AXIS));
+        List<MarkdownPlantUmlExtractor.Segment> segments =
+                md_plantuml_extractor.split_segments(markdown);
+        for (MarkdownPlantUmlExtractor.Segment segment : segments) {
+            JComponent segment_component;
+            if (segment.is_plantuml()) {
+                segment_component = build_plantuml_component(segment.get_content());
+            } else {
+                if (segment.get_content() == null || segment.get_content().isEmpty()) {
+                    continue;
+                }
+                segment_component = build_markdown_text_component(segment.get_content());
+            }
+            segment_component.setAlignmentX(LEFT_ALIGNMENT);
+            panel.add(segment_component);
+        }
+        if (panel.getComponentCount() == 0) {
+            JComponent empty = build_markdown_text_component("");
+            empty.setAlignmentX(LEFT_ALIGNMENT);
+            panel.add(empty);
+        }
+        return panel;
+    }
+
+    private JComponent build_message_component(String text) {
+        if (md_chk == null || !md_chk.isSelected()) {
+            return build_plain_text_component(text);
+        }
+        return build_markdown_component(text);
     }
 
     private String format_tool_calls(List<Map<String, Object>> tool_calls) {
@@ -160,8 +238,7 @@ public class ChatGUI extends JPanel {
     private void build_panel() {
         removeAll();
 
-        btn_panel = new JPanel(new FlowLayout(FlowLayout.LEFT));
-        btn_panel.setAlignmentX(LEFT_ALIGNMENT);
+        btn_panel = new JPanel();
         info_label = new JLabel();
         info_label.setPreferredSize(new Dimension(0, 40));
         restart_btn = new JButton("Clean");
@@ -224,22 +301,16 @@ public class ChatGUI extends JPanel {
                 String tool_call_id = cur_convo.get_tool_call_id(i);
                 List<Map<String, Object>> tool_calls = cur_convo.get_tool_calls(i);
                 text = get_display_text(role, text, tool_call_id, tool_calls);
-                JEditorPane edit_panel = new JEditorPane();
-                if (md_chk.isSelected()) {
-                    text = convert_md_to_html(text);
-                    edit_panel.setContentType("text/html");
-                }
-                edit_panel.setText(text);
-                edit_panel.setEditable(false);
+                JComponent msg_component = build_message_component(text);
 
                 JLabel role_label = new JLabel(role);
                 role_label.setPreferredSize(new Dimension(50, 0));
 
                 if (Conversation.USER_ROLE.equals(role)) {
                     msg_panel.add(role_label);
-                    msg_panel.add(edit_panel);
+                    msg_panel.add(msg_component);
                 } else {
-                    msg_panel.add(edit_panel);
+                    msg_panel.add(msg_component);
                     msg_panel.add(role_label);
                 }
 
