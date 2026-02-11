@@ -59,6 +59,7 @@ public class ChatGUI extends JPanel {
     private JLabel info_label;
     private JPanel btn_panel;
     private JCheckBox md_chk;
+    private JCheckBox tool_chk;
 
     private DockingAction log_action;
 
@@ -235,10 +236,22 @@ public class ChatGUI extends JPanel {
         return "";
     }
 
+    private boolean show_message(String role) {
+        if (tool_chk == null || tool_chk.isSelected()) {
+            return true;
+        }
+        if (Conversation.TOOL_ROLE.equals(role)) {
+            return false;
+        }
+        return true;
+    }
+
     private void build_panel() {
         removeAll();
 
         btn_panel = new JPanel();
+        btn_panel.setLayout(new FlowLayout(FlowLayout.LEFT, 0, 0));
+        btn_panel.setAlignmentX(LEFT_ALIGNMENT);
         info_label = new JLabel();
         info_label.setPreferredSize(new Dimension(0, 40));
         restart_btn = new JButton("Clean");
@@ -281,10 +294,12 @@ public class ChatGUI extends JPanel {
         btn_panel.add(delete_btn);
 
         btn_panel.add(md_chk);
+        btn_panel.add(tool_chk);
 
         input_area = new JTextArea("");
         input_area.setLineWrap(true);
         input_area.setWrapStyleWord(true);
+        input_area.setAlignmentX(LEFT_ALIGNMENT);
 
 
         JPanel p = new JPanel();
@@ -294,12 +309,16 @@ public class ChatGUI extends JPanel {
             for (int i = 0; i < cur_convo.get_msgs_len(); i++) {
                 JPanel msg_panel = new JPanel();
                 msg_panel.setLayout(new BoxLayout(msg_panel, BoxLayout.X_AXIS));
+                msg_panel.setAlignmentX(LEFT_ALIGNMENT);
                 msg_panel.setBorder(line_border);
 
                 String role = cur_convo.get_role(i);
                 String text = cur_convo.get_msg(i);
                 String tool_call_id = cur_convo.get_tool_call_id(i);
                 List<Map<String, Object>> tool_calls = cur_convo.get_tool_calls(i);
+                if (!show_message(role)) {
+                    continue;
+                }
                 text = get_display_text(role, text, tool_call_id, tool_calls);
                 JComponent msg_component = build_message_component(text);
 
@@ -357,6 +376,7 @@ public class ChatGUI extends JPanel {
         lgui = new LogGUI(container, this, plugin, program, logger);
 
         md_chk = new JCheckBox("markdown");
+        tool_chk = new JCheckBox("tool");
 
         build_panel();
     }
