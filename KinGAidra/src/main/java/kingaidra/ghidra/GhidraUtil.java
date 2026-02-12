@@ -8,6 +8,7 @@ import ghidra.program.model.data.DataType;
 import ghidra.program.model.listing.Data;
 import ghidra.program.model.listing.Function;
 import ghidra.program.model.symbol.Reference;
+import ghidra.util.task.TaskMonitor;
 import kingaidra.decom.DecomDiff;
 
 public interface GhidraUtil {
@@ -66,6 +67,10 @@ public interface GhidraUtil {
     public ScriptRunResult run_script(String script_file);
 
     public ScriptRunResult run_script(String script_file, String[] args);
+
+    public ScriptRunResult run_script(String script_file, TaskMonitor monitor);
+
+    public ScriptRunResult run_script(String script_file, String[] args, TaskMonitor monitor);
 
     public ScriptRunResult run_script(String script_file, String script_code);
 

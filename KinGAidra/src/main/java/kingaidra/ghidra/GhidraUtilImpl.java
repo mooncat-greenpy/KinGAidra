@@ -651,10 +651,18 @@ public class GhidraUtilImpl implements GhidraUtil {
     }
 
     public ScriptRunResult run_script(String script_file) {
-        return run_script(script_file, new String[]{});
+        return run_script(script_file, new String[]{}, monitor);
     }
 
     public ScriptRunResult run_script(String script_file, String[] args) {
+        return run_script(script_file, args, monitor);
+    }
+
+    public ScriptRunResult run_script(String script_file, TaskMonitor script_monitor) {
+        return run_script(script_file, new String[]{}, script_monitor);
+    }
+
+    public ScriptRunResult run_script(String script_file, String[] args, TaskMonitor script_monitor) {
         if (script_file == null || script_file.isEmpty()) {
             return new ScriptRunResult(false, "", "");
         }
@@ -728,7 +736,8 @@ public class GhidraUtilImpl implements GhidraUtil {
                 script_args = args;
             }
             script.setScriptArgs(script_args);
-            script.execute(state, new ScriptControls(stdout_writer, stderr_writer, monitor));
+            TaskMonitor exec_monitor = script_monitor == null ? TaskMonitor.DUMMY : script_monitor;
+            script.execute(state, new ScriptControls(stdout_writer, stderr_writer, exec_monitor));
         } catch (Exception e) {
             run_exception = e;
         }
