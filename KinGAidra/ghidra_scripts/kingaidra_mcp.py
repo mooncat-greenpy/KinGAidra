@@ -8,6 +8,7 @@
 
 import anyio
 import uvicorn
+import socket
 
 from typing import List
 from pydantic import BaseModel, Field
@@ -24,7 +25,6 @@ import logging
 logging.disable(logging.CRITICAL)
 
 DEFAULT_HOST = "127.0.0.1"
-DEFAULT_PORT = 8000
 
 
 class RefactorParam(BaseModel):
@@ -50,6 +50,64 @@ def _parse_hex_address(addr_str: str) -> int:
     if not s or any(c not in "0123456789abcdef" for c in s):
         raise ValueError("Invalid address format")
     return int(s, 16)
+
+def _parse_port(value):
+    try:
+        port = int(value)
+    except Exception:
+        return None
+    if port <= 0 or port > 65535:
+        return None
+    return port
+
+def _reserve_socket(host):
+    for candidate in [host, DEFAULT_HOST]:
+        sock = None
+        try:
+            family = socket.AF_INET6 if ":" in candidate else socket.AF_INET
+            sock = socket.socket(family, socket.SOCK_STREAM)
+            sock.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
+            sock.bind((candidate, 0))
+            sock.listen(1024)
+            port = sock.getsockname()[1]
+            return candidate, port, sock
+        except Exception:
+            try:
+                if sock:
+                    sock.close()
+            except Exception:
+                pass
+    raise RuntimeError("Failed to reserve a free port")
+
+def _get_program_identity():
+    return currentProgram.getDomainFile().getPathname()
+
+def _hash_identity(value):
+    raw = value.encode("utf-8")
+    import hashlib
+    return hashlib.sha1(raw).hexdigest()
+
+def _set_mcp_state(host, port, identity):
+    url = "http://%s:%s/mcp" % (host, port)
+    try:
+        import java.lang.System as JavaSystem
+        hash_key = _hash_identity(identity)
+        JavaSystem.setProperty("kingaidra.mcp.url.%s" % hash_key, url)
+    except Exception:
+        pass
+
+def _resolve_host_port(args):
+    host = DEFAULT_HOST
+    port = None
+    sock = None
+    if len(args) == 1:
+        port = _parse_port(args[0])
+    elif len(args) >= 2:
+        host = args[0]
+        port = _parse_port(args[1])
+    if port is None:
+        host, port, sock = _reserve_socket(host)
+    return host, port, sock
 
 def build_server(binary_id: str) -> FastMCP:
     ghidra = kingaidra.ghidra.GhidraUtilImpl(currentProgram, TaskMonitor.DUMMY)
@@ -337,7 +395,7 @@ def is_ghidra_cancelled() -> bool:
         return False
 
 
-async def serve(name: str, host: str, port: int) -> None:
+async def serve(name: str, host: str, port: int, sock=None) -> None:
     print(f"[KinGAidra MCP] starting binary_name={name} host={host} port={port}")
 
     mcp = build_server(name)
@@ -357,7 +415,17 @@ async def serve(name: str, host: str, port: int) -> None:
     async def run_uvicorn() -> None:
         try:
             async with mcp.session_manager.run():
-                await uv_server.serve()
+                if sock is not None:
+                    try:
+                        await uv_server.serve(sockets=[sock])
+                    except TypeError:
+                        try:
+                            sock.close()
+                        except Exception:
+                            pass
+                        await uv_server.serve()
+                else:
+                    await uv_server.serve()
         except Exception as e:
             raise
         finally:
@@ -385,15 +453,10 @@ async def serve(name: str, host: str, port: int) -> None:
 
 
 def main() -> None:
-    args = getScriptArgs()
-    if args == 2:
-        host = args[0]
-        port = args[1]
-    else:
-        host = DEFAULT_HOST
-        port = DEFAULT_PORT
-
-    anyio.run(serve, currentProgram.getName(), host, port)
+    host, port, sock = _resolve_host_port(getScriptArgs())
+    ident = _get_program_identity()
+    _set_mcp_state(host, port, ident)
+    anyio.run(serve, currentProgram.getName(), host, port, sock)
 
 
 if __name__ == "__main__":

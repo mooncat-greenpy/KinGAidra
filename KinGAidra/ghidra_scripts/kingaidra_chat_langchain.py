@@ -29,7 +29,7 @@ OPTIONAL_DATA = {}
 MCP_URL = "http://localhost:8000/mcp"
 MCP_SERVER_NAME = "ghidra_mcp"
 MCP_TRANSPORT = "http"
-
+MCP_AUTO = True
 
 def _init_llm():
     model = ChatOpenAI(
@@ -47,11 +47,12 @@ def _init_llm():
     return model
 
 def _init_mcp_tools():
+    mcp_url = _resolve_kingaidra_mcp_url()
     client = MultiServerMCPClient(
         {
             MCP_SERVER_NAME: {
                 "transport": MCP_TRANSPORT,
-                "url": MCP_URL,
+                "url": mcp_url,
             }
             # ...
         }
@@ -68,6 +69,28 @@ def _create_agent(model, tools, thread_id):
 # Only modify the code above this comment.
 # Do not modify the code below this comment.
 
+
+def _get_program_identity():
+    return currentProgram.getDomainFile().getPathname()
+
+def _hash_identity(value):
+    raw = value.encode("utf-8")
+    import hashlib
+    return hashlib.sha1(raw).hexdigest()
+
+def _resolve_kingaidra_mcp_url():
+    if MCP_AUTO:
+        try:
+            import java.lang.System as JavaSystem
+            prop = JavaSystem.getProperty(
+                "kingaidra.mcp.url.%s" % _hash_identity(_get_program_identity())
+            )
+            if prop:
+                return prop
+        except Exception:
+            pass
+        return MCP_URL
+    return MCP_URL
 
 def main():
     data = {
