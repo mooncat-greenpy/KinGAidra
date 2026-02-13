@@ -1,11 +1,5 @@
 package kingaidra.gui;
 
-import java.awt.BorderLayout;
-import java.awt.Dialog;
-import java.awt.FlowLayout;
-import java.awt.Window;
-import java.awt.event.WindowAdapter;
-import java.awt.event.WindowEvent;
 import java.util.LinkedList;
 import java.util.List;
 
@@ -35,6 +29,7 @@ import kingaidra.ghidra.GhidraUtil;
 import kingaidra.ghidra.GhidraUtilImpl;
 import kingaidra.keyfunc.gui.KeyFuncGUI;
 import kingaidra.log.Logger;
+import kingaidra.mcp.McpControlGui;
 import resources.Icons;
 
 public class MainProvider extends ComponentProvider {
@@ -43,15 +38,14 @@ public class MainProvider extends ComponentProvider {
     private ChatGUI chat_panel;
     private DecomGUI decom_panel;
     private KeyFuncGUI keyfunc_panel;
-    private KinGAidraPlugin plugin;
-    private JDialog mcp_dialog;
+    private McpControlGui mcp_control_gui;
 
     public MainProvider(Program program, Plugin plugin, String owner,
             KinGAidraChatTaskService srv, Logger logger, PromptConf conf) {
         super(plugin.getTool(), owner, owner);
 
         if (plugin instanceof KinGAidraPlugin) {
-            this.plugin = (KinGAidraPlugin) plugin;
+            this.mcp_control_gui = new McpControlGui(this, this.dockingTool, (KinGAidraPlugin) plugin);
         }
 
         GhidraUtil ghidra = new GhidraUtilImpl(program, TaskMonitor.DUMMY);
@@ -121,77 +115,13 @@ public class MainProvider extends ComponentProvider {
         conf_action.setEnabled(true);
         conf_action.markHelpUnnecessary();
         dockingTool.addLocalAction(this, conf_action);
-
-        DockingAction mcp_action = new DockingAction("MCP Control", this.getName()) {
-            @Override
-            public void actionPerformed(ActionContext context) {
-                show_mcp_control_dialog(program);
-            }
-        };
-        mcp_action.setToolBarData(new ToolBarData(Icons.CONFIGURE_FILTER_ICON, null));
-        mcp_action.setEnabled(true);
-        mcp_action.markHelpUnnecessary();
-        dockingTool.addLocalAction(this, mcp_action);
+        if (mcp_control_gui != null) {
+            mcp_control_gui.create_action(program);
+        }
     }
 
     @Override
     public JComponent getComponent() {
         return main_panel;
-    }
-
-    private void show_mcp_control_dialog(Program program) {
-        if (mcp_dialog != null && mcp_dialog.isShowing()) {
-            mcp_dialog.toFront();
-            return;
-        }
-
-        Window owner = SwingUtilities.getWindowAncestor(getComponent());
-        mcp_dialog = new JDialog(owner, "MCP Control", Dialog.ModalityType.MODELESS);
-        mcp_dialog.setDefaultCloseOperation(WindowConstants.DISPOSE_ON_CLOSE);
-        mcp_dialog.addWindowListener(new WindowAdapter() {
-            @Override
-            public void windowClosed(WindowEvent e) {
-                mcp_dialog = null;
-            }
-        });
-
-        JPanel root = new JPanel(new BorderLayout());
-        JPanel button_panel = new JPanel(new FlowLayout(FlowLayout.CENTER));
-        JButton start_button = new JButton("Start");
-        JButton stop_button = new JButton("Stop");
-        button_panel.add(start_button);
-        button_panel.add(stop_button);
-        root.add(button_panel, BorderLayout.CENTER);
-
-        start_button.addActionListener(e -> {
-            if (plugin == null) {
-                JOptionPane.showMessageDialog(mcp_dialog, "KinGAidraPlugin is not available.", "MCP Start",
-                        JOptionPane.WARNING_MESSAGE);
-                return;
-            }
-            boolean started = plugin.start_mcp_server(program);
-            if (!started) {
-                JOptionPane.showMessageDialog(mcp_dialog, "MCP server is already running.", "MCP Start",
-                        JOptionPane.INFORMATION_MESSAGE);
-            }
-        });
-
-        stop_button.addActionListener(e -> {
-            if (plugin == null) {
-                JOptionPane.showMessageDialog(mcp_dialog, "KinGAidraPlugin is not available.", "MCP Stop",
-                        JOptionPane.WARNING_MESSAGE);
-                return;
-            }
-            boolean stopped = plugin.stop_mcp_server();
-            if (!stopped) {
-                JOptionPane.showMessageDialog(mcp_dialog, "MCP server is not running.", "MCP Stop",
-                        JOptionPane.INFORMATION_MESSAGE);
-            }
-        });
-
-        mcp_dialog.setContentPane(root);
-        mcp_dialog.pack();
-        mcp_dialog.setLocationRelativeTo(getComponent());
-        mcp_dialog.setVisible(true);
     }
 }

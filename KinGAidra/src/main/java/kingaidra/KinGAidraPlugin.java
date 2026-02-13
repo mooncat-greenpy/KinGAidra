@@ -12,14 +12,13 @@ import ghidra.framework.plugintool.PluginTool;
 import ghidra.framework.plugintool.util.PluginStatus;
 import ghidra.program.model.listing.Program;
 import ghidra.util.HelpLocation;
-import ghidra.util.task.TaskMonitorAdapter;
 import kingaidra.ai.convo.Conversation;
 import kingaidra.ai.task.KinGAidraChatTaskService;
 import kingaidra.ai.task.TaskStatus;
 import kingaidra.ai.task.TaskType;
 import kingaidra.gui.MainProvider;
-import kingaidra.ghidra.GhidraUtilImpl;
 import kingaidra.log.Logger;
+import kingaidra.mcp.McpServerController;
 import kingaidra.ghidra.PromptConf;
 
 import ghidra.framework.options.Options;
@@ -41,17 +40,11 @@ public class KinGAidraPlugin extends ProgramPlugin implements KinGAidraChatTaskS
 
     private static final String NAME = "KinGAidra";
     private static final String OPTIONS_ROOT = "KingAidra";
-    private static final String MCP_OPTIONS_ROOT = "MCP";
-    private static final String OPTION_MCP_AUTO_START = "Auto-start MCP server";
-    private static final boolean DEFAULT_MCP_AUTO_START = true;
-    private static final String MCP_SCRIPT_NAME = "kingaidra_mcp.py";
 
     private MainProvider provider;
     private Logger logger;
     private PromptConf prompts;
-    private Options options;
-    private final Object mcp_lock = new Object();
-    private TaskMonitorAdapter mcp_monitor;
+    private McpServerController mcp_controller;
 
     public KinGAidraPlugin(PluginTool tool) {
         super(tool);
@@ -59,10 +52,11 @@ public class KinGAidraPlugin extends ProgramPlugin implements KinGAidraChatTaskS
         logger = new Logger(tool, true);
         prompts = new PromptConf();
 
-        options = tool.getOptions(OPTIONS_ROOT);
+        Options options = tool.getOptions(OPTIONS_ROOT);
         prompts.bind_options(options);
         register_prompt_options(options);
-        register_mcp_options(options);
+        mcp_controller = new McpServerController();
+        mcp_controller.register_options(options);
 
         status_map = new HashMap<>();
         type_map = new HashMap<>();
@@ -82,12 +76,12 @@ public class KinGAidraPlugin extends ProgramPlugin implements KinGAidraChatTaskS
         String anchorName = "HelpAnchor";
         provider.setHelpLocation(new HelpLocation(topicName, anchorName));
 
-        auto_start_mcp_server(program);
+        mcp_controller.on_program_opened(program);
     }
 
     @Override
     public void programClosed(Program program) {
-        stop_mcp_server();
+        mcp_controller.on_program_closed();
         super.programClosed(program);
     }
 
@@ -167,82 +161,15 @@ public class KinGAidraPlugin extends ProgramPlugin implements KinGAidraChatTaskS
         }
     }
 
-    private void register_mcp_options(Options options) {
-        Options mcp_root = options.getOptions(MCP_OPTIONS_ROOT);
-        mcp_root.registerOption(
-            OPTION_MCP_AUTO_START,
-            OptionType.BOOLEAN_TYPE,
-            DEFAULT_MCP_AUTO_START,
-            null,
-            "Automatically start kingaidra_mcp.py when a program opens."
-        );
-    }
-
-    private boolean is_mcp_auto_start_enabled() {
-        if (options == null) {
-            return DEFAULT_MCP_AUTO_START;
-        }
-        Options mcp_root = options.getOptions(MCP_OPTIONS_ROOT);
-        return mcp_root.getBoolean(OPTION_MCP_AUTO_START, DEFAULT_MCP_AUTO_START);
-    }
-
     public boolean start_mcp_server(Program program) {
-        if (program == null) {
-            return false;
-        }
-        synchronized (mcp_lock) {
-            if (mcp_monitor != null && !mcp_monitor.isCancelled()) {
-                return false;
-            }
-            mcp_monitor = new TaskMonitorAdapter(true);
-        }
-
-        Thread start_thread = new Thread(() -> {
-            TaskMonitorAdapter monitor;
-            synchronized (mcp_lock) {
-                monitor = mcp_monitor;
-            }
-            if (monitor == null) {
-                return;
-            }
-            try {
-                new GhidraUtilImpl(program, monitor).run_script(MCP_SCRIPT_NAME, monitor);
-            } finally {
-                synchronized (mcp_lock) {
-                    if (mcp_monitor == monitor) {
-                        mcp_monitor = null;
-                    }
-                }
-            }
-        }, "KinGAidra-MCP-" + program.getName());
-        start_thread.setDaemon(true);
-        start_thread.start();
-        return true;
+        return mcp_controller.start_server(program);
     }
 
     public boolean stop_mcp_server() {
-        TaskMonitorAdapter monitor;
-        synchronized (mcp_lock) {
-            monitor = mcp_monitor;
-            mcp_monitor = null;
-        }
-        if (monitor != null) {
-            monitor.cancel();
-            return true;
-        }
-        return false;
+        return mcp_controller.stop_server();
     }
 
     public boolean is_mcp_running() {
-        synchronized (mcp_lock) {
-            return mcp_monitor != null && !mcp_monitor.isCancelled();
-        }
-    }
-
-    private void auto_start_mcp_server(Program program) {
-        if (!is_mcp_auto_start_enabled()) {
-            return;
-        }
-        start_mcp_server(program);
+        return mcp_controller.is_running();
     }
 }
