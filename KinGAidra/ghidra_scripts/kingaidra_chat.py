@@ -13,6 +13,7 @@ POST_MSG = "" # "Please respond in XXXX."
 TOOLS_FLAG = True
 OPTIONAL_HEADERS = {}
 OPTIONAL_DATA = {}
+FIXED_SCRIPT_FILE = "kingaidra_mcp_tool_tmp_script.py"
 
 
 # Only modify the code above this comment.
@@ -384,6 +385,26 @@ def add_tools(data):
         {
             "type": "function",
             "function": {
+                "name": "run_script",
+                "description": "Run a Ghidra script with fixed script filename. Provide script_code (full script text) and args (string list).",
+                "parameters": {
+                    "type": "object",
+                    "properties": {
+                        "script_code": {"type": "string"},
+                        "args": {
+                            "type": "array",
+                            "items": {"type": "string"}
+                        }
+                    },
+                    "required": ["script_code", "args"],
+                    "additionalProperties": False
+                },
+                "strict": True
+            }
+        },
+        {
+            "type": "function",
+            "function": {
                 "name": "search_bytes",
                 "description": "Search for a byte sequence in memory. bytes_hex is hex string, spaces allowed (e.g. '55 8B EC').",
                 "parameters": {
@@ -620,6 +641,23 @@ def handle_tool_call(tool_call, ghidra):
                 else:
                     lines.append(str(addr))
             content = "\n".join(lines)
+    elif func_name == "run_script":
+        script_code = args.get("script_code")
+        if script_code is None or script_code == "":
+            return "script_code is required"
+        script_args = args.get("args")
+        if script_args is None:
+            script_args = []
+        try:
+            result = ghidra.run_script(FIXED_SCRIPT_FILE, script_args, script_code)
+            content = json.dumps({
+                "success": result.get_success(),
+                "stdout": result.get_stdout(),
+                "stderr": result.get_stderr(),
+            })
+        except Exception as e:
+            msg = str(e)
+            content = "Error: " + msg if msg else "Failed"
     if not content:
         content = "Failed"
     return content

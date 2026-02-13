@@ -25,6 +25,7 @@ import logging
 logging.disable(logging.CRITICAL)
 
 DEFAULT_HOST = "127.0.0.1"
+FIXED_SCRIPT_FILE = "kingaidra_mcp_tool_tmp_script.py"
 
 
 class RefactorParam(BaseModel):
@@ -462,6 +463,23 @@ def build_server(binary_id: str) -> FastMCP:
             return out
         except Exception:
             return ["Failed"]
+
+    @mcp.tool()
+    def run_script(script_code: str, args: List[str] = None) -> dict:
+        """Run a Ghidra script with fixed script filename. Provide script_code and args (string list)."""
+        if script_code is None or script_code == "":
+            return {"success": False, "stdout": "", "stderr": "script_code is required"}
+        try:
+            script_args = args if args is not None else []
+            result = ghidra.run_script(FIXED_SCRIPT_FILE, script_args, script_code)
+            return {
+                "success": result.get_success(),
+                "stdout": result.get_stdout(),
+                "stderr": result.get_stderr(),
+            }
+        except Exception as e:
+            msg = str(e)
+            return {"success": False, "stdout": "", "stderr": msg if msg else "Failed"}
 
     @mcp.tool()
     def search_bytes(bytes_hex: str) -> list:
