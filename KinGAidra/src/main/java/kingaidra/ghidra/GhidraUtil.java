@@ -44,6 +44,14 @@ public interface GhidraUtil {
 
     public String get_strings_str(long index, long num);
 
+    public byte[] get_bytes(Address addr, int size);
+
+    public List<Address> search_asm(String query);
+
+    public List<Address> search_decom(String query);
+
+    public List<Address> search_bytes(String bytes_hex);
+
     public String get_asm(Address addr);
 
     public String get_asm(Address addr, boolean include_addr);

@@ -9,6 +9,7 @@ import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.HashSet;
@@ -103,6 +104,15 @@ public class GhidraUtilImpl implements GhidraUtil {
 
     public Address get_addr(long addr_value) {
         return program.getAddressFactory().getDefaultAddressSpace().getAddress(addr_value);
+    }
+
+    public List<Function> list_funcs() {
+        List<Function> funcs = new ArrayList<>();
+        FunctionIterator itr = program_listing.getFunctions(true);
+        while (itr.hasNext()) {
+            funcs.add(itr.next());
+        }
+        return funcs;
     }
 
     public Function get_func(Address addr) {
@@ -280,6 +290,185 @@ public class GhidraUtilImpl implements GhidraUtil {
         return ret;
     }
 
+    public byte[] get_bytes(Address addr, int size) {
+        if (addr == null || size <= 0) {
+            return null;
+        }
+        try {
+            byte[] buf = new byte[size];
+            int read = program.getMemory().getBytes(addr, buf);
+            if (read <= 0) {
+                return null;
+            }
+            if (read == buf.length) {
+                return buf;
+            }
+            return Arrays.copyOf(buf, read);
+        } catch (Exception e) {
+            return null;
+        }
+    }
+
+    public List<Address> search_asm(String query) {
+        List<Address> hits = new ArrayList<>();
+        if (query == null || query.trim().isEmpty()) {
+            return hits;
+        }
+        String trimmed = query.trim();
+        List<String> patterns = new ArrayList<>();
+        boolean has_seq = trimmed.indexOf('\n') >= 0 || trimmed.indexOf(';') >= 0;
+        if (has_seq) {
+            String[] parts = trimmed.split("[;\\n]+");
+            for (String part : parts) {
+                String normalized = normalize_text(part);
+                if (!normalized.isEmpty()) {
+                    patterns.add(normalized);
+                }
+            }
+        } else {
+            String normalized = normalize_text(trimmed);
+            if (!normalized.isEmpty()) {
+                patterns.add(normalized);
+            }
+        }
+        if (patterns.isEmpty()) {
+            return hits;
+        }
+
+        List<Address> addrs = new ArrayList<>();
+        List<String> insts = new ArrayList<>();
+        TaskMonitor exec_monitor = monitor == null ? TaskMonitor.DUMMY : monitor;
+        Instruction inst = program_listing.getInstructionAt(program.getMemory().getMinAddress());
+        if (inst == null) {
+            inst = program_listing.getInstructionAfter(program.getMemory().getMinAddress());
+        }
+        while (inst != null) {
+            if (exec_monitor.isCancelled()) {
+                break;
+            }
+            String asm = inst.toString();
+            addrs.add(inst.getAddress());
+            insts.add(normalize_text(asm));
+            inst = program_listing.getInstructionAfter(inst.getAddress());
+        }
+
+        if (patterns.size() == 1) {
+            String needle = patterns.get(0);
+            for (int i = 0; i < insts.size(); i++) {
+                if (insts.get(i).contains(needle)) {
+                    hits.add(addrs.get(i));
+                }
+            }
+            return hits;
+        }
+
+        int limit = insts.size() - patterns.size();
+        for (int i = 0; i <= limit; i++) {
+            boolean match = true;
+            for (int j = 0; j < patterns.size(); j++) {
+                if (!insts.get(i + j).contains(patterns.get(j))) {
+                    match = false;
+                    break;
+                }
+            }
+            if (match) {
+                hits.add(addrs.get(i));
+            }
+        }
+        return hits;
+    }
+
+    public List<Address> search_decom(String query) {
+        List<Address> hits = new ArrayList<>();
+        if (query == null || query.trim().isEmpty()) {
+            return hits;
+        }
+        String needle = normalize_text(query);
+        if (needle.isEmpty()) {
+            return hits;
+        }
+        TaskMonitor exec_monitor = monitor == null ? TaskMonitor.DUMMY : monitor;
+        DecompInterface decom_interface = new DecompInterface();
+        try {
+            decom_interface.openProgram(program);
+            FunctionIterator func_itr = program_listing.getFunctions(true);
+            while (func_itr.hasNext()) {
+                if (exec_monitor.isCancelled()) {
+                    break;
+                }
+                Function func = func_itr.next();
+                try {
+                    DecompileResults decom_result = get_decom_results(func, decom_interface);
+                    if (decom_result == null) {
+                        continue;
+                    }
+                    DecompiledFunction decom_func = decom_result.getDecompiledFunction();
+                    if (decom_func == null) {
+                        continue;
+                    }
+                    String src = decom_func.getC();
+                    if (src == null) {
+                        continue;
+                    }
+                    if (normalize_text(src).contains(needle)) {
+                        hits.add(func.getEntryPoint());
+                    }
+                } catch (Exception e) {
+                    // skip failed function decompiles
+                }
+            }
+        } finally {
+            decom_interface.dispose();
+        }
+        return hits;
+    }
+
+    private static String normalize_text(String value) {
+        if (value == null) {
+            return "";
+        }
+        StringBuilder sb = new StringBuilder(value.length());
+        for (int i = 0; i < value.length(); i++) {
+            char c = value.charAt(i);
+            if (!Character.isWhitespace(c)) {
+                sb.append(Character.toLowerCase(c));
+            }
+        }
+        return sb.toString();
+    }
+
+    public List<Address> search_bytes(String bytes_hex) {
+        List<Address> hits = new ArrayList<>();
+        if (bytes_hex == null || bytes_hex.trim().isEmpty()) {
+            return hits;
+        }
+        byte[] needle;
+        try {
+            needle = decode_hex(bytes_hex);
+        } catch (IllegalArgumentException e) {
+            return hits;
+        }
+
+        Address cur = program.getMemory().getMinAddress();
+        TaskMonitor exec_monitor = monitor == null ? TaskMonitor.DUMMY : monitor;
+        while (cur != null) {
+            if (exec_monitor.isCancelled()) {
+                break;
+            }
+            Address found = program.getMemory().findBytes(cur, needle, null, true, exec_monitor);
+            if (found == null) {
+                break;
+            }
+            hits.add(found);
+            try {
+                cur = found.add(1);
+            } catch (Exception e) {
+                break;
+            }
+        }
+        return hits;
+    }
+
     public String get_asm(Address addr) {
         return get_asm(addr, false);
     }
@@ -345,9 +534,24 @@ public class GhidraUtilImpl implements GhidraUtil {
     }
 
     private DecompileResults get_decom_results(Function func) {
+        if (func == null) {
+            return null;
+        }
         DecompInterface decom_interface = new DecompInterface();
-        decom_interface.openProgram(program);
-        return decom_interface.decompileFunction(func, 0, monitor);
+        try {
+            decom_interface.openProgram(program);
+            return get_decom_results(func, decom_interface);
+        } finally {
+            decom_interface.dispose();
+        }
+    }
+
+    private DecompileResults get_decom_results(Function func, DecompInterface decom_interface) {
+        if (func == null || decom_interface == null) {
+            return null;
+        }
+        TaskMonitor exec_monitor = monitor == null ? TaskMonitor.DUMMY : monitor;
+        return decom_interface.decompileFunction(func, 0, exec_monitor);
     }
 
     private HighFunction get_high_func(Function func) {
@@ -788,6 +992,18 @@ public class GhidraUtilImpl implements GhidraUtil {
         } catch (Exception e) {
             return null;
         }
+    }
+
+    private static byte[] decode_hex(String hex) {
+        String normalized = hex.replaceAll("\\s+", "");
+        if ((normalized.length() % 2) != 0) {
+            throw new IllegalArgumentException("Invalid hex length");
+        }
+        byte[] out = new byte[normalized.length() / 2];
+        for (int i = 0; i < out.length; i++) {
+            out[i] = (byte) Integer.parseInt(normalized.substring(i * 2, i * 2 + 2), 16);
+        }
+        return out;
     }
 
     private static final class DualWriter extends Writer {

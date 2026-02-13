@@ -51,6 +51,34 @@ def _parse_hex_address(addr_str: str) -> int:
         raise ValueError("Invalid address format")
     return int(s, 16)
 
+def _hexdump(base_addr, buf) -> str:
+    if buf is None:
+        return ""
+    lines = []
+    length = len(buf)
+    for i in range(0, length, 16):
+        line = "%s  " % base_addr.add(i)
+        for j in range(16):
+            if i + j >= length:
+                break
+            b = buf[i + j]
+            if b < 0:
+                b += 256
+            line += "%02X " % b
+        lines.append(line.rstrip())
+    return "\n".join(lines)
+
+def _is_valid_hex_string(hex_str: str) -> bool:
+    if hex_str is None:
+        return False
+    s = hex_str.replace(" ", "").strip().lower()
+    if not s or (len(s) % 2) != 0:
+        return False
+    for c in s:
+        if c not in "0123456789abcdef":
+            return False
+    return True
+
 def _parse_port(value):
     try:
         port = int(value)
@@ -194,7 +222,7 @@ def build_server(binary_id: str) -> FastMCP:
 
     @mcp.tool()
     def get_asm_by_address(address: str) -> str:
-        """Retrieve the assembly code of the specified function."""
+        """Retrieve the assembly code of the specified function. Address is hex string (e.g. 0x401000)."""
         try:
             addr_int = _parse_hex_address(address)
             addr = ghidra.get_addr(addr_int)
@@ -222,7 +250,7 @@ def build_server(binary_id: str) -> FastMCP:
 
     @mcp.tool()
     def get_decompiled_code_by_address(address: str) -> str:
-        """Retrieve the decompiled code of the specified function in C language."""
+        """Retrieve the decompiled code of the specified function in C language. Address is hex string (e.g. 0x401000)."""
         try:
             addr_int = _parse_hex_address(address)
             addr = ghidra.get_addr(addr_int)
@@ -359,7 +387,7 @@ def build_server(binary_id: str) -> FastMCP:
 
     @mcp.tool()
     def get_ref_to(address: str) -> str:
-        """Returns a list of reference source addresses to the specified address."""
+        """Returns a list of reference source addresses to the specified address. Address is hex string."""
         try:
             addr_int = _parse_hex_address(address)
             addr = ghidra.get_addr(addr_int)
@@ -379,6 +407,72 @@ def build_server(binary_id: str) -> FastMCP:
             return "Invalid address format"
         except Exception:
             return "Failed"
+
+
+    @mcp.tool()
+    def get_bytes(address: str, size: int = 1) -> str:
+        """Get bytes at address and return a hexdump. Address is hex string, size is byte count."""
+        try:
+            addr_int = _parse_hex_address(address)
+            addr = ghidra.get_addr(addr_int)
+            if not addr:
+                return "Invalid address"
+            if size is None or size <= 0:
+                return "Size must be > 0"
+            buf = ghidra.get_bytes(addr, size)
+            if buf is None:
+                return "Error reading memory"
+            return _hexdump(addr, buf)
+        except ValueError:
+            return "Invalid address format"
+        except Exception:
+            return "Failed"
+
+    @mcp.tool()
+    def search_asm(query: str) -> list:
+        """Search assembly by substring match with whitespace ignored. Use ';' or newline to separate multiple instructions (sequence search)."""
+        if not query:
+            return ["Error: query required"]
+        try:
+            hits = ghidra.search_asm(query)
+            out = []
+            listing = currentProgram.getListing()
+            for addr in hits:
+                inst = listing.getInstructionAt(addr)
+                asm = inst.toString() if inst else "(no instruction)"
+                out.append("%s: %s" % (addr, asm))
+            return out
+        except Exception:
+            return ["Failed"]
+
+    @mcp.tool()
+    def search_decom(query: str) -> list:
+        """Search decompiled C code by substring match with whitespace ignored. Searches all functions and can be slow."""
+        if not query:
+            return ["Error: query required"]
+        try:
+            hits = ghidra.search_decom(query)
+            out = []
+            for addr in hits:
+                func = ghidra.get_func(addr)
+                if func is not None:
+                    out.append("%s: %s" % (addr, func.getName()))
+                else:
+                    out.append(str(addr))
+            return out
+        except Exception:
+            return ["Failed"]
+
+    @mcp.tool()
+    def search_bytes(bytes_hex: str) -> list:
+        """Search for byte sequence in memory and return addresses. bytes_hex is hex string, spaces allowed (e.g. '55 8B EC')."""
+        if not _is_valid_hex_string(bytes_hex):
+            return ["Error: invalid hex"]
+        try:
+            hits = ghidra.search_bytes(bytes_hex)
+            return [str(a) for a in hits] if hits else []
+        except Exception:
+            return ["Failed"]
 
     return mcp
 

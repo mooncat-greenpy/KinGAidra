@@ -7,11 +7,13 @@ import ghidra.program.model.listing.Function;
 import ghidra.program.model.listing.Program;
 import ghidra.program.model.symbol.Reference;
 import ghidra.program.model.data.DataType;
+import ghidra.program.model.address.Address;
 import ghidra.util.task.TaskMonitor;
 import kingaidra.decom.DecomDiff;
 import kingaidra.testutil.GhidraTestUtil;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
 
 import java.util.AbstractMap;
 import java.util.LinkedList;
@@ -432,4 +434,58 @@ class GhidraUtilImplTest {
         gu.find_datatypes("dummy", dt_list);
         assertEquals(dt_list.size(), 0);
     }
+
+    @Test
+    void test_get_bytes() throws Exception {
+        GhidraTestUtil util = new GhidraTestUtil();
+        Program program = util.create_program();
+        GhidraUtil gu = new GhidraUtilImpl(program, TaskMonitor.DUMMY);
+
+        byte[] bytes = gu.get_bytes(util.get_addr(program, 0x401000), 5);
+        assertNotNull(bytes);
+        assertEquals(5, bytes.length);
+        assertEquals((byte) 0x55, bytes[0]);
+        assertEquals((byte) 0x89, bytes[1]);
+        assertEquals((byte) 0xe5, bytes[2]);
+        assertEquals((byte) 0x5d, bytes[3]);
+        assertEquals((byte) 0xc3, bytes[4]);
+    }
+
+    @Test
+    void test_search_bytes() throws Exception {
+        GhidraTestUtil util = new GhidraTestUtil();
+        Program program = util.create_program();
+        GhidraUtil gu = new GhidraUtilImpl(program, TaskMonitor.DUMMY);
+
+        List<Address> hits = gu.search_bytes("55 89 e5");
+        assertTrue(hits.size() >= 1);
+        assertTrue(hits.contains(util.get_addr(program, 0x401000)));
+    }
+
+    @Test
+    void test_search_asm() throws Exception {
+        GhidraTestUtil util = new GhidraTestUtil();
+        Program program = util.create_program();
+        GhidraUtil gu = new GhidraUtilImpl(program, TaskMonitor.DUMMY);
+
+        List<Address> asm_hits = gu.search_asm("  push   ebp ");
+        assertTrue(asm_hits.size() >= 1);
+        assertTrue(asm_hits.contains(util.get_addr(program, 0x401000)));
+
+        List<Address> seq_hits = gu.search_asm("push ebp; mov ebp, esp");
+        assertTrue(seq_hits.size() >= 1);
+        assertTrue(seq_hits.contains(util.get_addr(program, 0x401000)));
+    }
+
+    @Test
+    void test_search_decom() throws Exception {
+        GhidraTestUtil util = new GhidraTestUtil();
+        Program program = util.create_program();
+        GhidraUtil gu = new GhidraUtilImpl(program, TaskMonitor.DUMMY);
+
+        List<Address> decom_hits = gu.search_decom("int func_401000(void)");
+        assertTrue(decom_hits.size() >= 1);
+        assertTrue(decom_hits.contains(util.get_addr(program, 0x401000)));
+    }
+
 }

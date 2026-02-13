@@ -28,10 +28,39 @@ import json
 
 import java.util.AbstractMap as AbstractMap
 import java.util.LinkedList as LinkedList
+import java.lang.Exception as JException
 
 import kingaidra
 
 import ghidra.util.task.TaskMonitor as TaskMonitor
+
+def _hexdump(base_addr, buf):
+    if buf is None:
+        return ""
+    lines = []
+    length = len(buf)
+    for i in range(0, length, 16):
+        line = "%s  " % base_addr.add(i)
+        for j in range(16):
+            if i + j >= length:
+                break
+            b = buf[i + j]
+            if b < 0:
+                b += 256
+            line += "%02X " % b
+        lines.append(line.rstrip())
+    return "\n".join(lines)
+
+def _is_valid_hex_string(hex_str):
+    if hex_str is None:
+        return False
+    s = hex_str.replace(" ", "").strip().lower()
+    if not s or (len(s) % 2) != 0:
+        return False
+    for c in s:
+        if c not in "0123456789abcdef":
+            return False
+    return True
 
 def add_tools(data):
     data["tools"] = [
@@ -114,7 +143,7 @@ def add_tools(data):
             "type": "function",
             "function": {
                 "name": "get_asm_by_address",
-                "description": "Retrieve the assembly code of the specified function.",
+                "description": "Retrieve the assembly code of the specified function. Address is hex string (e.g. 0x401000).",
                 "parameters": {
                     "type": "object",
                     "properties": {
@@ -146,7 +175,7 @@ def add_tools(data):
             "type": "function",
             "function": {
                 "name": "get_decompiled_code_by_address",
-                "description": "Retrieve the decompiled code of the specified function in C language.",
+                "description": "Retrieve the decompiled code of the specified function in C language. Address is hex string (e.g. 0x401000).",
                 "parameters": {
                     "type": "object",
                     "properties": {
@@ -291,7 +320,7 @@ def add_tools(data):
             "type": "function",
             "function": {
                 "name": "get_ref_to",
-                "description": "Returns a list of reference source addresses to the specified address.",
+                "description": "Returns a list of reference source addresses to the specified address. Address is hex string.",
                 "parameters": {
                     "type": "object",
                     "properties": {
@@ -302,7 +331,72 @@ def add_tools(data):
                 },
                 "strict": True
             }
-        }
+        },
+        {
+            "type": "function",
+            "function": {
+                "name": "get_bytes",
+                "description": "Get bytes at address and return a hexdump. Address is hex string, size is byte count.",
+                "parameters": {
+                    "type": "object",
+                    "properties": {
+                        "address": {"type": "string", "description": "hex string"},
+                        "size": {"type": "integer"}
+                    },
+                    "required": ["address", "size"],
+                    "additionalProperties": False
+                },
+                "strict": True
+            }
+        },
+        {
+            "type": "function",
+            "function": {
+                "name": "search_asm",
+                "description": "Search assembly by substring match with whitespace ignored. Use ';' or newline to separate multiple instructions (sequence search).",
+                "parameters": {
+                    "type": "object",
+                    "properties": {
+                        "query": {"type": "string"}
+                    },
+                    "required": ["query"],
+                    "additionalProperties": False
+                },
+                "strict": True
+            }
+        },
+        {
+            "type": "function",
+            "function": {
+                "name": "search_decom",
+                "description": "Search decompiled C code by substring match with whitespace ignored. Searches all functions and can be slow.",
+                "parameters": {
+                    "type": "object",
+                    "properties": {
+                        "query": {"type": "string"}
+                    },
+                    "required": ["query"],
+                    "additionalProperties": False
+                },
+                "strict": True
+            }
+        },
+        {
+            "type": "function",
+            "function": {
+                "name": "search_bytes",
+                "description": "Search for a byte sequence in memory. bytes_hex is hex string, spaces allowed (e.g. '55 8B EC').",
+                "parameters": {
+                    "type": "object",
+                    "properties": {
+                        "bytes_hex": {"type": "string"}
+                    },
+                    "required": ["bytes_hex"],
+                    "additionalProperties": False
+                },
+                "strict": True
+            }
+        },
     ]
 
 def handle_tool_call(tool_call, ghidra):
@@ -472,6 +566,60 @@ def handle_tool_call(tool_call, ghidra):
         content = "Reference address.\n"
         for ref in ref_list:
             content += "- %#x\n" % (ref.getFromAddress().getOffset())
+    elif func_name == "get_bytes":
+        try:
+            addr = int(args["address"], 16)
+        except ValueError:
+            return "Invalid address format"
+        size = args.get("size", 1)
+        if size <= 0:
+            return "Size must be > 0"
+        base = ghidra.get_addr(addr)
+        buf = ghidra.get_bytes(base, size)
+        if buf is None:
+            content = "Error reading memory"
+            return content
+        content = _hexdump(base, buf)
+    elif func_name == "search_bytes":
+        bytes_hex = args.get("bytes_hex")
+        if not _is_valid_hex_string(bytes_hex):
+            return "Error: invalid hex"
+        hits = ghidra.search_bytes(bytes_hex)
+        if not hits:
+            content = "None"
+        else:
+            content = "\n".join([str(a) for a in hits])
+    elif func_name == "search_asm":
+        query = args.get("query")
+        if not query:
+            return "Query is required"
+        hits = ghidra.search_asm(query)
+        if not hits:
+            content = "None"
+        else:
+            lines = []
+            listing = currentProgram.getListing()
+            for addr in hits:
+                inst = listing.getInstructionAt(addr)
+                asm = inst.toString() if inst else "(no instruction)"
+                lines.append("%s: %s" % (addr, asm))
+            content = "\n".join(lines)
+    elif func_name == "search_decom":
+        query = args.get("query")
+        if not query:
+            return "Query is required"
+        hits = ghidra.search_decom(query)
+        if not hits:
+            content = "None"
+        else:
+            lines = []
+            for addr in hits:
+                func = ghidra.get_func(addr)
+                if func is not None:
+                    lines.append("%s: %s" % (addr, func.getName()))
+                else:
+                    lines.append(str(addr))
+            content = "\n".join(lines)
     if not content:
         content = "Failed"
     return content
@@ -526,8 +674,12 @@ def main():
             for i in response["choices"][0]["message"]["tool_calls"]:
                 try:
                     content = handle_tool_call(i, ghidra)
-                except Exception as e:
-                    content = "Failed"
+                except (Exception, JException) as e:
+                    msg = str(e)
+                    if msg:
+                        content = "Error: " + msg
+                    else:
+                        content = "Error: " + e.__class__.__name__
                 data["messages"].append({"role": "tool", "tool_call_id": i["id"], "content": content})
         elif response["choices"][0]["finish_reason"] == "stop":
             break
