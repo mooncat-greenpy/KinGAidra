@@ -14,7 +14,7 @@ import asyncio
 from langchain_openai import ChatOpenAI
 from langchain_mcp_adapters.client import MultiServerMCPClient
 from langchain.agents import create_agent
-from langchain_core.messages import convert_to_messages, messages_to_dict
+from langchain_core.messages import convert_to_messages, messages_to_dict as _messages_to_dict
 from langgraph.checkpoint.memory import InMemorySaver
 
 
@@ -91,6 +91,76 @@ def _resolve_kingaidra_mcp_url():
             pass
         return MCP_URL
     return MCP_URL
+
+def _tool_args_to_str(args):
+    if args is None:
+        return ""
+    if isinstance(args, str):
+        return args
+    try:
+        return json.dumps(args, ensure_ascii=False)
+    except Exception:
+        return str(args)
+
+def _normalize_tool_call(call):
+    if not isinstance(call, dict):
+        return call
+    if "function" in call:
+        return call
+    name = call.get("name")
+    args = call.get("args")
+    call_id = call.get("id") or call.get("tool_call_id")
+    return {
+        "id": call_id,
+        "type": "function",
+        "function": {
+            "name": name,
+            "arguments": _tool_args_to_str(args),
+        },
+    }
+
+def _extract_tool_result(data):
+    if not isinstance(data, dict):
+        return ""
+    try:
+        result = data.get("artifact", {}).get("structured_content", {}).get("result")
+        if result:
+            return result
+    except Exception:
+        pass
+    content = data.get("content")
+    if isinstance(content, list):
+        parts = []
+        for item in content:
+            if isinstance(item, dict):
+                text = item.get("text")
+                if text is not None:
+                    parts.append(text)
+            elif isinstance(item, str):
+                parts.append(item)
+        return "".join(parts)
+    if content is None:
+        return ""
+    return str(content)
+
+def messages_to_dict(messages):
+    msgs = _messages_to_dict(messages)
+    for msg in msgs:
+        if not isinstance(msg, dict):
+            continue
+        msg_type = msg.get("type")
+        data = msg.get("data")
+        if msg_type == "ai" and isinstance(data, dict):
+            tool_calls = data.get("tool_calls")
+            if isinstance(tool_calls, list):
+                data["tool_calls"] = [_normalize_tool_call(c) for c in tool_calls]
+            else:
+                additional = data.get("additional_kwargs")
+                if isinstance(additional, dict) and isinstance(additional.get("tool_calls"), list):
+                    additional["tool_calls"] = [_normalize_tool_call(c) for c in additional["tool_calls"]]
+        elif msg_type == "tool" and isinstance(data, dict):
+            data["content"] = _extract_tool_result(data)
+    return msgs
 
 def main():
     data = {
