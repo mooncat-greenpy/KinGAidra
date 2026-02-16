@@ -1,5 +1,6 @@
 package kingaidra.decom.gui;
 
+import java.awt.Color;
 import java.awt.BorderLayout;
 import java.awt.FlowLayout;
 import java.awt.Toolkit;
@@ -16,6 +17,8 @@ import java.util.Map;
 import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 import javax.swing.BoxLayout;
 import javax.swing.DefaultComboBoxModel;
@@ -23,8 +26,16 @@ import javax.swing.JButton;
 import javax.swing.JComboBox;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
+import javax.swing.JTextField;
 import javax.swing.SwingUtilities;
 import javax.swing.SwingWorker;
+import javax.swing.event.DocumentEvent;
+import javax.swing.event.DocumentListener;
+import javax.swing.event.CaretEvent;
+import javax.swing.event.CaretListener;
+import javax.swing.text.BadLocationException;
+import javax.swing.text.DefaultHighlighter;
+import javax.swing.text.Highlighter;
 
 import org.fife.ui.rsyntaxtextarea.RSyntaxTextArea;
 import org.fife.ui.rsyntaxtextarea.SyntaxConstants;
@@ -32,10 +43,12 @@ import org.fife.ui.rtextarea.RTextScrollPane;
 
 import docking.Tool;
 import docking.action.builder.ActionBuilder;
+import ghidra.app.decompiler.DecompilerLocation;
 import ghidra.app.context.ProgramLocationActionContext;
 import ghidra.program.model.address.Address;
 import ghidra.program.model.listing.Function;
 import ghidra.program.model.listing.Program;
+import ghidra.program.model.symbol.Symbol;
 import ghidra.program.util.ProgramLocation;
 import ghidra.framework.plugintool.Plugin;
 import ghidra.framework.plugintool.PluginTool;
@@ -55,6 +68,8 @@ public class LlmDecompileGUI extends JPanel {
             "/* Move the cursor into a function to view LLM decompile output. */";
     private static final String MSG_NO_OUTPUT =
             "/* No LLM output for this function. Run 'Decompile using AI (view)'. */";
+    private static final Pattern IDENTIFIER_PATTERN = Pattern.compile("[A-Za-z_][A-Za-z0-9_]*");
+    private static final int MAX_SYMBOL_TEXT_LENGTH = 256;
     private static final DateTimeFormatter DATE_FORMAT =
             DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
 
@@ -70,12 +85,31 @@ public class LlmDecompileGUI extends JPanel {
     private JLabel info_label;
     private JLabel func_label;
     private JButton regen_btn;
-    private JButton load_btn;
     private JButton copy_btn;
+    private JButton search_prev_btn;
+    private JButton search_next_btn;
     private JComboBox<FunctionSelectionItem> function_selector;
+    private JTextField search_field;
+    private JLabel search_status_label;
     private RSyntaxTextArea code_area;
     private Address current_func_entry;
     private boolean updating_function_selector;
+    private String location_selected_symbol;
+    private String local_selected_symbol;
+    private boolean suppress_code_area_caret_listener;
+    private String search_query;
+    private int search_match_index;
+    private List<SearchMatch> search_matches;
+    private List<Object> symbol_highlight_tags;
+    private List<Object> search_highlight_tags;
+    private Object active_search_highlight_tag;
+
+    private final Highlighter.HighlightPainter symbol_highlight_painter =
+            new DefaultHighlighter.DefaultHighlightPainter(new Color(255, 244, 170));
+    private final Highlighter.HighlightPainter search_highlight_painter =
+            new DefaultHighlighter.DefaultHighlightPainter(new Color(202, 231, 255));
+    private final Highlighter.HighlightPainter active_search_highlight_painter =
+            new DefaultHighlighter.DefaultHighlightPainter(new Color(255, 193, 122));
 
     private boolean busy;
 
@@ -88,6 +122,16 @@ public class LlmDecompileGUI extends JPanel {
             this.entry = entry;
             this.code = code;
             this.updated = updated;
+        }
+    }
+
+    private static class SearchMatch {
+        private int start;
+        private int end;
+
+        SearchMatch(int start, int end) {
+            this.start = start;
+            this.end = end;
         }
     }
 
@@ -124,6 +168,15 @@ public class LlmDecompileGUI extends JPanel {
         this.decompile_updated = new ConcurrentHashMap<>();
         this.current_func_entry = null;
         this.updating_function_selector = false;
+        this.location_selected_symbol = null;
+        this.local_selected_symbol = null;
+        this.suppress_code_area_caret_listener = false;
+        this.search_query = "";
+        this.search_match_index = -1;
+        this.search_matches = new ArrayList<>();
+        this.symbol_highlight_tags = new ArrayList<>();
+        this.search_highlight_tags = new ArrayList<>();
+        this.active_search_highlight_tag = null;
         check_and_set_busy(false);
         setLayout(new BorderLayout());
         build_panel();
@@ -137,14 +190,19 @@ public class LlmDecompileGUI extends JPanel {
 
         JPanel button_panel = new JPanel(new FlowLayout(FlowLayout.LEFT, 4, 4));
         regen_btn = new JButton("Regenerate");
-        load_btn = new JButton("Load Saved");
         copy_btn = new JButton("Copy");
         info_label = new JLabel("");
         func_label = new JLabel("Function: (none)");
         function_selector = new JComboBox<>();
+        search_field = new JTextField(20);
+        search_prev_btn = new JButton("Prev");
+        search_next_btn = new JButton("Next");
+        search_status_label = new JLabel("0/0");
         function_selector.setPrototypeDisplayValue(
                 new FunctionSelectionItem(null, "function_name @ 0x00000000 (yyyy-MM-dd HH:mm:ss)"));
         function_selector.setEnabled(false);
+        search_prev_btn.setEnabled(false);
+        search_next_btn.setEnabled(false);
 
         regen_btn.addActionListener(new ActionListener() {
             @Override
@@ -155,12 +213,6 @@ public class LlmDecompileGUI extends JPanel {
                     return;
                 }
                 run_llm_decompile(func.getEntryPoint());
-            }
-        });
-        load_btn.addActionListener(new ActionListener() {
-            @Override
-            public void actionPerformed(ActionEvent e) {
-                run_load_saved_results();
             }
         });
         copy_btn.addActionListener(new ActionListener() {
@@ -189,8 +241,41 @@ public class LlmDecompileGUI extends JPanel {
                 show_code_for_function(item.get_entry(), false);
             }
         });
+        search_prev_btn.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                move_search_match(-1);
+            }
+        });
+        search_next_btn.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                move_search_match(1);
+            }
+        });
+        search_field.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                move_search_match(1);
+            }
+        });
+        search_field.getDocument().addDocumentListener(new DocumentListener() {
+            @Override
+            public void insertUpdate(DocumentEvent e) {
+                refresh_search_matches(false);
+            }
+
+            @Override
+            public void removeUpdate(DocumentEvent e) {
+                refresh_search_matches(false);
+            }
+
+            @Override
+            public void changedUpdate(DocumentEvent e) {
+                refresh_search_matches(false);
+            }
+        });
         button_panel.add(regen_btn);
-        button_panel.add(load_btn);
         button_panel.add(copy_btn);
         button_panel.add(info_label);
 
@@ -198,8 +283,16 @@ public class LlmDecompileGUI extends JPanel {
         function_selector_panel.add(new JLabel("Saved Function:"));
         function_selector_panel.add(function_selector);
 
+        JPanel search_panel = new JPanel(new FlowLayout(FlowLayout.LEFT, 4, 0));
+        search_panel.add(new JLabel("Search:"));
+        search_panel.add(search_field);
+        search_panel.add(search_prev_btn);
+        search_panel.add(search_next_btn);
+        search_panel.add(search_status_label);
+
         header.add(button_panel);
         header.add(function_selector_panel);
+        header.add(search_panel);
         header.add(func_label);
         add(header, BorderLayout.NORTH);
 
@@ -207,7 +300,13 @@ public class LlmDecompileGUI extends JPanel {
         code_area.setEditable(false);
         code_area.setSyntaxEditingStyle(SyntaxConstants.SYNTAX_STYLE_C);
         code_area.setCodeFoldingEnabled(true);
-        code_area.setText(MSG_NO_FUNCTION);
+        code_area.addCaretListener(new CaretListener() {
+            @Override
+            public void caretUpdate(CaretEvent e) {
+                handle_code_area_caret_change();
+            }
+        });
+        set_code(MSG_NO_FUNCTION);
 
         RTextScrollPane scroll = new RTextScrollPane(code_area);
         add(scroll, BorderLayout.CENTER);
@@ -243,6 +342,7 @@ public class LlmDecompileGUI extends JPanel {
         }
         if (loc == null || loc.getAddress() == null) {
             current_func_entry = null;
+            clear_selected_symbol();
             func_label.setText("Function: (none)");
             set_code(MSG_NO_FUNCTION);
             return;
@@ -250,6 +350,7 @@ public class LlmDecompileGUI extends JPanel {
         Function func = program.getFunctionManager().getFunctionContaining(loc.getAddress());
         if (func == null) {
             current_func_entry = null;
+            clear_selected_symbol();
             func_label.setText("Function: (none)");
             set_code(MSG_NO_FUNCTION);
             return;
@@ -259,6 +360,8 @@ public class LlmDecompileGUI extends JPanel {
         current_func_entry = entry;
         select_function_entry(entry);
         show_code_for_function(entry, true);
+        local_selected_symbol = null;
+        set_location_selected_symbol(resolve_selected_symbol(loc, func));
     }
 
     private Function get_current_function() {
@@ -277,6 +380,7 @@ public class LlmDecompileGUI extends JPanel {
         if (func != null) {
             current_func_entry = func_entry;
             func_label.setText(String.format("Function: %s @ %s", func.getName(), func_entry));
+            set_location_selected_symbol(func.getName());
         }
         if (!check_and_set_busy(true)) {
             logger.append_message("Another process running");
@@ -310,7 +414,6 @@ public class LlmDecompileGUI extends JPanel {
                         show_code_for_function(func_entry, true);
                     }
                     regen_btn.setEnabled(true);
-                    load_btn.setEnabled(true);
                     function_selector.setEnabled(function_selector.getItemCount() > 0);
                     check_and_set_busy(false);
                     validate();
@@ -331,7 +434,6 @@ public class LlmDecompileGUI extends JPanel {
             return;
         }
         regen_btn.setEnabled(false);
-        load_btn.setEnabled(false);
         function_selector.setEnabled(false);
         info_label.setText("Loading ...");
         Address selected_entry = get_selected_function_entry();
@@ -357,7 +459,6 @@ public class LlmDecompileGUI extends JPanel {
                     info_label.setText("Load failed");
                 } finally {
                     regen_btn.setEnabled(true);
-                    load_btn.setEnabled(true);
                     function_selector.setEnabled(function_selector.getItemCount() > 0);
                     check_and_set_busy(false);
                     validate();
@@ -603,8 +704,314 @@ public class LlmDecompileGUI extends JPanel {
     }
 
     private void set_code(String code) {
-        code_area.setText(code == null ? MSG_NO_OUTPUT : code);
-        code_area.setCaretPosition(0);
+        suppress_code_area_caret_listener = true;
+        try {
+            code_area.setText(code == null ? MSG_NO_OUTPUT : code);
+            code_area.setCaretPosition(0);
+        } finally {
+            suppress_code_area_caret_listener = false;
+        }
+        local_selected_symbol = null;
+        apply_symbol_highlight();
+        refresh_search_matches(true);
+    }
+
+    private void clear_selected_symbol() {
+        location_selected_symbol = null;
+        local_selected_symbol = null;
+        apply_symbol_highlight();
+    }
+
+    private void set_location_selected_symbol(String raw_symbol) {
+        location_selected_symbol = normalize_symbol(raw_symbol);
+        apply_symbol_highlight();
+    }
+
+    private String resolve_selected_symbol(ProgramLocation loc, Function func) {
+        if (loc instanceof DecompilerLocation) {
+            DecompilerLocation decom_loc = (DecompilerLocation) loc;
+            String symbol = normalize_symbol(decom_loc.getTokenName());
+            if (symbol != null) {
+                return symbol;
+            }
+        }
+        if (loc != null && loc.getAddress() != null) {
+            Symbol primary = program.getSymbolTable().getPrimarySymbol(loc.getAddress());
+            if (primary != null) {
+                String symbol = normalize_symbol(primary.getName());
+                if (symbol != null) {
+                    return symbol;
+                }
+            }
+        }
+        if (func != null) {
+            return normalize_symbol(func.getName());
+        }
+        return null;
+    }
+
+    private String normalize_symbol(String raw) {
+        if (raw == null) {
+            return null;
+        }
+        String text = raw.trim();
+        if (text.isEmpty()) {
+            return null;
+        }
+        if (text.length() > MAX_SYMBOL_TEXT_LENGTH) {
+            text = text.substring(0, MAX_SYMBOL_TEXT_LENGTH);
+        }
+        if (is_identifier(text)) {
+            return text;
+        }
+
+        Matcher matcher = IDENTIFIER_PATTERN.matcher(text);
+        String best = null;
+        while (matcher.find()) {
+            String candidate = matcher.group();
+            if (candidate == null || candidate.isEmpty()) {
+                continue;
+            }
+            if (best == null || candidate.length() > best.length()) {
+                best = candidate;
+            }
+        }
+        return best;
+    }
+
+    private boolean is_identifier(String value) {
+        if (value == null || value.isEmpty()) {
+            return false;
+        }
+        if (!(Character.isLetter(value.charAt(0)) || value.charAt(0) == '_')) {
+            return false;
+        }
+        for (int i = 1; i < value.length(); i++) {
+            char ch = value.charAt(i);
+            if (!(Character.isLetterOrDigit(ch) || ch == '_')) {
+                return false;
+            }
+        }
+        return true;
+    }
+
+    private void apply_symbol_highlight() {
+        clear_highlight_tags(symbol_highlight_tags);
+        String selected_symbol = local_selected_symbol != null
+                ? local_selected_symbol
+                : location_selected_symbol;
+        if (selected_symbol == null || selected_symbol.isEmpty()) {
+            return;
+        }
+        List<SearchMatch> matches = find_matches(code_area.getText(), selected_symbol, true);
+        add_highlights(matches, symbol_highlight_painter, symbol_highlight_tags);
+    }
+
+    private void handle_code_area_caret_change() {
+        if (suppress_code_area_caret_listener || code_area == null) {
+            return;
+        }
+        local_selected_symbol = resolve_symbol_from_code_area();
+        apply_symbol_highlight();
+    }
+
+    private String resolve_symbol_from_code_area() {
+        String selected_text = code_area.getSelectedText();
+        if (selected_text != null && !selected_text.isEmpty()) {
+            String symbol = normalize_symbol(selected_text);
+            if (symbol != null) {
+                return symbol;
+            }
+        }
+
+        String text = code_area.getText();
+        if (text == null || text.isEmpty()) {
+            return null;
+        }
+        int caret = code_area.getCaretPosition();
+        if (caret < 0) {
+            return null;
+        }
+        if (caret >= text.length()) {
+            caret = text.length() - 1;
+        }
+        if (caret < 0) {
+            return null;
+        }
+
+        if (!is_identifier_char(text.charAt(caret))) {
+            if (caret > 0 && is_identifier_char(text.charAt(caret - 1))) {
+                caret--;
+            } else {
+                return null;
+            }
+        }
+
+        int start = caret;
+        while (start > 0 && is_identifier_char(text.charAt(start - 1))) {
+            start--;
+        }
+        int end = caret + 1;
+        while (end < text.length() && is_identifier_char(text.charAt(end))) {
+            end++;
+        }
+        if (start >= end) {
+            return null;
+        }
+        return normalize_symbol(text.substring(start, end));
+    }
+
+    private void move_search_match(int delta) {
+        boolean query_changed = refresh_search_matches(true);
+        if (search_matches.isEmpty()) {
+            return;
+        }
+        if (!query_changed) {
+            search_match_index = Math.floorMod(search_match_index + delta, search_matches.size());
+            apply_active_search_highlight();
+        }
+    }
+
+    private boolean refresh_search_matches(boolean keep_index) {
+        if (search_field == null) {
+            return false;
+        }
+        String next_query = search_field.getText();
+        if (next_query == null) {
+            next_query = "";
+        }
+        next_query = next_query.trim();
+        boolean query_changed = !next_query.equals(search_query);
+        search_query = next_query;
+
+        int previous_index = search_match_index;
+        search_match_index = -1;
+        clear_highlight_tags(search_highlight_tags);
+        clear_active_search_highlight();
+        search_matches.clear();
+        if (next_query.isEmpty()) {
+            update_search_controls();
+            update_search_status();
+            return query_changed;
+        }
+
+        search_matches.addAll(find_matches(code_area.getText(), next_query, false));
+        add_highlights(search_matches, search_highlight_painter, search_highlight_tags);
+        if (!search_matches.isEmpty()) {
+            if (!query_changed && keep_index && previous_index >= 0
+                    && previous_index < search_matches.size()) {
+                search_match_index = previous_index;
+            } else {
+                search_match_index = 0;
+            }
+            apply_active_search_highlight();
+        }
+        update_search_controls();
+        update_search_status();
+        return query_changed;
+    }
+
+    private void apply_active_search_highlight() {
+        clear_active_search_highlight();
+        if (search_match_index < 0 || search_match_index >= search_matches.size()) {
+            update_search_status();
+            return;
+        }
+        SearchMatch match = search_matches.get(search_match_index);
+        try {
+            active_search_highlight_tag =
+                    code_area.getHighlighter().addHighlight(match.start, match.end,
+                        active_search_highlight_painter);
+            code_area.setCaretPosition(match.start);
+            code_area.moveCaretPosition(match.end);
+        } catch (BadLocationException e) {
+            active_search_highlight_tag = null;
+        }
+        update_search_status();
+    }
+
+    private void clear_active_search_highlight() {
+        if (active_search_highlight_tag == null) {
+            return;
+        }
+        code_area.getHighlighter().removeHighlight(active_search_highlight_tag);
+        active_search_highlight_tag = null;
+    }
+
+    private void update_search_controls() {
+        boolean has_match = !search_matches.isEmpty();
+        search_prev_btn.setEnabled(has_match);
+        search_next_btn.setEnabled(has_match);
+    }
+
+    private void update_search_status() {
+        if (search_status_label == null) {
+            return;
+        }
+        if (search_matches.isEmpty()) {
+            search_status_label.setText("0/0");
+            return;
+        }
+        search_status_label.setText(String.format("%d/%d", search_match_index + 1, search_matches.size()));
+    }
+
+    private List<SearchMatch> find_matches(String text, String needle, boolean word_boundary_only) {
+        List<SearchMatch> matches = new ArrayList<>();
+        if (text == null || text.isEmpty() || needle == null || needle.isEmpty()) {
+            return matches;
+        }
+        int from = 0;
+        while (from <= text.length() - needle.length()) {
+            int start = text.indexOf(needle, from);
+            if (start < 0) {
+                break;
+            }
+            int end = start + needle.length();
+            if (!word_boundary_only || is_identifier_boundary(text, start, end)) {
+                matches.add(new SearchMatch(start, end));
+            }
+            from = start + 1;
+        }
+        return matches;
+    }
+
+    private boolean is_identifier_boundary(String text, int start, int end) {
+        boolean left_ok = start <= 0 || !is_identifier_char(text.charAt(start - 1));
+        boolean right_ok = end >= text.length() || !is_identifier_char(text.charAt(end));
+        return left_ok && right_ok;
+    }
+
+    private boolean is_identifier_char(char ch) {
+        return Character.isLetterOrDigit(ch) || ch == '_';
+    }
+
+    private void add_highlights(List<SearchMatch> matches,
+            Highlighter.HighlightPainter painter, List<Object> dest_tags) {
+        if (matches == null || matches.isEmpty()) {
+            return;
+        }
+        Highlighter highlighter = code_area.getHighlighter();
+        for (SearchMatch match : matches) {
+            try {
+                Object tag = highlighter.addHighlight(match.start, match.end, painter);
+                dest_tags.add(tag);
+            } catch (BadLocationException e) {
+            }
+        }
+    }
+
+    private void clear_highlight_tags(List<Object> tags) {
+        if (tags == null || tags.isEmpty()) {
+            return;
+        }
+        Highlighter highlighter = code_area.getHighlighter();
+        for (Object tag : tags) {
+            if (tag == null) {
+                continue;
+            }
+            highlighter.removeHighlight(tag);
+        }
+        tags.clear();
     }
 
     synchronized private boolean check_and_set_busy(boolean v) {
