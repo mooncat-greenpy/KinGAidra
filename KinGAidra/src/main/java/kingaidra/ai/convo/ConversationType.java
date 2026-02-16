@@ -4,5 +4,6 @@ public enum ConversationType {
     USER_CHAT,
     SYSTEM_COMMENT,
     SYSTEM_DECOM,
+    SYSTEM_DECOMPILE_VIEW,
     SYSTEM_KEYFUNC,
 }

@@ -11,6 +11,7 @@ public class PromptConf {
 
     public static final String PROMPT_GROUP_CHAT = "Chat";
     public static final String PROMPT_GROUP_DECOM = "Decom";
+    public static final String PROMPT_GROUP_DECOM_VIEW = "DecomView";
     public static final String PROMPT_GROUP_KEYFUNC = "KeyFunc";
     public static final String PROMPT_GROUP_OTHER = "Other";
 
@@ -59,6 +60,8 @@ public class PromptConf {
                 return new String[] { PROMPT_GROUP_CHAT, PROMPT_CHAT_GROUP_EXPLAIN_STRINGS_MALWARE };
             case ADD_COMMENTS:
                 return new String[] { PROMPT_GROUP_CHAT, PROMPT_CHAT_GROUP_ADD_COMMENTS_WITH_AI };
+            case DECOMPILE_VIEW:
+                return new String[] { PROMPT_GROUP_DECOM_VIEW };
             case DECOM_REFACTOR_FUNC_PARAM_VAR:
             case REVIEW_DECOM_REFACTOR_FUNC_PARAM_VAR:
             case DECOM_REFACTOR_DATATYPE:
@@ -86,6 +89,8 @@ public class PromptConf {
                 return "1: Action: Explain strings (malware)";
             case ADD_COMMENTS:
                 return "1: Action: Add comments using AI";
+            case DECOMPILE_VIEW:
+                return "1: Action: Decompile using AI (view)";
             case DECOM_REFACTOR_FUNC_PARAM_VAR:
                 return "1: Refactor Names";
             case REVIEW_DECOM_REFACTOR_FUNC_PARAM_VAR:
@@ -117,6 +122,8 @@ public class PromptConf {
                 return "Prompt used by \"Explain strings (malware)\".";
             case ADD_COMMENTS:
                 return "Prompt used by \"Add comments using AI\".";
+            case DECOMPILE_VIEW:
+                return "Prompt used by \"Decompile using AI (view)\".";
             case DECOM_REFACTOR_FUNC_PARAM_VAR:
                 return "Decom prompt for renaming functions, parameters, and variables.";
             case REVIEW_DECOM_REFACTOR_FUNC_PARAM_VAR:
@@ -358,6 +365,16 @@ public class PromptConf {
                 "```cpp\n" +
                 "<code>\n" +
                 "```");
+
+        default_user_prompts.put(TaskType.DECOMPILE_VIEW,
+                "Decompile the target function into equivalent C code.\n" +
+                "Requirements for output:\n" +
+                "1. Add concise, helpful comments so the code is easier to read.\n" +
+                "2. Use related function context, cross-references, and referenced address data.\n" +
+                "3. Resolve likely struct layouts from observed offsets and references when possible.\n" +
+                "4. If uncertainty remains, keep conservative placeholder members but preserve offset consistency.\n" +
+                "Output only C code. Do not include markdown, code fences, or explanations.\n" +
+                "```asm\n<aasm>\n```");
 
         default_user_prompts.put(TaskType.DECOM_RESOLVE_DATATYPE,
                 "Write only the C struct definition for a struct named <datatype_name>. " +

@@ -11,6 +11,7 @@ import docking.action.ToolBarData;
 import docking.ComponentProvider;
 import ghidra.framework.plugintool.Plugin;
 import ghidra.program.model.listing.Program;
+import ghidra.program.util.ProgramLocation;
 import ghidra.util.task.TaskMonitor;
 import kingaidra.KinGAidraPlugin;
 import kingaidra.ai.Ai;
@@ -23,6 +24,7 @@ import kingaidra.ai.model.ModelScriptUpdater;
 import kingaidra.ai.task.KinGAidraChatTaskService;
 import kingaidra.chat.gui.ChatGUI;
 import kingaidra.decom.gui.DecomGUI;
+import kingaidra.decom.gui.LlmDecompileGUI;
 import kingaidra.ghidra.ChatModelPreferences;
 import kingaidra.ghidra.PromptConf;
 import kingaidra.ghidra.GhidraUtil;
@@ -37,6 +39,7 @@ public class MainProvider extends ComponentProvider {
     private JTabbedPane main_panel;
     private ChatGUI chat_panel;
     private DecomGUI decom_panel;
+    private LlmDecompileGUI llm_decom_panel;
     private KeyFuncGUI keyfunc_panel;
     private McpControlGui mcp_control_gui;
 
@@ -65,6 +68,9 @@ public class MainProvider extends ComponentProvider {
         decom_panel = new DecomGUI(this, this.dockingTool, program, plugin, owner, srv, ghidra, refactor_model_conf, conf, ai, logger);
         main_panel.add("Decom", decom_panel);
 
+        llm_decom_panel = new LlmDecompileGUI(this, this.dockingTool, program, plugin, owner, ghidra, container, chat_model_conf, conf, ai, logger);
+        main_panel.add("DecomView", llm_decom_panel);
+
         // Currently considering a feature to identify areas that should be prioritized for analysis in binary analysis
         keyfunc_panel = new KeyFuncGUI(this, this.dockingTool, program, plugin, owner, srv, ghidra, chat_model_conf, conf, ai, logger);
         main_panel.add("KeyFunc", keyfunc_panel);
@@ -91,6 +97,9 @@ public class MainProvider extends ComponentProvider {
         }
         if (decom_panel != null) {
             decom_panel.initActions(this, dockingTool);
+        }
+        if (llm_decom_panel != null) {
+            llm_decom_panel.initActions(this, dockingTool);
         }
         if (chat_panel != null) {
             chat_panel.initActions(this, dockingTool);
@@ -123,5 +132,11 @@ public class MainProvider extends ComponentProvider {
     @Override
     public JComponent getComponent() {
         return main_panel;
+    }
+
+    public void location_changed(ProgramLocation loc) {
+        if (llm_decom_panel != null) {
+            llm_decom_panel.update_location(loc);
+        }
     }
 }

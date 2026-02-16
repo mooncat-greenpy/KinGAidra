@@ -47,6 +47,7 @@ dependencies {
 	implementation 'com.vladsch.flexmark:flexmark-all:0.64.6'
 	implementation 'net.sourceforge.plantuml:plantuml-mit:1.2026.1'
 	implementation 'com.fasterxml.jackson.core:jackson-databind:2.15.2'
+	implementation 'com.fifesoft:rsyntaxtextarea:3.5.4'
 }
 
 test {

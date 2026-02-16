@@ -23,6 +23,7 @@ import kingaidra.ghidra.PromptConf;
 
 import ghidra.framework.options.Options;
 import ghidra.framework.options.OptionType;
+import ghidra.program.util.ProgramLocation;
 
 //@formatter:off
 @PluginInfo(
@@ -39,7 +40,7 @@ import ghidra.framework.options.OptionType;
 public class KinGAidraPlugin extends ProgramPlugin implements KinGAidraChatTaskService {
 
     private static final String NAME = "KinGAidra";
-    private static final String OPTIONS_ROOT = "KingAidra";
+    private static final String OPTIONS_ROOT = "KinGAidra";
 
     private MainProvider provider;
     private Logger logger;
@@ -85,6 +86,13 @@ public class KinGAidraPlugin extends ProgramPlugin implements KinGAidraChatTaskS
         super.programClosed(program);
     }
 
+    @Override
+    protected void locationChanged(ProgramLocation loc) {
+        super.locationChanged(loc);
+        if (provider != null) {
+            provider.location_changed(loc);
+        }
+    }
 
     private Map<String, TaskStatus> status_map;
     private Map<String, TaskType> type_map;
