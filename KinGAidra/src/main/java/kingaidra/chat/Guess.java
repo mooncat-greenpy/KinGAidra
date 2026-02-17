@@ -12,6 +12,7 @@ import kingaidra.ai.convo.ConversationType;
 import kingaidra.ai.model.Model;
 import kingaidra.ai.model.ModelConf;
 import kingaidra.ai.task.TaskType;
+import kingaidra.chat.workflow.ChatWorkflow;
 import kingaidra.decom.extractor.CommentJson;
 import kingaidra.decom.extractor.CommentListJson;
 import kingaidra.decom.extractor.JsonExtractor;
@@ -33,20 +34,23 @@ public class Guess {
         return model_conf;
     }
 
+    private Model get_active_model() {
+        for (String name : model_conf.get_models()) {
+            Model tmp = model_conf.get_model(name);
+            if (tmp != null && tmp.get_active()) {
+                return tmp;
+            }
+        }
+        return null;
+    }
+
     public Conversation guess(TaskType type, Conversation convo, String msg, Address addr) {
         convo = ai.guess(type, convo, msg, addr);
         return convo;
     }
 
     public Conversation guess(TaskType type, String msg, Address addr) {
-        Model m = null;
-        for (String name : model_conf.get_models()) {
-            Model tmp = model_conf.get_model(name);
-            if (tmp.get_active()) {
-                m = tmp;
-                break;
-            }
-        }
+        Model m = get_active_model();
         if (m == null) {
             return null;
         }
@@ -65,17 +69,34 @@ public class Guess {
         return guess(type, convo, msg, addr);
     }
 
+    public Conversation guess_workflow(ChatWorkflow workflow, Address addr) {
+        if (workflow == null || workflow.get_step_prompts().isEmpty()) {
+            return null;
+        }
+
+        Model m = get_active_model();
+        if (m == null) {
+            return null;
+        }
+
+        Conversation convo = new Conversation(ConversationType.USER_CHAT, m);
+        convo.set_model(m);
+        convo.add_system_msg(conf.get_system_prompt(TaskType.CHAT, m.get_name()));
+
+        Conversation result = convo;
+        for (String prompt : workflow.get_step_prompts()) {
+            result = ai.guess(TaskType.CHAT, result, prompt, addr);
+            if (result == null) {
+                return null;
+            }
+        }
+        return result;
+    }
+
     public List<Map.Entry<String, String>> guess_src_code_comments(Address addr) {
         List<Map.Entry<String, String>> comments = new LinkedList<>();
 
-        Model m = null;
-        for (String name : model_conf.get_models()) {
-            Model tmp = model_conf.get_model(name);
-            if (tmp.get_active()) {
-                m = tmp;
-                break;
-            }
-        }
+        Model m = get_active_model();
         if (m == null) {
             return comments;
         }

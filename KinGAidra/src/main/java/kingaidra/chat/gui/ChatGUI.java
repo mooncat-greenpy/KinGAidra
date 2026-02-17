@@ -44,6 +44,7 @@ import kingaidra.ai.model.ModelConf;
 import kingaidra.ai.task.KinGAidraChatTaskService;
 import kingaidra.ai.task.TaskType;
 import kingaidra.chat.Guess;
+import kingaidra.chat.workflow.ChatWorkflow;
 import kingaidra.ghidra.PromptConf;
 import kingaidra.ghidra.GhidraUtil;
 import kingaidra.gui.MainProvider;
@@ -494,6 +495,7 @@ public class ChatGUI extends JPanel {
                 }).popupMenuPath(new String[] {"Add comments using AI"}).popupMenuGroup("KinGAidra")
                 .buildAndInstall(plugin);
 
+        install_workflow_actions(provider);
 
         log_action = new DockingAction("History", provider.getName()) {
             @Override
@@ -511,6 +513,32 @@ public class ChatGUI extends JPanel {
         log_action.setEnabled(true);
         log_action.markHelpUnnecessary();
         dockingTool.addLocalAction(provider, log_action);
+    }
+
+    private void install_workflow_actions(MainProvider provider) {
+        List<ChatWorkflow> workflows = conf.get_workflows();
+        for (int i = 0; i < workflows.size(); i++) {
+            final ChatWorkflow workflow = workflows.get(i);
+            String popup_name = workflow.get_popup_name();
+            if (popup_name == null || popup_name.isEmpty()) {
+                continue;
+            }
+
+            String action_name = String.format("Custom Workflow using AI (%d): %s", i + 1, popup_name);
+            new ActionBuilder(action_name, provider.getName())
+                    .withContext(ProgramLocationActionContext.class)
+                    .enabledWhen(context -> true)
+                    .onAction(context -> {
+                        provider.setVisible(true);
+                        provider.toFront();
+                        provider.change_tab("Chat");
+
+                        reset(null);
+                        guess_workflow(workflow, ghidra.get_current_addr());
+                    }).popupMenuPath(new String[] {"Custom Workflow using AI", popup_name})
+                    .popupMenuGroup("KinGAidra")
+                    .buildAndInstall(plugin);
+        }
     }
 
     synchronized private boolean check_and_set_busy(boolean v) {
@@ -571,6 +599,48 @@ public class ChatGUI extends JPanel {
                     return ggui.run_guess(type, input_area.getText(), addr);
                 }
                 return ggui.run_guess(type, cur_convo, input_area.getText(), addr);
+            }
+
+            @Override
+            protected void done() {
+                try {
+                    cur_convo = get();
+                    build_panel();
+                    info_label.setText(cur_convo == null ? "Failed!" : "Finished!");
+                } catch (Exception e) {
+                    cur_convo = null;
+                     info_label.setText("Failed!");
+                } finally {
+                    restart_btn.setEnabled(true);
+                    submit_btn.setEnabled(true);
+                    delete_btn.setEnabled(true);
+                    check_and_set_busy(false);
+                    validate();
+                    repaint();
+                 }
+             }
+        };
+        worker.execute();
+
+        validate();
+    }
+
+    public void guess_workflow(ChatWorkflow workflow, Address addr) {
+        if (!check_and_set_busy(true)) {
+            logger.append_message("Another process running");
+            return;
+        }
+        restart_btn.setEnabled(false);
+        submit_btn.setEnabled(false);
+        delete_btn.setEnabled(false);
+        info_label.setText("Working ...");
+        SwingWorker<Conversation, Void> worker = new SwingWorker<>() {
+            @Override
+            protected Conversation doInBackground() {
+                if (addr == null) {
+                    return cur_convo;
+                 }
+                return ggui.run_workflow(workflow, addr);
             }
 
             @Override

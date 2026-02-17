@@ -153,6 +153,19 @@ public class KinGAidraPlugin extends ProgramPlugin implements KinGAidraChatTaskS
             () -> new MultiLineStringPropertyEditor()
         );
 
+        Options workflow_options = PromptConf.get_group_options(
+            prompt_root,
+            PromptConf.get_workflow_group_path()
+        );
+        workflow_options.registerOption(
+            PromptConf.OPTION_WORKFLOWS_JSON,
+            OptionType.STRING_TYPE,
+            prompts.get_default_workflows_json_base(),
+            null,
+            PromptConf.WORKFLOWS_DESCRIPTION,
+            () -> new MultiLineStringPropertyEditor()
+        );
+
         for (TaskType task : TaskType.values()) {
             Options group_options = PromptConf.get_group_options(
                 prompt_root,

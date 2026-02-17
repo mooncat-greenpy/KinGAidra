@@ -10,6 +10,7 @@ import ghidra.program.model.address.Address;
 import kingaidra.ai.convo.Conversation;
 import kingaidra.ai.task.TaskType;
 import kingaidra.chat.Guess;
+import kingaidra.chat.workflow.ChatWorkflow;
 import kingaidra.log.Logger;
 
 public class GuessGUI extends JPanel {
@@ -28,6 +29,10 @@ public class GuessGUI extends JPanel {
 
     public Conversation run_guess(TaskType type, Conversation convo, String msg, Address addr) {
         return guess.guess(type, convo, msg, addr);
+    }
+
+    public Conversation run_workflow(ChatWorkflow workflow, Address addr) {
+        return guess.guess_workflow(workflow, addr);
     }
 
     public List<Map.Entry<String, String>> run_guess_src_code_comments(Address addr) {

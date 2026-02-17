@@ -1,10 +1,16 @@
 package kingaidra.ghidra;
 
+import java.util.ArrayList;
 import java.util.EnumMap;
+import java.util.List;
 import java.util.Map;
+
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
 
 import ghidra.framework.options.Options;
 import kingaidra.ai.task.TaskType;
+import kingaidra.chat.workflow.ChatWorkflow;
 
 public class PromptConf {
     public static final String PROMPT_OPTIONS_ROOT = "Prompts";
@@ -21,20 +27,29 @@ public class PromptConf {
     public static final String PROMPT_CHAT_GROUP_DECOMPILE_WITH_AI = "Decompile with AI";
     public static final String PROMPT_CHAT_GROUP_EXPLAIN_STRINGS_MALWARE = "Explain strings (malware)";
     public static final String PROMPT_CHAT_GROUP_ADD_COMMENTS_WITH_AI = "Add comments using AI";
+    public static final String PROMPT_CHAT_GROUP_WORKFLOWS = "Workflows";
 
     public static final String OPTION_SYSTEM_PROMPT = "Default System Prompt";
-
     private static final String DEFAULT_SYSTEM_PROMPT = "You are a malware analysis expert.";
+    public static final String OPTION_WORKFLOWS_JSON = "Action Workflows (JSON)";
+    public static final String WORKFLOWS_DESCRIPTION =
+            "Define popup workflows as JSON array.\n" +
+            "Format: [{\"name\":\"Popup Name\",\"tasks\":[\"Prompt 1\",\"Prompt 2\"]}]\n" +
+            "Each task is a prompt string.";
+
+    private static final String DEFAULT_WORKFLOWS_JSON = "[]";
 
     private final Map<TaskType, String> default_user_prompts = new EnumMap<>(TaskType.class);
     private final Map<TaskType, String> user_prompt_overrides = new EnumMap<>(TaskType.class);
     private final Map<TaskType, String> system_prompt_overrides = new EnumMap<>(TaskType.class);
 
     private String system_prompt;
+    private String workflows_json;
     private Options options;
 
     public PromptConf() {
         system_prompt = DEFAULT_SYSTEM_PROMPT; // "You are a senior reverse-engineer.";
+        workflows_json = DEFAULT_WORKFLOWS_JSON;
         init_default_user_prompts();
     }
 
@@ -44,6 +59,10 @@ public class PromptConf {
 
     public static String get_user_prompt_option_name(TaskType task) {
         return get_user_prompt_label(task);
+    }
+
+    public static String[] get_workflow_group_path() {
+        return new String[] { PROMPT_GROUP_CHAT, PROMPT_CHAT_GROUP_WORKFLOWS };
     }
 
     public static String[] get_user_prompt_group_path(TaskType task) {
@@ -210,6 +229,76 @@ public class PromptConf {
         } else {
             user_prompt_overrides.put(task, system_prompt);
         }
+    }
+
+    public String get_default_workflows_json_base() {
+        return workflows_json;
+    }
+
+    public String get_workflows_json() {
+        if (options != null) {
+            Options prompt_root = options.getOptions(PROMPT_OPTIONS_ROOT);
+            Options group_options = get_group_options(prompt_root, get_workflow_group_path());
+            return group_options.getString(OPTION_WORKFLOWS_JSON, workflows_json);
+        }
+        return workflows_json;
+    }
+
+    public void set_workflows_json(String data) {
+        workflows_json = (data == null) ? "" : data;
+        if (options != null) {
+            Options prompt_root = options.getOptions(PROMPT_OPTIONS_ROOT);
+            Options group_options = get_group_options(prompt_root, get_workflow_group_path());
+            group_options.setString(OPTION_WORKFLOWS_JSON, workflows_json);
+        }
+    }
+
+    public List<ChatWorkflow> get_workflows() {
+        List<ChatWorkflow> workflows = new ArrayList<>();
+        String raw = get_workflows_json();
+        if (raw == null || raw.trim().isEmpty()) {
+            return workflows;
+        }
+
+        try {
+            ObjectMapper mapper = new ObjectMapper();
+            JsonNode root = mapper.readTree(raw);
+            if (root == null || !root.isArray()) {
+                return workflows;
+            }
+
+            for (JsonNode workflow_node : root) {
+                if (workflow_node == null || !workflow_node.isObject()) {
+                    continue;
+                }
+                String popup_name = workflow_node.path("name").asText("").trim();
+                if (popup_name.isEmpty()) {
+                    continue;
+                }
+
+                JsonNode tasks_node = workflow_node.path("tasks");
+                if (tasks_node == null || !tasks_node.isArray()) {
+                    continue;
+                }
+                List<String> tasks = new ArrayList<>();
+                for (JsonNode task_node : tasks_node) {
+                    String prompt = (task_node == null || !task_node.isTextual())
+                            ? "" : task_node.asText("");
+                    if (prompt.trim().isEmpty()) {
+                        continue;
+                    }
+                    tasks.add(prompt);
+                }
+
+                if (tasks.isEmpty()) {
+                    continue;
+                }
+                workflows.add(new ChatWorkflow(popup_name, tasks));
+            }
+        } catch (Exception e) {
+            return new ArrayList<>();
+        }
+        return workflows;
     }
 
     private void init_default_user_prompts() {
