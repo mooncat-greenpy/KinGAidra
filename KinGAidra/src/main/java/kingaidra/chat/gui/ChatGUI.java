@@ -5,6 +5,7 @@ import java.awt.FlowLayout;
 import java.awt.image.BufferedImage;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
@@ -20,6 +21,7 @@ import javax.swing.JPanel;
 import javax.swing.JScrollPane;
 import javax.swing.JTextArea;
 import javax.swing.SwingConstants;
+import javax.swing.SwingUtilities;
 import javax.swing.SwingWorker;
 import javax.swing.border.Border;
 import javax.swing.border.LineBorder;
@@ -31,6 +33,8 @@ import docking.action.DockingAction;
 import docking.action.ToolBarData;
 import docking.action.builder.ActionBuilder;
 import ghidra.app.context.ProgramLocationActionContext;
+import ghidra.framework.options.OptionsChangeListener;
+import ghidra.framework.options.ToolOptions;
 import ghidra.framework.plugintool.Plugin;
 import ghidra.framework.plugintool.PluginTool;
 import ghidra.program.model.address.Address;
@@ -52,6 +56,7 @@ import kingaidra.log.Logger;
 import resources.Icons;
 
 public class ChatGUI extends JPanel {
+    private static final String TOOL_OPTIONS_ROOT = "KinGAidra";
 
     private JTextArea input_area;
     private JButton restart_btn;
@@ -63,6 +68,8 @@ public class ChatGUI extends JPanel {
     private JCheckBox tool_chk;
 
     private DockingAction log_action;
+    private final List<DockingAction> workflow_actions = new ArrayList<>();
+    private OptionsChangeListener workflow_options_listener;
 
     private Program program;
     private PluginTool plugin;
@@ -496,6 +503,7 @@ public class ChatGUI extends JPanel {
                 .buildAndInstall(plugin);
 
         install_workflow_actions(provider);
+        register_workflow_options_listener(provider);
 
         log_action = new DockingAction("History", provider.getName()) {
             @Override
@@ -515,7 +523,32 @@ public class ChatGUI extends JPanel {
         dockingTool.addLocalAction(provider, log_action);
     }
 
+    private void register_workflow_options_listener(MainProvider provider) {
+        if (workflow_options_listener != null) {
+            return;
+        }
+
+        ToolOptions options = plugin.getOptions(TOOL_OPTIONS_ROOT);
+        workflow_options_listener = (changed_options, option_name, old_value, new_value) -> {
+            if (option_name == null ||
+                    !option_name.endsWith(PromptConf.OPTION_WORKFLOWS_JSON)) {
+                return;
+            }
+            SwingUtilities.invokeLater(() -> install_workflow_actions(provider));
+        };
+        options.addOptionsChangeListener(workflow_options_listener);
+    }
+
+    private void clear_workflow_actions() {
+        for (DockingAction action : workflow_actions) {
+            plugin.removeAction(action);
+        }
+        workflow_actions.clear();
+    }
+
     private void install_workflow_actions(MainProvider provider) {
+        clear_workflow_actions();
+
         List<ChatWorkflow> workflows = conf.get_workflows();
         for (int i = 0; i < workflows.size(); i++) {
             final ChatWorkflow workflow = workflows.get(i);
@@ -525,7 +558,7 @@ public class ChatGUI extends JPanel {
             }
 
             String action_name = String.format("Custom Workflow using AI (%d): %s", i + 1, popup_name);
-            new ActionBuilder(action_name, provider.getName())
+            DockingAction action = new ActionBuilder(action_name, provider.getName())
                     .withContext(ProgramLocationActionContext.class)
                     .enabledWhen(context -> true)
                     .onAction(context -> {
@@ -538,6 +571,7 @@ public class ChatGUI extends JPanel {
                     }).popupMenuPath(new String[] {"Custom Workflow using AI", popup_name})
                     .popupMenuGroup("KinGAidra")
                     .buildAndInstall(plugin);
+            workflow_actions.add(action);
         }
     }
 
