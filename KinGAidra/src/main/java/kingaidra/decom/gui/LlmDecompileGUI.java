@@ -7,6 +7,8 @@ import java.awt.Toolkit;
 import java.awt.datatransfer.StringSelection;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.awt.event.MouseAdapter;
+import java.awt.event.MouseEvent;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
@@ -45,6 +47,7 @@ import docking.Tool;
 import docking.action.builder.ActionBuilder;
 import ghidra.app.decompiler.DecompilerLocation;
 import ghidra.app.context.ProgramLocationActionContext;
+import ghidra.app.services.GoToService;
 import ghidra.program.model.address.Address;
 import ghidra.program.model.listing.Function;
 import ghidra.program.model.listing.Program;
@@ -300,6 +303,12 @@ public class LlmDecompileGUI extends JPanel {
         code_area.setEditable(false);
         code_area.setSyntaxEditingStyle(SyntaxConstants.SYNTAX_STYLE_C);
         code_area.setCodeFoldingEnabled(true);
+        code_area.addMouseListener(new MouseAdapter() {
+            @Override
+            public void mouseClicked(MouseEvent e) {
+                handle_code_area_double_click(e);
+            }
+        });
         code_area.addCaretListener(new CaretListener() {
             @Override
             public void caretUpdate(CaretEvent e) {
@@ -813,6 +822,52 @@ public class LlmDecompileGUI extends JPanel {
         }
         local_selected_symbol = resolve_symbol_from_code_area();
         apply_symbol_highlight();
+    }
+
+    private void handle_code_area_double_click(MouseEvent e) {
+        if (e == null || e.getClickCount() != 2 || !SwingUtilities.isLeftMouseButton(e)) {
+            return;
+        }
+        SwingUtilities.invokeLater(new Runnable() {
+            @Override
+            public void run() {
+                String symbol = resolve_symbol_from_code_area();
+                if (symbol == null) {
+                    return;
+                }
+                navigate_to_symbol_function(symbol);
+            }
+        });
+    }
+
+    private void navigate_to_symbol_function(String symbol) {
+        Function func = resolve_function_by_name(symbol);
+        if (func == null || func.getEntryPoint() == null) {
+            return;
+        }
+        GoToService go_to_service = plugin.getService(GoToService.class);
+        if (go_to_service == null) {
+            logger.append_message("GoTo service unavailable");
+            return;
+        }
+        go_to_service.goTo(func.getEntryPoint(), program);
+    }
+
+    private Function resolve_function_by_name(String name) {
+        if (name == null || name.isEmpty()) {
+            return null;
+        }
+        List<Function> funcs = ghidra.get_func(name);
+        if (funcs.isEmpty()) {
+            return null;
+        }
+        Function result = null;
+        for (Function func : funcs) {
+            if (result == null || func.getEntryPoint().compareTo(result.getEntryPoint()) < 0) {
+                result = func;
+            }
+        }
+        return result;
     }
 
     private String resolve_symbol_from_code_area() {
