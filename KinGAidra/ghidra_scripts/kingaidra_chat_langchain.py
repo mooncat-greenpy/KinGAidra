@@ -8,7 +8,10 @@
 
 import kingaidra
 
+import os
 import json
+import threading
+import time
 import asyncio
 
 from langchain_openai import ChatOpenAI
@@ -17,6 +20,7 @@ from langchain.agents import create_agent
 from langchain_core.messages import convert_to_messages, messages_to_dict as _messages_to_dict
 from langgraph.checkpoint.memory import InMemorySaver
 
+import ghidra.util.task.TaskMonitorAdapter as TaskMonitorAdapter
 
 URL = "" # "https://api.openai.com/v1"
 MODEL = ""  # "gpt-5.2"
@@ -26,10 +30,10 @@ TOOLS_FLAG = True
 OPTIONAL_HEADERS = {}
 OPTIONAL_DATA = {}
 
-MCP_URL = "http://localhost:8000/mcp"
-MCP_SERVER_NAME = "ghidra_mcp"
-MCP_TRANSPORT = "http"
-MCP_AUTO = True
+KINGAIDRA_MCP_NAME = "ghidra_mcp"
+KINGAIDRA_MCP_TRANSPORT = "http"
+KINGAIDRA_MCP_AUTO = True
+KINGAIDRA_MCP_AUTO_WAITTIME = 15
 
 def _init_llm():
     model = ChatOpenAI(
@@ -46,16 +50,18 @@ def _init_llm():
     )
     return model
 
-def _init_mcp_tools():
-    mcp_url = _resolve_kingaidra_mcp_url()
-    client = MultiServerMCPClient(
-        {
-            MCP_SERVER_NAME: {
-                "transport": MCP_TRANSPORT,
-                "url": mcp_url,
-            }
-            # ...
+def _init_mcp_tools(kingaidra_mcp_url):
+    connections = {
+        # ...
+    }
+    print("KinGAidra MCP URL:", kingaidra_mcp_url)
+    if kingaidra_mcp_url:
+        connections[KINGAIDRA_MCP_NAME] = {
+            "transport": KINGAIDRA_MCP_TRANSPORT,
+            "url": kingaidra_mcp_url,
         }
+    client = MultiServerMCPClient(
+        connections
     )
     return asyncio.run(client.get_tools())
 
@@ -79,18 +85,16 @@ def _hash_identity(value):
     return hashlib.sha1(raw).hexdigest()
 
 def _resolve_kingaidra_mcp_url():
-    if MCP_AUTO:
-        try:
-            import java.lang.System as JavaSystem
-            prop = JavaSystem.getProperty(
-                "kingaidra.mcp.url.%s" % _hash_identity(_get_program_identity())
-            )
-            if prop:
-                return prop
-        except Exception:
-            pass
-        return MCP_URL
-    return MCP_URL
+    try:
+        import java.lang.System as JavaSystem
+        prop = JavaSystem.getProperty(
+            "kingaidra.mcp.url.%s" % _hash_identity(_get_program_identity())
+        )
+        if prop:
+            return prop
+    except Exception:
+        pass
+    return None
 
 def _tool_args_to_str(args):
     if args is None:
@@ -162,6 +166,10 @@ def messages_to_dict(messages):
             data["content"] = _extract_tool_result(data)
     return msgs
 
+def run_mcp(monitor):
+    ghidra = kingaidra.ghidra.GhidraUtilImpl(currentProgram, monitor)
+    ghidra.run_script("kingaidra_mcp.py", monitor)
+
 def main():
     data = {
         "messages": []
@@ -179,8 +187,16 @@ def main():
 
 
     tools = []
+    t = None
     if TOOLS_FLAG:
-        tools = _init_mcp_tools()
+        kingaidra_mcp_url = _resolve_kingaidra_mcp_url()
+        if KINGAIDRA_MCP_AUTO and kingaidra_mcp_url is None:
+            monitor = TaskMonitorAdapter(True)
+            t = threading.Thread(target=run_mcp, args=(monitor,))
+            t.start()
+            time.sleep(KINGAIDRA_MCP_AUTO_WAITTIME)
+            kingaidra_mcp_url = _resolve_kingaidra_mcp_url()
+        tools = _init_mcp_tools(kingaidra_mcp_url)
     model = _init_llm()
 
     import httpx
@@ -202,6 +218,9 @@ def main():
     state.addEnvironmentVar("RESPONSE", result)
     state.addEnvironmentVar("MESSAGES_OUT", json.dumps(messages_to_dict(resp["messages"]), default=str))
 
+    if t:
+        monitor.cancel()
+        t.join()
 
 if __name__ == "__main__":
     main()
