@@ -432,7 +432,7 @@ public class kingaidra_auto extends GhidraScript {
         chat_guess = new kingaidra.chat.Guess(ai, chat_model_conf, conf);
 
         decom_guess = new kingaidra.decom.Guess(ghidra, ai, chat_model_conf, conf);
-        refactor = new kingaidra.decom.Refactor(ghidra, ai, new java.util.function.Function<String, String>() {
+        refactor = new kingaidra.decom.Refactor(ghidra, ai, conf, new java.util.function.Function<String, String>() {
             @Override
             public String apply(String msg) {
                 return msg;
