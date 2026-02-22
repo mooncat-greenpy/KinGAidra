@@ -293,7 +293,13 @@ public class PromptConf {
                 if (tasks.isEmpty()) {
                     continue;
                 }
-                workflows.add(new ChatWorkflow(popup_name, tasks));
+                String workflow_system_prompt = "";
+                JsonNode system_prompt_node = workflow_node.get("system_prompt");
+                if (system_prompt_node != null && system_prompt_node.isTextual()) {
+                    workflow_system_prompt = system_prompt_node.asText("").trim();
+                }
+
+                workflows.add(new ChatWorkflow(popup_name, tasks, workflow_system_prompt));
             }
         } catch (Exception e) {
             return new ArrayList<>();
