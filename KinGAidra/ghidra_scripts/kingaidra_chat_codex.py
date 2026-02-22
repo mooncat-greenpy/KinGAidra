@@ -221,7 +221,6 @@ def main():
         task_type == kingaidra.ai.task.TaskType.CHAT_EXPLAIN_STRINGS.toString() or
         task_type == kingaidra.ai.task.TaskType.ADD_COMMENTS.toString()):
         messages[-1]["content"] += "\n\n" + POST_MSG
-    prompt = messages[-1]["content"]
 
     CodexCLI = _load_codex_cli()
     prev_session_id = _find_latest_session_id(messages)
@@ -242,12 +241,18 @@ def main():
         if prev_session_id:
             result = cli.resume(
                 session_id=prev_session_id,
-                prompt=prompt,
+                prompt=messages[-1]["content"],
                 extra_args=_resume_extra_args(extra_args),
             )
             if result.returncode != 0:
                 raise RuntimeError(_result_error_text(result))
         else:
+            prompt = ""
+            if len(messages) == 1:
+                prompt = messages[-1]["content"]
+            else:
+                for msg in messages:
+                    prompt += msg["role"] + ": " + msg["content"] + "\n"
             result = cli.instruct(prompt, extra_args=extra_args)
             if result.returncode != 0:
                 raise RuntimeError(_result_error_text(result))
