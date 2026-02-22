@@ -22,10 +22,10 @@ from langgraph.checkpoint.memory import InMemorySaver
 
 import ghidra.util.task.TaskMonitorAdapter as TaskMonitorAdapter
 
-URL = "" # "https://api.openai.com/v1"
-MODEL = ""  # "gpt-5.2"
-API_KEY = ""
-POST_MSG = ""  # "Please respond in XXXX."
+URL = "https://api.openai.com/v1" # e.g. "http://localhost:8000/v1"
+MODEL = "gpt-5.2" # e.g. "gpt-oss:120b"
+API_KEY = os.environ.get("OPENAI_API_KEY", "")
+POST_MSG = ""  # e.g. "Please respond in XXXX."
 TOOLS_FLAG = True
 OPTIONAL_HEADERS = {}
 OPTIONAL_DATA = {}
