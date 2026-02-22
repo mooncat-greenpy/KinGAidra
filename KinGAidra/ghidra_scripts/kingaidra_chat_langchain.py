@@ -61,7 +61,8 @@ def _init_mcp_tools(kingaidra_mcp_url):
             "url": kingaidra_mcp_url,
         }
     client = MultiServerMCPClient(
-        connections
+        connections,
+        tool_name_prefix=True,
     )
     return asyncio.run(client.get_tools())
 

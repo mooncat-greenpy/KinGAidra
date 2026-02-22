@@ -63,6 +63,7 @@ def _is_valid_hex_string(hex_str):
             return False
     return True
 
+KINGAIDRA_MCP_NAME = "ghidra_mcp"
 def add_tools(data):
     data["tools"] = [
         {
@@ -419,10 +420,15 @@ def add_tools(data):
             }
         },
     ]
+    for tool in data["tools"]:
+        func = tool.get("function")
+        name = func.get("name")
+        func["name"] = KINGAIDRA_MCP_NAME + "_" + name
 
 def handle_tool_call(tool_call, ghidra):
-    func_name = tool_call["function"]["name"]
+    func_name = tool_call["function"]["name"][len(KINGAIDRA_MCP_NAME + "_"):]
     args = json.loads(tool_call["function"]["arguments"])
+    content = ""
     if func_name == "get_current_address":
         content = "%#x" % (ghidra.get_current_addr().getOffset())
     elif func_name == "get_function_address_by_name":
