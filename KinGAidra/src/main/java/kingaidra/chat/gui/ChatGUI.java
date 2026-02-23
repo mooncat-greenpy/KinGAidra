@@ -5,9 +5,12 @@ import java.awt.FlowLayout;
 import java.awt.image.BufferedImage;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.awt.event.MouseAdapter;
+import java.awt.event.MouseEvent;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import java.util.regex.Pattern;
 
 import javax.swing.BoxLayout;
 import javax.swing.JButton;
@@ -25,10 +28,12 @@ import javax.swing.SwingUtilities;
 import javax.swing.SwingWorker;
 import javax.swing.border.Border;
 import javax.swing.border.LineBorder;
+import javax.swing.text.BadLocationException;
 
 import docking.ActionContext;
 import docking.ComponentProvider;
 import docking.Tool;
+import ghidra.app.services.GoToService;
 import docking.action.DockingAction;
 import docking.action.ToolBarData;
 import docking.action.builder.ActionBuilder;
@@ -38,6 +43,7 @@ import ghidra.framework.options.ToolOptions;
 import ghidra.framework.plugintool.Plugin;
 import ghidra.framework.plugintool.PluginTool;
 import ghidra.program.model.address.Address;
+import ghidra.program.model.listing.Function;
 import ghidra.program.model.listing.Program;
 import kingaidra.ai.Ai;
 import kingaidra.ai.convo.Conversation;
@@ -58,6 +64,8 @@ import resources.Icons;
 
 public class ChatGUI extends JPanel {
     private static final String TOOL_OPTIONS_ROOT = "KinGAidra";
+    private static final Pattern ADDRESS_TOKEN_PATTERN = Pattern.compile("(?i)0x[0-9a-f]+");
+    private static final Pattern IDENTIFIER_TOKEN_PATTERN = Pattern.compile("[A-Za-z_][A-Za-z0-9_]*");
 
     private JTextArea input_area;
     private JButton restart_btn;
@@ -131,7 +139,119 @@ public class ChatGUI extends JPanel {
         edit_panel.setContentType("text/html");
         edit_panel.setText("<html><body>" + md_html_renderer.render(markdown) + "</body></html>");
         edit_panel.setEditable(false);
+        install_markdown_navigation(edit_panel);
         return edit_panel;
+    }
+
+    private void install_markdown_navigation(JEditorPane edit_panel) {
+        edit_panel.addMouseListener(new MouseAdapter() {
+            @Override
+            public void mouseClicked(MouseEvent e) {
+                if (e.getClickCount() != 1 || !SwingUtilities.isLeftMouseButton(e)) {
+                    return;
+                }
+                int pos = edit_panel.viewToModel2D(e.getPoint());
+                String token = resolve_click_token(edit_panel, pos);
+                if (token == null) {
+                    return;
+                }
+                if (is_address_token(token)) {
+                    navigate_to_address_token(token);
+                    return;
+                }
+                if (is_identifier_token(token)) {
+                    navigate_to_symbol_function(token);
+                }
+            }
+        });
+    }
+
+    private String resolve_click_token(JEditorPane edit_panel, int pos) {
+        try {
+            int len = edit_panel.getDocument().getLength();
+            if (pos >= len) {
+                pos = len - 1;
+            }
+            String text = edit_panel.getDocument().getText(0, len);
+            if (text.isEmpty()) {
+                return null;
+            }
+            if (!is_token_char(text.charAt(pos))) {
+                if (pos > 0 && is_token_char(text.charAt(pos - 1))) {
+                    pos--;
+                } else {
+                    return null;
+                }
+            }
+            int start = pos;
+            while (start > 0 && is_token_char(text.charAt(start - 1))) {
+                start--;
+            }
+            int end = pos + 1;
+            while (end < text.length() && is_token_char(text.charAt(end))) {
+                end++;
+            }
+            return text.substring(start, end);
+        } catch (BadLocationException ex) {
+            return null;
+        }
+    }
+
+    private boolean is_token_char(char ch) {
+        return Character.isLetterOrDigit(ch) || ch == '_';
+    }
+
+    private boolean is_address_token(String token) {
+        return ADDRESS_TOKEN_PATTERN.matcher(token).matches();
+    }
+
+    private boolean is_identifier_token(String token) {
+        return IDENTIFIER_TOKEN_PATTERN.matcher(token).matches();
+    }
+
+    private void navigate_to_address_token(String token) {
+        if (token.length() < 3) {
+            return;
+        }
+        Address addr;
+        try {
+            long addr_value = Long.parseUnsignedLong(token.substring(2), 16);
+            addr = ghidra.get_addr(addr_value);
+        } catch (NumberFormatException ex) {
+            return;
+        }
+        if (addr == null) {
+            return;
+        }
+        navigate_to_address(addr);
+    }
+
+    private void navigate_to_symbol_function(String symbol) {
+        Function func = resolve_function_by_name(symbol);
+        if (func == null) {
+            return;
+        }
+        navigate_to_address(func.getEntryPoint());
+    }
+
+    private Function resolve_function_by_name(String name) {
+        if (name.isEmpty()) {
+            return null;
+        }
+        List<Function> funcs = ghidra.get_func(name);
+        if (funcs.isEmpty()) {
+            return null;
+        }
+        return funcs.get(0);
+    }
+
+    private void navigate_to_address(Address addr) {
+        GoToService go_to_service = plugin.getService(GoToService.class);
+        if (go_to_service == null) {
+            logger.append_message("GoTo service unavailable");
+            return;
+        }
+        go_to_service.goTo(addr, program);
     }
 
     private String escape_html(String src) {
