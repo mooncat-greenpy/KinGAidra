@@ -88,10 +88,12 @@ public class LlmDecompileGUI extends JPanel {
     private JLabel info_label;
     private JLabel func_label;
     private JButton regen_btn;
+    private JButton instruction_btn;
     private JButton copy_btn;
     private JButton search_prev_btn;
     private JButton search_next_btn;
     private JComboBox<FunctionSelectionItem> function_selector;
+    private JTextField instruction_field;
     private JTextField search_field;
     private JLabel search_status_label;
     private RSyntaxTextArea code_area;
@@ -193,10 +195,12 @@ public class LlmDecompileGUI extends JPanel {
 
         JPanel button_panel = new JPanel(new FlowLayout(FlowLayout.LEFT, 4, 4));
         regen_btn = new JButton("Regenerate");
+        instruction_btn = new JButton("Apply Instruction");
         copy_btn = new JButton("Copy");
         info_label = new JLabel("");
         func_label = new JLabel("Function: (none)");
         function_selector = new JComboBox<>();
+        instruction_field = new JTextField(48);
         search_field = new JTextField(20);
         search_prev_btn = new JButton("Prev");
         search_next_btn = new JButton("Next");
@@ -216,6 +220,12 @@ public class LlmDecompileGUI extends JPanel {
                     return;
                 }
                 run_llm_decompile(func.getEntryPoint());
+            }
+        });
+        instruction_btn.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                run_llm_decompile_with_instruction();
             }
         });
         copy_btn.addActionListener(new ActionListener() {
@@ -262,6 +272,12 @@ public class LlmDecompileGUI extends JPanel {
                 move_search_match(1);
             }
         });
+        instruction_field.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                run_llm_decompile_with_instruction();
+            }
+        });
         search_field.getDocument().addDocumentListener(new DocumentListener() {
             @Override
             public void insertUpdate(DocumentEvent e) {
@@ -282,6 +298,11 @@ public class LlmDecompileGUI extends JPanel {
         button_panel.add(copy_btn);
         button_panel.add(info_label);
 
+        JPanel instruction_panel = new JPanel(new FlowLayout(FlowLayout.LEFT, 4, 0));
+        instruction_panel.add(new JLabel("Instruction:"));
+        instruction_panel.add(instruction_field);
+        instruction_panel.add(instruction_btn);
+
         JPanel function_selector_panel = new JPanel(new FlowLayout(FlowLayout.LEFT, 4, 0));
         function_selector_panel.add(new JLabel("Saved Function:"));
         function_selector_panel.add(function_selector);
@@ -294,6 +315,7 @@ public class LlmDecompileGUI extends JPanel {
         search_panel.add(search_status_label);
 
         header.add(button_panel);
+        header.add(instruction_panel);
         header.add(function_selector_panel);
         header.add(search_panel);
         header.add(func_label);
@@ -381,7 +403,34 @@ public class LlmDecompileGUI extends JPanel {
         return program.getFunctionManager().getFunctionContaining(addr);
     }
 
+    private void run_llm_decompile_with_instruction() {
+        String instruction = instruction_field.getText();
+        if (instruction.trim().isEmpty()) {
+            info_label.setText("Instruction is empty");
+            return;
+        }
+        Address func_entry = get_selected_function_entry();
+        if (func_entry == null) {
+            func_entry = current_func_entry;
+        }
+        if (func_entry == null) {
+            logger.append_message("Function not selected");
+            info_label.setText("Function not selected");
+            return;
+        }
+        String current_code = decompile_results.get(func_entry);
+        if (current_code == null || current_code.trim().isEmpty()) {
+            info_label.setText("No existing output");
+            return;
+        }
+        run_llm_decompile(func_entry, instruction.trim(), current_code);
+    }
+
     private void run_llm_decompile(Address func_entry) {
+        run_llm_decompile(func_entry, null, null);
+    }
+
+    private void run_llm_decompile(Address func_entry, String instruction, String current_code) {
         if (func_entry == null) {
             return;
         }
@@ -396,12 +445,19 @@ public class LlmDecompileGUI extends JPanel {
             return;
         }
         regen_btn.setEnabled(false);
+        instruction_btn.setEnabled(false);
+        instruction_field.setEnabled(false);
         info_label.setText("Working ...");
+        final String instruction_text = instruction;
+        final String base_code = current_code;
 
         SwingWorker<String, Void> worker = new SwingWorker<>() {
             @Override
             protected String doInBackground() {
-                return llm_decompile.guess(func_entry);
+                if (instruction_text == null || instruction_text.isEmpty()) {
+                    return llm_decompile.guess(func_entry);
+                }
+                return llm_decompile.guess(func_entry, instruction_text, base_code);
             }
 
             @Override
@@ -412,6 +468,9 @@ public class LlmDecompileGUI extends JPanel {
                         decompile_results.put(func_entry, code);
                         decompile_updated.put(func_entry, LocalDateTime.now().format(DATE_FORMAT));
                         refresh_function_selector(func_entry);
+                        if (instruction_text != null && !instruction_text.isEmpty()) {
+                            instruction_field.setText("");
+                        }
                         info_label.setText("Finished!");
                     } else {
                         info_label.setText("Failed!");
@@ -423,6 +482,8 @@ public class LlmDecompileGUI extends JPanel {
                         show_code_for_function(func_entry, true);
                     }
                     regen_btn.setEnabled(true);
+                    instruction_btn.setEnabled(true);
+                    instruction_field.setEnabled(true);
                     function_selector.setEnabled(function_selector.getItemCount() > 0);
                     check_and_set_busy(false);
                     validate();
@@ -443,6 +504,8 @@ public class LlmDecompileGUI extends JPanel {
             return;
         }
         regen_btn.setEnabled(false);
+        instruction_btn.setEnabled(false);
+        instruction_field.setEnabled(false);
         function_selector.setEnabled(false);
         info_label.setText("Loading ...");
         Address selected_entry = get_selected_function_entry();
@@ -468,6 +531,8 @@ public class LlmDecompileGUI extends JPanel {
                     info_label.setText("Load failed");
                 } finally {
                     regen_btn.setEnabled(true);
+                    instruction_btn.setEnabled(true);
+                    instruction_field.setEnabled(true);
                     function_selector.setEnabled(function_selector.getItemCount() > 0);
                     check_and_set_busy(false);
                     validate();

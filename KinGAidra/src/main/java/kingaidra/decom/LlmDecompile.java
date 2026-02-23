@@ -37,6 +37,10 @@ public class LlmDecompile {
     }
 
     public String guess(Address addr) {
+        return guess(addr, null, null);
+    }
+
+    public String guess(Address addr, String additional_instruction, String current_code) {
         if (addr == null) {
             return null;
         }
@@ -49,7 +53,7 @@ public class LlmDecompile {
         Conversation convo = new Conversation(ConversationType.SYSTEM_DECOMPILE_VIEW, model);
         convo.set_model(model);
         convo.add_system_msg(conf.get_system_prompt(task, model.get_name()));
-        String msg = build_decompile_prompt(model, addr);
+        String msg = build_decompile_prompt(model, addr, additional_instruction, current_code);
         convo = ai.guess(task, convo, msg, addr);
         if (convo == null || convo.get_msgs_len() <= 0) {
             return null;
@@ -67,6 +71,20 @@ public class LlmDecompile {
             }
         }
         return null;
+    }
+
+    private String build_decompile_prompt(Model model, Address addr, String additional_instruction, String current_code) {
+        String base_prompt = build_decompile_prompt(model, addr);
+        if (is_blank(additional_instruction) && is_blank(current_code)) {
+            return base_prompt;
+        }
+        String instruction_prompt = conf.get_user_prompt(TaskType.DECOMPILE_VIEW_INSTRUCTION, model.get_name());
+        if (is_blank(instruction_prompt)) {
+            return base_prompt;
+        }
+        return base_prompt + "\n\n" + instruction_prompt
+                .replace("<current_c_code>", is_blank(current_code) ? "" : current_code.trim())
+                .replace("<instruction>", is_blank(additional_instruction) ? "" : additional_instruction.trim());
     }
 
     private String build_decompile_prompt(Model model, Address addr) {
@@ -153,6 +171,10 @@ public class LlmDecompile {
             sb.append("\n- ...");
         }
         return sb.toString();
+    }
+
+    private boolean is_blank(String text) {
+        return text == null || text.trim().isEmpty();
     }
 
     public static String normalize_code(String code) {

@@ -147,6 +147,7 @@ public class PromptConf {
             case ADD_COMMENTS:
                 return new String[] { PROMPT_GROUP_CHAT, PROMPT_CHAT_GROUP_ADD_COMMENTS_WITH_AI };
             case DECOMPILE_VIEW:
+            case DECOMPILE_VIEW_INSTRUCTION:
                 return new String[] { PROMPT_GROUP_DECOM_VIEW };
             case DECOM_REFACTOR_FUNC_PARAM_VAR:
             case REVIEW_DECOM_REFACTOR_FUNC_PARAM_VAR:
@@ -177,6 +178,8 @@ public class PromptConf {
                 return "1: Action: Add comments using AI";
             case DECOMPILE_VIEW:
                 return "1: Action: Decompile using AI (view)";
+            case DECOMPILE_VIEW_INSTRUCTION:
+                return "2: Action: Apply instruction (view)";
             case DECOM_REFACTOR_FUNC_PARAM_VAR:
                 return "1: Refactor Names";
             case REVIEW_DECOM_REFACTOR_FUNC_PARAM_VAR:
@@ -210,6 +213,8 @@ public class PromptConf {
                 return "Prompt used by \"Add comments using AI\".";
             case DECOMPILE_VIEW:
                 return "Prompt used by \"Decompile using AI (view)\".";
+            case DECOMPILE_VIEW_INSTRUCTION:
+                return "Prompt used when applying additional instructions to existing DecomView output.";
             case DECOM_REFACTOR_FUNC_PARAM_VAR:
                 return "Decom prompt for renaming functions, parameters, and variables.";
             case REVIEW_DECOM_REFACTOR_FUNC_PARAM_VAR:
@@ -537,6 +542,21 @@ public class PromptConf {
                 "4. If uncertainty remains, keep conservative placeholder members but preserve offset consistency.\n" +
                 "Output only C code. Do not include markdown, code fences, or explanations.\n" +
                 "```asm\n<aasm>\n```");
+
+        default_user_prompts.put(TaskType.DECOMPILE_VIEW_INSTRUCTION,
+                "Revise the previously generated C code for the same target function.\n" +
+                "Use the existing C code as the base, and apply the additional instructions.\n" +
+                "Preserve behavior unless the instruction explicitly asks to change behavior.\n" +
+                "If instructions conflict with the provided context, prioritize assembly/context consistency.\n" +
+                "Output only C code. Do not include markdown, code fences, or explanations.\n" +
+                "\n" +
+                "# Existing C code\n" +
+                "```c\n" +
+                "<current_c_code>\n" +
+                "```\n" +
+                "\n" +
+                "# Additional instructions\n" +
+                "<instruction>");
 
         default_user_prompts.put(TaskType.DECOM_RESOLVE_DATATYPE,
                 "Write only the C struct definition for a struct named <datatype_name>. " +
