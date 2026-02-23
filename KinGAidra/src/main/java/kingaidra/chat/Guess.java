@@ -55,7 +55,7 @@ public class Guess {
             return null;
         }
         Conversation convo = new Conversation(ConversationType.USER_CHAT, m);
-        convo.set_model(m);
+        convo.add_system_msg(conf.get_system_prompt(type, m.get_name()));
 
         if (type == TaskType.CHAT_EXPLAIN_DECOM) {
             return ai.guess_explain_decom(m, addr);
