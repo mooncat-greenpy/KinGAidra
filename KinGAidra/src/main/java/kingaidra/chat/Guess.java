@@ -80,7 +80,6 @@ public class Guess {
         }
 
         Conversation convo = new Conversation(ConversationType.USER_CHAT, m);
-        convo.set_model(m);
         String workflow_system_prompt = workflow.get_system_prompt();
         if (workflow_system_prompt.isEmpty()) {
             workflow_system_prompt = conf.get_system_prompt(TaskType.CHAT, m.get_name());

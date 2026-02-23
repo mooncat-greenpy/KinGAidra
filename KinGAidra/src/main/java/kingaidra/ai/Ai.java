@@ -279,7 +279,6 @@ public class Ai {
     public Conversation guess_explain_decom(Model m, Address addr) {
         TaskType task = TaskType.CHAT_EXPLAIN_DECOM;
         Conversation convo = new Conversation(ConversationType.USER_CHAT, m);
-        convo.set_model(m);
         convo.add_system_msg(conf.get_system_prompt(task, m.get_name()));
         String msg = conf.get_user_prompt(task, m.get_name());
         return guess(task, convo, msg, addr);
@@ -288,7 +287,6 @@ public class Ai {
     public Conversation guess_explain_asm(Model m, Address addr) {
         TaskType task = TaskType.CHAT_EXPLAIN_ASM;
         Conversation convo = new Conversation(ConversationType.USER_CHAT, m);
-        convo.set_model(m);
         convo.add_system_msg(conf.get_system_prompt(task, m.get_name()));
         String msg = conf.get_user_prompt(task, m.get_name());
         return guess(task, convo, msg, addr);
@@ -297,7 +295,6 @@ public class Ai {
     public Conversation guess_decom_asm(Model m, Address addr) {
         TaskType task = TaskType.CHAT_DECOM_ASM;
         Conversation convo = new Conversation(ConversationType.USER_CHAT, m);
-        convo.set_model(m);
         convo.add_system_msg(conf.get_system_prompt(task, m.get_name()));
         String msg = conf.get_user_prompt(task, m.get_name());
         return guess(task, convo, msg, addr);
@@ -306,7 +303,6 @@ public class Ai {
     public Conversation guess_explain_strings(Model m, Address addr) {
         TaskType task = TaskType.CHAT_EXPLAIN_STRINGS;
         Conversation convo = new Conversation(ConversationType.USER_CHAT, m);
-        convo.set_model(m);
         convo.add_system_msg(conf.get_system_prompt(task, m.get_name()));
         String msg = conf.get_user_prompt(task, m.get_name());
         return guess(task, convo, msg, addr);

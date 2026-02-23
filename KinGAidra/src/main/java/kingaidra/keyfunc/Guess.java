@@ -118,7 +118,6 @@ public class Guess {
         }
         TaskType task = TaskType.KEYFUNC_CALLTREE;
         Conversation convo = new Conversation(ConversationType.SYSTEM_KEYFUNC, m);
-        convo.set_model(m);
         convo.add_system_msg(conf.get_system_prompt(task, m.get_name()));
         convo = guess(convo, call_tree, addr);
         if (convo == null) {

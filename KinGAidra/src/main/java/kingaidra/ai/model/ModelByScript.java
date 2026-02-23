@@ -78,8 +78,6 @@ public class ModelByScript implements Model, Serializable {
         Random rand = new Random();
         String key = String.format("%x", rand.nextLong());
 
-        convo.set_model(this);
-
         ResourceFile file = GhidraScriptUtil.findScriptByName(script_file);
         if (file == null) {
             logger.append_message(String.format("Failed to get script \"%s\"", script_file));

@@ -23,7 +23,7 @@ public class Conversation implements Serializable {
 
     private final UUID uuid;
     private ConversationType type;
-    private Model model;
+    private final Model model;
     private String created;
     private String updated;
     private List<Message> messages;
@@ -67,10 +67,6 @@ public class Conversation implements Serializable {
 
     public Model get_model() {
         return model;
-    }
-
-    public void set_model(Model model) {
-        this.model = model;
     }
 
     public String get_created() {

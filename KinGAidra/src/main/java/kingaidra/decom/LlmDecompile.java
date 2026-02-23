@@ -51,7 +51,6 @@ public class LlmDecompile {
 
         TaskType task = TaskType.DECOMPILE_VIEW;
         Conversation convo = new Conversation(ConversationType.SYSTEM_DECOMPILE_VIEW, model);
-        convo.set_model(model);
         convo.add_system_msg(conf.get_system_prompt(task, model.get_name()));
         String msg = build_decompile_prompt(model, addr, additional_instruction, current_code);
         convo = ai.guess(task, convo, msg, addr);
