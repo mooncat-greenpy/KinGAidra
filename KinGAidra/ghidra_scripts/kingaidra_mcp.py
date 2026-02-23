@@ -17,9 +17,11 @@ from mcp.server.fastmcp import FastMCP
 
 import kingaidra
 import ghidra.util.task.TaskMonitor as TaskMonitor
+import ghidra.program.model.data.DataTypeWriter as DataTypeWriter
 
 import java.util.AbstractMap as AbstractMap
 import java.util.LinkedList as LinkedList
+import java.io.StringWriter as StringWriter
 
 import logging
 logging.disable(logging.CRITICAL)
@@ -88,6 +90,31 @@ def _parse_port(value):
     if port <= 0 or port > 65535:
         return None
     return port
+
+def _datatype_name(dt) -> str:
+    name = dt.getDisplayName()
+    if name:
+        return name
+    return dt.getName()
+
+def _datatype_to_c_text(dt) -> str:
+    writer = StringWriter()
+    dt_writer = DataTypeWriter(currentProgram.getDataTypeManager(), writer)
+    dt_list = LinkedList()
+    dt_list.add(dt)
+    dt_writer.write(dt_list, TaskMonitor.DUMMY)
+    return writer.toString().strip()
+
+def _find_datatype(ghidra, datatype_name: str):
+    dt_list = LinkedList()
+    ghidra.find_datatypes(datatype_name, dt_list)
+    if dt_list.isEmpty():
+        return None
+
+    for dt in dt_list:
+        if dt.getName() == datatype_name or dt.getDisplayName() == datatype_name:
+            return dt
+    return dt_list.get(0)
 
 def _reserve_socket(host):
     for candidate in [host, DEFAULT_HOST]:
@@ -483,6 +510,28 @@ def build_server(binary_id: str) -> FastMCP:
             return [str(a) for a in hits] if hits else []
         except Exception:
             return ["Failed"]
+
+    @mcp.tool()
+    def get_datatype(datatype_name: str) -> str:
+        """Retrieve a datatype definition in C syntax by datatype name."""
+        dt = _find_datatype(ghidra, datatype_name)
+        if dt is None:
+            return "None"
+        return _datatype_to_c_text(dt)
+
+    @mcp.tool()
+    def create_datatype_from_c_source(c_source: str) -> str:
+        """Create datatype(s) from C source text (Parse C Source style)."""
+        if c_source is None or c_source.strip() == "":
+            return "C source is required"
+        try:
+            dt = ghidra.parse_datatypes(c_source)
+            if dt is None:
+                return "Failed to parse C source"
+            ghidra.add_datatype(dt)
+            return "Success: " + _datatype_name(dt)
+        except Exception:
+            return "Failed"
 
     return mcp
 

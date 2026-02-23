@@ -32,10 +32,12 @@ import json
 import java.util.AbstractMap as AbstractMap
 import java.util.LinkedList as LinkedList
 import java.lang.Exception as JException
+import java.io.StringWriter as StringWriter
 
 import kingaidra
 
 import ghidra.util.task.TaskMonitor as TaskMonitor
+import ghidra.program.model.data.DataTypeWriter as DataTypeWriter
 
 def _hexdump(base_addr, buf):
     if buf is None:
@@ -64,6 +66,30 @@ def _is_valid_hex_string(hex_str):
         if c not in "0123456789abcdef":
             return False
     return True
+
+def _datatype_name(dt):
+    name = dt.getDisplayName()
+    if name:
+        return name
+    return dt.getName()
+
+def _datatype_to_c_text(dt):
+    writer = StringWriter()
+    dt_writer = DataTypeWriter(currentProgram.getDataTypeManager(), writer)
+    dt_list = LinkedList()
+    dt_list.add(dt)
+    dt_writer.write(dt_list, TaskMonitor.DUMMY)
+    return writer.toString().strip()
+
+def _find_datatype(ghidra, datatype_name):
+    dt_list = LinkedList()
+    ghidra.find_datatypes(datatype_name, dt_list)
+    if dt_list.isEmpty():
+        return None
+    for dt in dt_list:
+        if dt.getName() == datatype_name or dt.getDisplayName() == datatype_name:
+            return dt
+    return dt_list.get(0)
 
 KINGAIDRA_MCP_NAME = "ghidra_mcp"
 def add_tools(data):
@@ -421,6 +447,38 @@ def add_tools(data):
                 "strict": True
             }
         },
+        {
+            "type": "function",
+            "function": {
+                "name": "get_datatype",
+                "description": "Retrieve a datatype definition in C syntax by datatype name.",
+                "parameters": {
+                    "type": "object",
+                    "properties": {
+                        "datatype_name": {"type": "string"}
+                    },
+                    "required": ["datatype_name"],
+                    "additionalProperties": False
+                },
+                "strict": True
+            }
+        },
+        {
+            "type": "function",
+            "function": {
+                "name": "create_datatype_from_c_source",
+                "description": "Create datatype(s) from C source text (Parse C Source style).",
+                "parameters": {
+                    "type": "object",
+                    "properties": {
+                        "c_source": {"type": "string"}
+                    },
+                    "required": ["c_source"],
+                    "additionalProperties": False
+                },
+                "strict": True
+            }
+        },
     ]
     for tool in data["tools"]:
         func = tool.get("function")
@@ -666,6 +724,21 @@ def handle_tool_call(tool_call, ghidra):
         except Exception as e:
             msg = str(e)
             content = "Error: " + msg if msg else "Failed"
+    elif func_name == "get_datatype":
+        dt = _find_datatype(ghidra, args["datatype_name"])
+        if dt is None:
+            content = "None"
+        else:
+            content = _datatype_to_c_text(dt)
+    elif func_name == "create_datatype_from_c_source":
+        c_source = args.get("c_source")
+        if c_source is None or c_source.strip() == "":
+            return "C source is required"
+        dt = ghidra.parse_datatypes(c_source)
+        if dt is None:
+            return "Failed to parse C source"
+        ghidra.add_datatype(dt)
+        content = "Success: " + _datatype_name(dt)
     if not content:
         content = "Failed"
     return content
