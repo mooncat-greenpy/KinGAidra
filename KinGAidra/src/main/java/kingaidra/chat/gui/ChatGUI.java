@@ -41,6 +41,7 @@ import ghidra.program.model.address.Address;
 import ghidra.program.model.listing.Program;
 import kingaidra.ai.Ai;
 import kingaidra.ai.convo.Conversation;
+import kingaidra.ai.convo.ConversationType;
 import kingaidra.ai.convo.ConversationContainer;
 import kingaidra.ai.model.Model;
 import kingaidra.ai.model.ModelByScript;
@@ -89,6 +90,7 @@ public class ChatGUI extends JPanel {
 
     private boolean busy;
     private boolean add_comments_busy;
+    private boolean history_read_only;
 
     public ChatGUI(MainProvider provider, Tool dockingTool, Program program, Plugin plugin,
             String owner, KinGAidraChatTaskService srv, GhidraUtil ghidra, ModelConf model_conf, PromptConf conf, ConversationContainer container, Ai ai, Logger logger) {
@@ -196,6 +198,29 @@ public class ChatGUI extends JPanel {
             return build_plain_text_component(text);
         }
         return build_markdown_component(text);
+    }
+
+    private void apply_history_view_state() {
+        boolean editable = !history_read_only;
+        if (input_area != null) {
+            input_area.setEditable(editable);
+        }
+        if (submit_btn != null) {
+            submit_btn.setEnabled(editable);
+        }
+    }
+
+    private boolean is_history_read_only_conversation(Conversation convo) {
+        if (convo == null) {
+            return false;
+        }
+        ConversationType type = convo.get_type();
+        if (type == null) {
+            return false;
+        }
+        return type == ConversationType.SYSTEM_DECOM
+                || type == ConversationType.SYSTEM_DECOMPILE_VIEW
+                || type == ConversationType.SYSTEM_KEYFUNC;
     }
 
     private String format_tool_calls(List<Map<String, Object>> tool_calls) {
@@ -368,6 +393,7 @@ public class ChatGUI extends JPanel {
 
         input_area.setText("");
         input_area.setRows(10);
+        apply_history_view_state();
 
         add(info_label);
         add(s);
@@ -625,13 +651,15 @@ public class ChatGUI extends JPanel {
         info_label.setText("Working ...");
         try {
             cur_convo = convo;
+            history_read_only = is_history_read_only_conversation(convo);
             build_panel();
         } finally {
             info_label.setText("Finished!");
             restart_btn.setEnabled(true);
-            submit_btn.setEnabled(true);
+            submit_btn.setEnabled(!history_read_only);
             delete_btn.setEnabled(true);
             refresh_btn.setEnabled(true);
+            apply_history_view_state();
             check_and_set_busy(false);
             validate();
             repaint();
@@ -639,6 +667,10 @@ public class ChatGUI extends JPanel {
     }
 
     public void guess(TaskType type, Address addr) {
+        if (history_read_only) {
+            logger.append_message("History view is read-only");
+            return;
+        }
         if (!check_and_set_busy(true)) {
             logger.append_message("Another process running");
             return;
