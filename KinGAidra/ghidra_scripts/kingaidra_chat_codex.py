@@ -15,6 +15,7 @@ import kingaidra
 import ghidra.util.task.TaskMonitorAdapter as TaskMonitorAdapter
 
 MODEL = "gpt-5.3-codex"
+MODEL_REASONING_EFFORT = "xhigh" # e.g. "high", "medium"
 POST_MSG = ""
 TOOLS_FLAG = True
 
@@ -233,6 +234,10 @@ def main():
 
     extra_args = CODEX_EXTRA_ARGS
     extra_args.extend(["--model", MODEL])
+    if MODEL_REASONING_EFFORT:
+        extra_args.extend(
+            ["-c", "model_reasoning_effort=%s" % MODEL_REASONING_EFFORT]
+        )
 
     mcp_args, mcp_thread, mcp_monitor = _mcp_config_args()
     extra_args.extend(mcp_args)

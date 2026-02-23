@@ -62,6 +62,7 @@ public class ChatGUI extends JPanel {
     private JButton restart_btn;
     private JButton submit_btn;
     private JButton delete_btn;
+    private JButton refresh_btn;
     private JLabel info_label;
     private JPanel btn_panel;
     private JCheckBox md_chk;
@@ -265,6 +266,7 @@ public class ChatGUI extends JPanel {
         restart_btn = new JButton("Clean");
         submit_btn = new JButton("Submit");
         delete_btn = new JButton("Delete");
+        refresh_btn = new JButton("Refresh");
         Dimension button_size = new Dimension(100, 40);
 
         restart_btn.addActionListener(new ActionListener() {
@@ -303,6 +305,20 @@ public class ChatGUI extends JPanel {
 
         btn_panel.add(md_chk);
         btn_panel.add(tool_chk);
+
+        refresh_btn.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                String input_text = (input_area == null) ? "" : input_area.getText();
+                build_panel();
+                input_area.setText(input_text);
+                validate();
+                repaint();
+            }
+        });
+        refresh_btn.setPreferredSize(button_size);
+        refresh_btn.setToolTipText("Refresh chat view");
+        btn_panel.add(refresh_btn);
 
         input_area = new JTextArea("");
         input_area.setLineWrap(true);
@@ -599,6 +615,7 @@ public class ChatGUI extends JPanel {
         restart_btn.setEnabled(false);
         submit_btn.setEnabled(false);
         delete_btn.setEnabled(false);
+        refresh_btn.setEnabled(false);
         info_label.setText("Working ...");
         try {
             cur_convo = convo;
@@ -608,6 +625,7 @@ public class ChatGUI extends JPanel {
             restart_btn.setEnabled(true);
             submit_btn.setEnabled(true);
             delete_btn.setEnabled(true);
+            refresh_btn.setEnabled(true);
             check_and_set_busy(false);
             validate();
             repaint();
@@ -622,6 +640,7 @@ public class ChatGUI extends JPanel {
         restart_btn.setEnabled(false);
         submit_btn.setEnabled(false);
         delete_btn.setEnabled(false);
+        refresh_btn.setEnabled(false);
         info_label.setText("Working ...");
         SwingWorker<Conversation, Void> worker = new SwingWorker<>() {
             @Override
@@ -648,6 +667,7 @@ public class ChatGUI extends JPanel {
                     restart_btn.setEnabled(true);
                     submit_btn.setEnabled(true);
                     delete_btn.setEnabled(true);
+                    refresh_btn.setEnabled(true);
                     check_and_set_busy(false);
                     validate();
                     repaint();
@@ -667,6 +687,7 @@ public class ChatGUI extends JPanel {
         restart_btn.setEnabled(false);
         submit_btn.setEnabled(false);
         delete_btn.setEnabled(false);
+        refresh_btn.setEnabled(false);
         info_label.setText("Working ...");
         SwingWorker<Conversation, Void> worker = new SwingWorker<>() {
             @Override
@@ -690,6 +711,7 @@ public class ChatGUI extends JPanel {
                     restart_btn.setEnabled(true);
                     submit_btn.setEnabled(true);
                     delete_btn.setEnabled(true);
+                    refresh_btn.setEnabled(true);
                     check_and_set_busy(false);
                     validate();
                     repaint();
