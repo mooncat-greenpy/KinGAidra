@@ -388,6 +388,12 @@ public class ChatGUI extends JPanel {
             guess.get_model_conf().add_model(langchain_model.get_name(), langchain_model.get_script());
             guess.get_model_conf().set_model_status(langchain_model.get_name(), langchain_model.get_active());
         }
+        Model codex_model =
+                new ModelByScript("Codex", "kingaidra_chat_codex.py", false);
+        if (!guess.get_model_conf().exist_model(codex_model.get_name())) {
+            guess.get_model_conf().add_model(codex_model.get_name(), codex_model.get_script());
+            guess.get_model_conf().set_model_status(codex_model.get_name(), codex_model.get_active());
+        }
         Model gencopytext_model =
                 new ModelByScript("CopyTextGen", "kingaidra_gen_copy_text.py", false);
         if (!guess.get_model_conf().exist_model(gencopytext_model.get_name())) {

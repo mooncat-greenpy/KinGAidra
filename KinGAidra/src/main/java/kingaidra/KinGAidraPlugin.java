@@ -202,6 +202,10 @@ public class KinGAidraPlugin extends ProgramPlugin implements KinGAidraChatTaskS
         return mcp_controller.ensure_server_url();
     }
 
+    public String get_mcp_server_url() {
+        return mcp_controller.get_server_url();
+    }
+
     @Override
     public void publish_mcp_server_url(String host, int port) {
         mcp_controller.publish_server_url(host, port);
