@@ -108,22 +108,14 @@ def _reserve_socket(host):
                 pass
     raise RuntimeError("Failed to reserve a free port")
 
-def _get_program_identity():
-    return currentProgram.getDomainFile().getPathname()
-
-def _hash_identity(value):
-    raw = value.encode("utf-8")
-    import hashlib
-    return hashlib.sha1(raw).hexdigest()
-
-def _set_mcp_state(host, port, identity):
-    url = "http://%s:%s/mcp" % (host, port)
-    try:
-        import java.lang.System as JavaSystem
-        hash_key = _hash_identity(identity)
-        JavaSystem.setProperty("kingaidra.mcp.url.%s" % hash_key, url)
-    except Exception:
-        pass
+def _publish_mcp_state(host, port):
+    tool = state.getTool()
+    if tool is None:
+        return
+    service = tool.getService(kingaidra.ai.task.KinGAidraChatTaskService)
+    if service is None:
+        return
+    service.publish_mcp_server_url(host, port)
 
 def _resolve_host_port(args):
     host = DEFAULT_HOST
@@ -566,8 +558,7 @@ async def serve(name: str, host: str, port: int, sock=None) -> None:
 
 def main() -> None:
     host, port, sock = _resolve_host_port(getScriptArgs())
-    ident = _get_program_identity()
-    _set_mcp_state(host, port, ident)
+    _publish_mcp_state(host, port)
     anyio.run(serve, currentProgram.getName(), host, port, sock)
 
 

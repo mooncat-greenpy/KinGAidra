@@ -8,11 +8,8 @@
 
 import json
 import os
-import threading
-import time
 
 import kingaidra
-import ghidra.util.task.TaskMonitorAdapter as TaskMonitorAdapter
 
 MODEL = "gpt-5.3-codex"
 MODEL_REASONING_EFFORT = "xhigh" # e.g. "high", "medium"
@@ -25,8 +22,6 @@ CODEX_EXTRA_ARGS = ["--sandbox", "read-only"]
 CODEX_SESSION_PREFIX = "codex_session:"
 
 KINGAIDRA_MCP_NAME = "ghidra_mcp"
-KINGAIDRA_MCP_AUTO = True
-KINGAIDRA_MCP_AUTO_WAITTIME = 15
 
 
 def _load_codex_cli():
@@ -139,50 +134,33 @@ def _attach_session_marker(messages, session_id):
     messages.append({"role": "assistant", "content": "", "tool_call_id": marker})
 
 
-def _get_program_identity():
-    return currentProgram.getDomainFile().getPathname()
+def _get_chat_task_service():
+    tool = state.getTool()
+    if tool is None:
+        return None
+    return tool.getService(kingaidra.ai.task.KinGAidraChatTaskService)
 
 
-def _hash_identity(value):
-    raw = value.encode("utf-8")
-    import hashlib
-    return hashlib.sha1(raw).hexdigest()
-
-
-def _resolve_kingaidra_mcp_url():
-    try:
-        import java.lang.System as JavaSystem
-        prop = JavaSystem.getProperty(
-            "kingaidra.mcp.url.%s" % _hash_identity(_get_program_identity())
-        )
-        if prop:
-            return prop
-    except Exception:
-        pass
+def _ensure_kingaidra_mcp_url():
+    service = _get_chat_task_service()
+    if service is None:
+        return None
+    url = service.ensure_mcp_server_url()
+    if url:
+        return str(url)
     return None
 
 
-def _run_mcp(monitor):
-    ghidra = kingaidra.ghidra.GhidraUtilImpl(currentProgram, monitor)
-    ghidra.run_script("kingaidra_mcp.py", monitor)
-
-
 def _mcp_config_args():
-    t = None
-    monitor = None
-    mcp_url = _resolve_kingaidra_mcp_url()
-    if TOOLS_FLAG and KINGAIDRA_MCP_AUTO and mcp_url is None:
-        monitor = TaskMonitorAdapter(True)
-        t = threading.Thread(target=_run_mcp, args=(monitor,))
-        t.start()
-        time.sleep(KINGAIDRA_MCP_AUTO_WAITTIME)
-        mcp_url = _resolve_kingaidra_mcp_url()
-    if not TOOLS_FLAG or not mcp_url:
-        return [], t, monitor
+    if not TOOLS_FLAG:
+        return []
+    mcp_url = _ensure_kingaidra_mcp_url()
+    if not mcp_url:
+        return []
     return [
         "-c",
         "mcp_servers.%s.url=\"%s\"" % (KINGAIDRA_MCP_NAME, mcp_url),
-    ], t, monitor
+    ]
 
 
 def _result_error_text(result):
@@ -239,32 +217,27 @@ def main():
             ["-c", "model_reasoning_effort=%s" % MODEL_REASONING_EFFORT]
         )
 
-    mcp_args, mcp_thread, mcp_monitor = _mcp_config_args()
+    mcp_args = _mcp_config_args()
     extra_args.extend(mcp_args)
 
-    try:
-        if prev_session_id:
-            result = cli.resume(
-                session_id=prev_session_id,
-                prompt=messages[-1]["content"],
-                extra_args=_resume_extra_args(extra_args),
-            )
-            if result.returncode != 0:
-                raise RuntimeError(_result_error_text(result))
+    if prev_session_id:
+        result = cli.resume(
+            session_id=prev_session_id,
+            prompt=messages[-1]["content"],
+            extra_args=_resume_extra_args(extra_args),
+        )
+        if result.returncode != 0:
+            raise RuntimeError(_result_error_text(result))
+    else:
+        prompt = ""
+        if len(messages) == 1:
+            prompt = messages[-1]["content"]
         else:
-            prompt = ""
-            if len(messages) == 1:
-                prompt = messages[-1]["content"]
-            else:
-                for msg in messages:
-                    prompt += msg["role"] + ": " + msg["content"] + "\n"
-            result = cli.instruct(prompt, extra_args=extra_args)
-            if result.returncode != 0:
-                raise RuntimeError(_result_error_text(result))
-    finally:
-        if mcp_thread is not None and mcp_monitor is not None:
-            mcp_monitor.cancel()
-            mcp_thread.join()
+            for msg in messages:
+                prompt += msg["role"] + ": " + msg["content"] + "\n"
+        result = cli.instruct(prompt, extra_args=extra_args, use_stdin=True)
+        if result.returncode != 0:
+            raise RuntimeError(_result_error_text(result))
 
     session_id = result.session_id or prev_session_id
 

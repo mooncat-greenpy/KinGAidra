@@ -182,15 +182,28 @@ public class KinGAidraPlugin extends ProgramPlugin implements KinGAidraChatTaskS
         }
     }
 
-    public boolean start_mcp_server(Program program) {
-        return mcp_controller.start_server(program);
+    @Override
+    public boolean start_mcp_server() {
+        return mcp_controller.start_server();
     }
 
+    @Override
     public boolean stop_mcp_server() {
         return mcp_controller.stop_server();
     }
 
+    @Override
     public boolean is_mcp_running() {
         return mcp_controller.is_running();
+    }
+
+    @Override
+    public String ensure_mcp_server_url() {
+        return mcp_controller.ensure_server_url();
+    }
+
+    @Override
+    public void publish_mcp_server_url(String host, int port) {
+        mcp_controller.publish_server_url(host, port);
     }
 }

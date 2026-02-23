@@ -24,4 +24,14 @@ public interface KinGAidraChatTaskService {
     public TaskStatus get_task_status(String key);
 
     public Conversation pop_task(String key);
+
+    public boolean start_mcp_server();
+
+    public boolean stop_mcp_server();
+
+    public boolean is_mcp_running();
+
+    public String ensure_mcp_server_url();
+
+    public void publish_mcp_server_url(String host, int port);
 }

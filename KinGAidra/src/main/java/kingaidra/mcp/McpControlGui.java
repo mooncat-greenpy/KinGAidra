@@ -42,7 +42,7 @@ public class McpControlGui {
                 show_control_dialog(program);
             }
         };
-        mcp_action.setToolBarData(new ToolBarData(Icons.CONFIGURE_FILTER_ICON, null));
+        mcp_action.setToolBarData(new ToolBarData(Icons.NAVIGATE_ON_OUTGOING_EVENT_ICON, null));
         mcp_action.setEnabled(true);
         mcp_action.markHelpUnnecessary();
         docking_tool.addLocalAction(provider, mcp_action);
@@ -74,7 +74,7 @@ public class McpControlGui {
         JPanel button_panel = new JPanel(new FlowLayout(FlowLayout.CENTER));
         JButton start_button = new JButton("Start");
         JButton stop_button = new JButton("Stop");
-        start_button.addActionListener(e -> on_start(program));
+        start_button.addActionListener(e -> on_start());
         stop_button.addActionListener(e -> on_stop());
         button_panel.add(start_button);
         button_panel.add(stop_button);
@@ -82,8 +82,8 @@ public class McpControlGui {
         return root;
     }
 
-    private void on_start(Program program) {
-        if (!plugin.start_mcp_server(program)) {
+    private void on_start() {
+        if (!plugin.start_mcp_server()) {
             show_info("MCP Start", "MCP server is already running.");
         }
     }
