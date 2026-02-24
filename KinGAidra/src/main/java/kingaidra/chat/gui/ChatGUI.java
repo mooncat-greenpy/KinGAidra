@@ -761,6 +761,9 @@ public class ChatGUI extends JPanel {
 
     public void reset(Conversation convo) {
         if (!check_and_set_busy(true)) {
+            if (convo == null) {
+                return;
+            }
             logger.append_message("Another process running");
             return;
         }
@@ -791,29 +794,33 @@ public class ChatGUI extends JPanel {
             logger.append_message("History view is read-only");
             return;
         }
-        if (!check_and_set_busy(true)) {
-            logger.append_message("Another process running");
-            return;
+        final boolean show_in_chat_tab = check_and_set_busy(true);
+        final Conversation base_convo = show_in_chat_tab ? cur_convo : null;
+        final String input_text = input_area.getText();
+        if (show_in_chat_tab) {
+            restart_btn.setEnabled(false);
+            submit_btn.setEnabled(false);
+            delete_btn.setEnabled(false);
+            refresh_btn.setEnabled(false);
+            info_label.setText("Working ...");
         }
-        restart_btn.setEnabled(false);
-        submit_btn.setEnabled(false);
-        delete_btn.setEnabled(false);
-        refresh_btn.setEnabled(false);
-        info_label.setText("Working ...");
         SwingWorker<Conversation, Void> worker = new SwingWorker<>() {
             @Override
             protected Conversation doInBackground() {
                 if (addr == null) {
-                    return cur_convo;
-                 }
-                 if (cur_convo == null) {
-                    return ggui.run_guess(type, input_area.getText(), addr);
+                    return base_convo;
                 }
-                return ggui.run_guess(type, cur_convo, input_area.getText(), addr);
+                if (base_convo == null) {
+                    return ggui.run_guess(type, input_text, addr);
+                }
+                return ggui.run_guess(type, base_convo, input_text, addr);
             }
 
             @Override
             protected void done() {
+                if (!show_in_chat_tab) {
+                    return;
+                }
                 try {
                     cur_convo = get();
                     build_panel();
@@ -829,35 +836,40 @@ public class ChatGUI extends JPanel {
                     check_and_set_busy(false);
                     validate();
                     repaint();
-                 }
-             }
+                }
+            }
         };
         worker.execute();
 
-        validate();
+        if (show_in_chat_tab) {
+            validate();
+        }
     }
 
     public void guess_workflow(ChatWorkflow workflow, Address addr) {
-        if (!check_and_set_busy(true)) {
-            logger.append_message("Another process running");
-            return;
+        final boolean show_in_chat_tab = check_and_set_busy(true);
+        final Conversation base_convo = cur_convo;
+        if (show_in_chat_tab) {
+            restart_btn.setEnabled(false);
+            submit_btn.setEnabled(false);
+            delete_btn.setEnabled(false);
+            refresh_btn.setEnabled(false);
+            info_label.setText("Working ...");
         }
-        restart_btn.setEnabled(false);
-        submit_btn.setEnabled(false);
-        delete_btn.setEnabled(false);
-        refresh_btn.setEnabled(false);
-        info_label.setText("Working ...");
         SwingWorker<Conversation, Void> worker = new SwingWorker<>() {
             @Override
             protected Conversation doInBackground() {
                 if (addr == null) {
-                    return cur_convo;
-                 }
+                    return base_convo;
+                }
                 return ggui.run_workflow(workflow, addr);
             }
 
             @Override
             protected void done() {
+                if (!show_in_chat_tab) {
+                    return;
+                }
                 try {
                     cur_convo = get();
                     build_panel();
@@ -873,11 +885,13 @@ public class ChatGUI extends JPanel {
                     check_and_set_busy(false);
                     validate();
                     repaint();
-                 }
-             }
+                }
+            }
         };
         worker.execute();
 
-        validate();
+        if (show_in_chat_tab) {
+            validate();
+        }
     }
 }
