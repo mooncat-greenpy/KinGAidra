@@ -613,6 +613,27 @@ public class GhidraUtilImpl implements GhidraUtil {
     public void find_datatypes(String name, List<DataType> dt_list) {
         DataTypeManager datatype_manager = program.getDataTypeManager();
         datatype_manager.findDataTypes(name, dt_list);
+        if (dt_list.size() > 0) {
+            return;
+        }
+
+        String normalized_name = normalize_datatype_name(name);
+        if (normalized_name == null || normalized_name.equals(name)) {
+            return;
+        }
+        datatype_manager.findDataTypes(normalized_name, dt_list);
+    }
+
+    private String normalize_datatype_name(String name) {
+        String normalized = name.trim();
+        normalized = normalized.replaceAll("\\[[^\\]]*\\]\\s*$", "").trim();
+        while (normalized.endsWith("*")) {
+            normalized = normalized.substring(0, normalized.length() - 1).trim();
+        }
+        if (normalized.isEmpty()) {
+            return null;
+        }
+        return normalized;
     }
 
     public void add_datatype(DataType dt) {
