@@ -59,7 +59,10 @@ import kingaidra.ai.convo.Conversation;
 import kingaidra.ai.convo.ConversationContainer;
 import kingaidra.ai.convo.ConversationType;
 import kingaidra.ai.model.ModelConf;
+import kingaidra.decom.DecomDiff;
+import kingaidra.decom.Guess;
 import kingaidra.decom.LlmDecompile;
+import kingaidra.decom.Refactor;
 import kingaidra.ghidra.GhidraUtil;
 import kingaidra.ghidra.PromptConf;
 import kingaidra.gui.MainProvider;
@@ -82,12 +85,15 @@ public class LlmDecompileGUI extends JPanel {
     private ConversationContainer container;
     private Logger logger;
     private LlmDecompile llm_decompile;
+    private Guess refactor_guess;
+    private Refactor refactor;
     private ConcurrentMap<Address, String> decompile_results;
     private ConcurrentMap<Address, String> decompile_updated;
 
     private JLabel info_label;
     private JLabel func_label;
     private JButton regen_btn;
+    private JButton refactor_btn;
     private JButton instruction_btn;
     private JButton copy_btn;
     private JButton search_prev_btn;
@@ -169,6 +175,8 @@ public class LlmDecompileGUI extends JPanel {
         this.container = container;
         this.logger = logger;
         this.llm_decompile = new LlmDecompile(ai, ghidra, model_conf, conf);
+        this.refactor_guess = new Guess(ghidra, ai, model_conf, conf);
+        this.refactor = new Refactor(ghidra, ai, conf, msg -> msg);
         this.decompile_results = new ConcurrentHashMap<>();
         this.decompile_updated = new ConcurrentHashMap<>();
         this.current_func_entry = null;
@@ -195,6 +203,7 @@ public class LlmDecompileGUI extends JPanel {
 
         JPanel button_panel = new JPanel(new FlowLayout(FlowLayout.LEFT, 4, 4));
         regen_btn = new JButton("Regenerate");
+        refactor_btn = new JButton("Refactor Ghidra");
         instruction_btn = new JButton("Apply Instruction");
         copy_btn = new JButton("Copy");
         info_label = new JLabel("");
@@ -226,6 +235,12 @@ public class LlmDecompileGUI extends JPanel {
             @Override
             public void actionPerformed(ActionEvent e) {
                 run_llm_decompile_with_instruction();
+            }
+        });
+        refactor_btn.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                run_refactor_from_decompile_view();
             }
         });
         copy_btn.addActionListener(new ActionListener() {
@@ -295,6 +310,7 @@ public class LlmDecompileGUI extends JPanel {
             }
         });
         button_panel.add(regen_btn);
+        button_panel.add(refactor_btn);
         button_panel.add(copy_btn);
         button_panel.add(info_label);
 
@@ -403,6 +419,82 @@ public class LlmDecompileGUI extends JPanel {
         return program.getFunctionManager().getFunctionContaining(addr);
     }
 
+    private void set_operation_controls_enabled(boolean enabled) {
+        regen_btn.setEnabled(enabled);
+        refactor_btn.setEnabled(enabled);
+        instruction_btn.setEnabled(enabled);
+        instruction_field.setEnabled(enabled);
+        function_selector.setEnabled(enabled && function_selector.getItemCount() > 0);
+    }
+
+    private void run_refactor_from_decompile_view() {
+        Address func_entry = get_selected_function_entry();
+        if (func_entry == null) {
+            func_entry = current_func_entry;
+        }
+        if (func_entry == null) {
+            logger.append_message("Function not selected");
+            info_label.setText("Function not selected");
+            return;
+        }
+
+        String reference_code = decompile_results.get(func_entry);
+        if (reference_code == null || reference_code.trim().isEmpty()) {
+            info_label.setText("No existing output");
+            return;
+        }
+
+        if (!check_and_set_busy(true)) {
+            logger.append_message("Another process running");
+            return;
+        }
+
+        set_operation_controls_enabled(false);
+        info_label.setText("Refactoring ...");
+        final Address target_entry = func_entry;
+        final String target_code = reference_code;
+
+        SwingWorker<DecomDiff, Void> worker = new SwingWorker<>() {
+            @Override
+            protected DecomDiff doInBackground() {
+                DecomDiff[] diffs = refactor_guess.guess_selected(target_entry, false, target_code);
+                if (diffs.length == 0) {
+                    // simple retry
+                    diffs = refactor_guess.guess_selected(target_entry, false, target_code);
+                }
+                if (diffs.length == 0) {
+                    return null;
+                }
+                refactor.refact(diffs[0], true, target_code);
+                return diffs[0];
+            }
+
+            @Override
+            protected void done() {
+                try {
+                    DecomDiff diff = get();
+                    if (diff == null) {
+                        info_label.setText("Refactor failed");
+                    } else {
+                        refresh_function_selector(target_entry);
+                        if (current_func_entry != null && current_func_entry.equals(target_entry)) {
+                            show_code_for_function(target_entry, true);
+                        }
+                        info_label.setText("Refactor applied");
+                    }
+                } catch (Exception e) {
+                    info_label.setText("Refactor failed");
+                } finally {
+                    set_operation_controls_enabled(true);
+                    check_and_set_busy(false);
+                    validate();
+                    repaint();
+                }
+            }
+        };
+        worker.execute();
+    }
+
     private void run_llm_decompile_with_instruction() {
         String instruction = instruction_field.getText();
         if (instruction.trim().isEmpty()) {
@@ -444,9 +536,7 @@ public class LlmDecompileGUI extends JPanel {
             logger.append_message("Another process running");
             return;
         }
-        regen_btn.setEnabled(false);
-        instruction_btn.setEnabled(false);
-        instruction_field.setEnabled(false);
+        set_operation_controls_enabled(false);
         info_label.setText("Working ...");
         final String instruction_text = instruction;
         final String base_code = current_code;
@@ -481,10 +571,7 @@ public class LlmDecompileGUI extends JPanel {
                     if (current_func_entry != null && current_func_entry.equals(func_entry)) {
                         show_code_for_function(func_entry, true);
                     }
-                    regen_btn.setEnabled(true);
-                    instruction_btn.setEnabled(true);
-                    instruction_field.setEnabled(true);
-                    function_selector.setEnabled(function_selector.getItemCount() > 0);
+                    set_operation_controls_enabled(true);
                     check_and_set_busy(false);
                     validate();
                     repaint();
@@ -503,10 +590,7 @@ public class LlmDecompileGUI extends JPanel {
             logger.append_message("Another process running");
             return;
         }
-        regen_btn.setEnabled(false);
-        instruction_btn.setEnabled(false);
-        instruction_field.setEnabled(false);
-        function_selector.setEnabled(false);
+        set_operation_controls_enabled(false);
         info_label.setText("Loading ...");
         Address selected_entry = get_selected_function_entry();
 
@@ -530,10 +614,7 @@ public class LlmDecompileGUI extends JPanel {
                 } catch (Exception e) {
                     info_label.setText("Load failed");
                 } finally {
-                    regen_btn.setEnabled(true);
-                    instruction_btn.setEnabled(true);
-                    instruction_field.setEnabled(true);
-                    function_selector.setEnabled(function_selector.getItemCount() > 0);
+                    set_operation_controls_enabled(true);
                     check_and_set_busy(false);
                     validate();
                     repaint();

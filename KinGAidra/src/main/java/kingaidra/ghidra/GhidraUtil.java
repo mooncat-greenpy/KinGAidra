@@ -65,6 +65,7 @@ public interface GhidraUtil {
     public void add_datatype(DataType dt);
 
     public DataType parse_datatypes(String code);
+    public DataTypeParseResult parse_datatypes_with_error(String code);
 
     public boolean refact(DecomDiff diff);
 

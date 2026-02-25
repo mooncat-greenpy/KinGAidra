@@ -148,6 +148,9 @@ public class PromptConf {
                 return new String[] { PROMPT_GROUP_CHAT, PROMPT_CHAT_GROUP_ADD_COMMENTS_WITH_AI };
             case DECOMPILE_VIEW:
             case DECOMPILE_VIEW_INSTRUCTION:
+            case DECOM_VIEW_REFACTOR_FUNC_PARAM_VAR:
+            case DECOM_VIEW_REFACTOR_DATATYPE:
+            case DECOM_VIEW_RESOLVE_DATATYPE:
                 return new String[] { PROMPT_GROUP_DECOM_VIEW };
             case DECOM_REFACTOR_FUNC_PARAM_VAR:
             case REVIEW_DECOM_REFACTOR_FUNC_PARAM_VAR:
@@ -180,6 +183,12 @@ public class PromptConf {
                 return "1: Action: Decompile using AI (view)";
             case DECOMPILE_VIEW_INSTRUCTION:
                 return "2: Action: Apply instruction (view)";
+            case DECOM_VIEW_REFACTOR_FUNC_PARAM_VAR:
+                return "3: Refactor Names (view)";
+            case DECOM_VIEW_REFACTOR_DATATYPE:
+                return "4: Refactor Data Types (view)";
+            case DECOM_VIEW_RESOLVE_DATATYPE:
+                return "5: Resolve Struct Definitions (view)";
             case DECOM_REFACTOR_FUNC_PARAM_VAR:
                 return "1: Refactor Names";
             case REVIEW_DECOM_REFACTOR_FUNC_PARAM_VAR:
@@ -215,6 +224,12 @@ public class PromptConf {
                 return "Prompt used by \"Decompile using AI (view)\".";
             case DECOMPILE_VIEW_INSTRUCTION:
                 return "Prompt used when applying additional instructions to existing DecomView output.";
+            case DECOM_VIEW_REFACTOR_FUNC_PARAM_VAR:
+                return "DecomView prompt for renaming function, parameter, and variable names in Ghidra decompile.";
+            case DECOM_VIEW_REFACTOR_DATATYPE:
+                return "DecomView prompt for proposing datatype fixes for Ghidra decompile.";
+            case DECOM_VIEW_RESOLVE_DATATYPE:
+                return "DecomView prompt for generating missing struct definitions from Ghidra+DecomView context.";
             case DECOM_REFACTOR_FUNC_PARAM_VAR:
                 return "Decom prompt for renaming functions, parameters, and variables.";
             case REVIEW_DECOM_REFACTOR_FUNC_PARAM_VAR:
@@ -476,6 +491,96 @@ public class PromptConf {
                 "    \"confidence\": \"Confidence (0.0-1.0)\"\n" +
                 "}\n" +
                 "```");
+
+        default_user_prompts.put(TaskType.DECOM_VIEW_REFACTOR_FUNC_PARAM_VAR,
+                "You are refactoring names in Ghidra's decompile output using DecompileView C as semantic guidance.\n" +
+                "Use Ghidra code as the authoritative source for identifiers to rename. Use DecompileView code only to infer semantics.\n" +
+                "\n" +
+                "# Ghidra Decompiled Target (authoritative identifiers)\n" +
+                "```c\n" +
+                "<ghidra_c_code>\n" +
+                "```\n" +
+                "\n" +
+                "# DecompileView Generated C (semantic reference)\n" +
+                "```c\n" +
+                "<decompile_view_c_code>\n" +
+                "```\n" +
+                "\n" +
+                "Requirements:\n" +
+                "- Rename function/parameters/locals with clear snake_case names.\n" +
+                "- Keep all `orig_*` names exactly as they appear in Ghidra decompile.\n" +
+                "- Do not invent symbols that do not exist in the Ghidra target.\n" +
+                "- Output JSON only.\n" +
+                "\n" +
+                "```json\n" +
+                "{\n" +
+                "    \"new_func_name\": \"new function name\",\n" +
+                "    \"orig_func_name\": \"original function name\",\n" +
+                "    \"parameters\": [\n" +
+                "        {\n" +
+                "            \"new_param_name\": \"new parameter name\",\n" +
+                "            \"orig_param_name\": \"original parameter name\"\n" +
+                "        }\n" +
+                "    ],\n" +
+                "    \"variables\": [\n" +
+                "        {\n" +
+                "            \"new_var_name\": \"new variable name\",\n" +
+                "            \"orig_var_name\": \"original variable name\"\n" +
+                "        }\n" +
+                "    ]\n" +
+                "}\n" +
+                "```");
+
+        default_user_prompts.put(TaskType.DECOM_VIEW_REFACTOR_DATATYPE,
+                "You are fixing data types in Ghidra's decompile output using DecompileView C as semantic guidance.\n" +
+                "Use Ghidra code as authoritative for variable names. Use DecompileView code to infer likely concrete types.\n" +
+                "\n" +
+                "# Ghidra Decompiled Target (authoritative identifiers)\n" +
+                "```c\n" +
+                "<ghidra_c_code>\n" +
+                "```\n" +
+                "\n" +
+                "# DecompileView Generated C (semantic reference)\n" +
+                "```c\n" +
+                "<decompile_view_c_code>\n" +
+                "```\n" +
+                "\n" +
+                "Requirements:\n" +
+                "- Keep `var_name` exactly as it appears in the Ghidra target.\n" +
+                "- Prefer concrete, analysis-useful C types.\n" +
+                "- Output JSON array only.\n" +
+                "\n" +
+                "```json\n" +
+                "[\n" +
+                "    {\n" +
+                "        \"new_datatype\": \"new datatype name\",\n" +
+                "        \"orig_datatype\": \"original datatype name\",\n" +
+                "        \"var_name\": \"variable name\"\n" +
+                "    }\n" +
+                "]\n" +
+                "```");
+
+        default_user_prompts.put(TaskType.DECOM_VIEW_RESOLVE_DATATYPE,
+                "Resolve one missing datatype for Ghidra refactoring.\n" +
+                "Generate C definitions needed to resolve `<datatype_name>` for a <bit_size>-bit target.\n" +
+                "\n" +
+                "# Ghidra Decompiled Target\n" +
+                "```c\n" +
+                "<ghidra_c_code>\n" +
+                "```\n" +
+                "\n" +
+                "# DecompileView Generated C\n" +
+                "```c\n" +
+                "<decompile_view_c_code>\n" +
+                "```\n" +
+                "\n" +
+                "Requirements:\n" +
+                "- Use the DecompileView code to infer field semantics and likely member types.\n" +
+                "- Keep the result conservative if uncertain, but maintain plausible layout consistency.\n" +
+                "- If dependent data types are required, include minimal dependent struct/typedef definitions before the target struct.\n" +
+                "- Ensure the final definition in the output is exactly the target struct `<datatype_name>`.\n" +
+                "- Do not include includes, macros, or explanations.\n" +
+                "- Output C code only.\n");
 
         default_user_prompts.put(TaskType.CHAT, "");
 

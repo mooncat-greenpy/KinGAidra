@@ -38,27 +38,80 @@ public class Guess {
     }
 
     public DecomDiff guess(DecomDiff diff, boolean review) {
-        if (!guess_func_param_var(diff, review)) {
+        return guess(diff, review, null);
+    }
+
+    public DecomDiff guess(DecomDiff diff, boolean review, String reference_code) {
+        String ghidra_code = diff.get_src_code();
+        String code_context = build_code_context(ghidra_code, reference_code);
+        TaskType rename_task = resolve_rename_task(reference_code);
+        TaskType datatype_task = resolve_datatype_task(reference_code);
+
+        if (!guess_func_param_var(diff, review, code_context, ghidra_code, reference_code, rename_task)) {
             return null;
         }
 
-        if (!guess_datatype(diff, review)) {
+        if (!guess_datatype(diff, review, code_context, ghidra_code, reference_code, datatype_task)) {
             return diff;
         }
 
         return diff;
     }
 
-    private boolean guess_func_param_var(DecomDiff diff, boolean review) {
-        TaskType task = TaskType.DECOM_REFACTOR_FUNC_PARAM_VAR;
+    private TaskType resolve_rename_task(String reference_code) {
+        if (reference_code != null) {
+            return TaskType.DECOM_VIEW_REFACTOR_FUNC_PARAM_VAR;
+        }
+        return TaskType.DECOM_REFACTOR_FUNC_PARAM_VAR;
+    }
+
+    private TaskType resolve_datatype_task(String reference_code) {
+        if (reference_code != null) {
+            return TaskType.DECOM_VIEW_REFACTOR_DATATYPE;
+        }
+        return TaskType.DECOM_REFACTOR_DATATYPE;
+    }
+
+    private String build_code_context(String ghidra_code, String reference_code) {
+        if (reference_code == null) {
+            return ghidra_code;
+        }
+        return "/* Refactoring target (Ghidra decompile). Keep orig_* identifiers from this block. */\n"
+                + ghidra_code
+                + "\n\n/* Semantic reference (DecompileView generated C). Use only as analysis hint. */\n"
+                + reference_code;
+    }
+
+    private String apply_code_context(String prompt, String code_context,
+            String ghidra_code, String reference_code) {
+        String result = prompt;
+        result = result.replace("<code>", code_context);
+        result = result.replace("<ghidra_c_code>", ghidra_code == null ? "" : ghidra_code);
+        result = result.replace("<decompile_view_c_code>", reference_code == null ? "" : reference_code);
+        return result;
+    }
+
+    private String apply_review_response(String prompt, String rsp_msg) {
+        return prompt.replace("%s", rsp_msg);
+    }
+
+    private boolean guess_func_param_var(DecomDiff diff, boolean review, String code_context,
+            String ghidra_code, String reference_code, TaskType task) {
         Conversation convo = new Conversation(ConversationType.SYSTEM_DECOM, diff.get_model());
         convo.add_system_msg(conf.get_system_prompt(task, diff.get_model().get_name()));
-        convo = ai.guess(task, convo, conf.get_user_prompt(TaskType.CHAT_EXPLAIN_DECOM, diff.get_model().get_name()), diff.get_addr());
+        String explain_msg = apply_code_context(
+                conf.get_user_prompt(TaskType.CHAT_EXPLAIN_DECOM, diff.get_model().get_name()),
+                code_context, ghidra_code, reference_code);
+        convo = ai.guess(task, convo, explain_msg, diff.get_addr());
         if (convo == null) {
             return false;
         }
 
-        String msg = conf.get_user_prompt(task, diff.get_model().get_name());
+        String msg = apply_code_context(
+                conf.get_user_prompt(task, diff.get_model().get_name()),
+                code_context,
+                ghidra_code,
+                reference_code);
         convo = ai.guess(task, convo, msg, diff.get_addr());
         if (convo == null) {
             return false;
@@ -74,7 +127,13 @@ public class Guess {
             TaskType review_task = TaskType.REVIEW_DECOM_REFACTOR_FUNC_PARAM_VAR;
             Conversation review_convo = new Conversation(ConversationType.SYSTEM_DECOM, diff.get_model());
             review_convo.add_system_msg(conf.get_system_prompt(review_task, diff.get_model().get_name()));
-            String review_msg = String.format(conf.get_user_prompt(review_task, diff.get_model().get_name()), rsp_msg);
+            String review_msg = apply_review_response(
+                    apply_code_context(
+                            conf.get_user_prompt(review_task, diff.get_model().get_name()),
+                            code_context,
+                            ghidra_code,
+                            reference_code),
+                    rsp_msg);
             review_convo = ai.guess(review_task, review_convo, review_msg, diff.get_addr());
             if (review_convo == null) {
                 return false;
@@ -95,16 +154,23 @@ public class Guess {
         return true;
     }
 
-    private boolean guess_datatype(DecomDiff diff, boolean review) {
-        TaskType task = TaskType.DECOM_REFACTOR_DATATYPE;
+    private boolean guess_datatype(DecomDiff diff, boolean review, String code_context,
+            String ghidra_code, String reference_code, TaskType task) {
         Conversation convo = new Conversation(ConversationType.SYSTEM_DECOM, diff.get_model());
         convo.add_system_msg(conf.get_system_prompt(task, diff.get_model().get_name()));
-        convo = ai.guess(task, convo, conf.get_user_prompt(TaskType.CHAT_EXPLAIN_DECOM, diff.get_model().get_name()), diff.get_addr());
+        String explain_msg = apply_code_context(
+                conf.get_user_prompt(TaskType.CHAT_EXPLAIN_DECOM, diff.get_model().get_name()),
+                code_context, ghidra_code, reference_code);
+        convo = ai.guess(task, convo, explain_msg, diff.get_addr());
         if (convo == null) {
             return false;
         }
 
-        String msg = conf.get_user_prompt(task, diff.get_model().get_name());
+        String msg = apply_code_context(
+                conf.get_user_prompt(task, diff.get_model().get_name()),
+                code_context,
+                ghidra_code,
+                reference_code);
         convo = ai.guess(task, convo, msg, diff.get_addr());
         if (convo == null) {
             return false;
@@ -120,7 +186,13 @@ public class Guess {
             TaskType review_task = TaskType.REVIEW_DECOM_REFACTOR_DATATYPE;
             Conversation review_convo = new Conversation(ConversationType.SYSTEM_DECOM, diff.get_model());
             review_convo.add_system_msg(conf.get_system_prompt(review_task, diff.get_model().get_name()));
-            String review_msg = String.format(conf.get_user_prompt(review_task, diff.get_model().get_name()), rsp_msg);
+            String review_msg = apply_review_response(
+                    apply_code_context(
+                            conf.get_user_prompt(review_task, diff.get_model().get_name()),
+                            code_context,
+                            ghidra_code,
+                            reference_code),
+                    rsp_msg);
             review_convo = ai.guess(review_task, review_convo, review_msg, diff.get_addr());
             if (review_convo == null) {
                 return false;
@@ -142,12 +214,16 @@ public class Guess {
     }
 
     public DecomDiff guess(String name, DecomDiff diff, boolean review) {
+        return guess(name, diff, review, null);
+    }
+
+    public DecomDiff guess(String name, DecomDiff diff, boolean review, String reference_code) {
         Model m = model_conf.get_model(name);
         if (m == null) {
             return null;
         }
         diff.set_model(m);
-        diff = guess(diff, review);
+        diff = guess(diff, review, reference_code);
         return diff;
     }
 
@@ -156,6 +232,10 @@ public class Guess {
     }
 
     public DecomDiff[] guess_all(Address addr, boolean review) {
+        return guess_all(addr, review, null);
+    }
+
+    public DecomDiff[] guess_all(Address addr, boolean review, String reference_code) {
         List<DecomDiff> results = new ArrayList<>();
         DecomDiff diff = ghidra.get_decomdiff(addr);
         if (diff == null) {
@@ -163,7 +243,7 @@ public class Guess {
         }
         for (String name : model_conf.get_models()) {
             Model model = model_conf.get_model(name);
-            DecomDiff guessed = guess(model.get_name(), diff.clone(), review);
+            DecomDiff guessed = guess(model.get_name(), diff.clone(), review, reference_code);
             if (guessed == null) {
                 continue;
             }
@@ -177,6 +257,10 @@ public class Guess {
     }
 
     public DecomDiff[] guess_selected(Address addr, boolean review) {
+        return guess_selected(addr, review, null);
+    }
+
+    public DecomDiff[] guess_selected(Address addr, boolean review, String reference_code) {
         List<DecomDiff> results = new ArrayList<>();
         DecomDiff diff = ghidra.get_decomdiff(addr);
         if (diff == null) {
@@ -187,7 +271,7 @@ public class Guess {
             if (!model.get_active()) {
                 continue;
             }
-            DecomDiff guessed = guess(model.get_name(), diff.clone(), review);
+            DecomDiff guessed = guess(model.get_name(), diff.clone(), review, reference_code);
             if (guessed == null) {
                 continue;
             }
@@ -197,10 +281,14 @@ public class Guess {
     }
 
     public DecomDiff guess(String name, Address addr, boolean review) {
+        return guess(name, addr, review, null);
+    }
+
+    public DecomDiff guess(String name, Address addr, boolean review, String reference_code) {
         DecomDiff diff = ghidra.get_decomdiff(addr);
         if (diff == null) {
             return null;
         }
-        return guess(name, diff, review);
+        return guess(name, diff, review, reference_code);
     }
 }

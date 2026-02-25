@@ -438,4 +438,42 @@ public class JsonExtractorTest {
         assertEquals(data5.get(3).get_source(), "return (int)in_EAX - (int)in_stack_00000004;");
         assertEquals(data5.get(3).get_comment(), "comment4");
     }
+
+    @Test
+    void test_decompile_view_refactor_json() throws Exception {
+        String src = "{\n" +
+                "  \"new_func_name\": \"do_work\",\n" +
+                "  \"orig_func_name\": \"func_401000\",\n" +
+                "  \"parameters\": [\n" +
+                "    {\n" +
+                "      \"new_param_name\": \"ctx\",\n" +
+                "      \"orig_param_name\": \"param_1\"\n" +
+                "    }\n" +
+                "  ],\n" +
+                "  \"variables\": [\n" +
+                "    {\n" +
+                "      \"new_var_name\": \"counter\",\n" +
+                "      \"orig_var_name\": \"iVar1\"\n" +
+                "    }\n" +
+                "  ],\n" +
+                "  \"datatypes\": [\n" +
+                "    {\n" +
+                "      \"new_datatype\": \"MY_CTX*\",\n" +
+                "      \"orig_datatype\": \"undefined4*\",\n" +
+                "      \"var_name\": \"param_1\"\n" +
+                "    }\n" +
+                "  ]\n" +
+                "}";
+        JsonExtractor<DecompileViewRefactorJson> extractor =
+                new JsonExtractor<>(src, DecompileViewRefactorJson.class);
+        DecompileViewRefactorJson data = extractor.get_data();
+        assertEquals("do_work", data.get_new_func_name());
+        assertEquals("func_401000", data.get_orig_func_name());
+        assertEquals(1, data.get_parameters().size());
+        assertEquals(1, data.get_variables().size());
+        assertEquals(1, data.get_datatypes().size());
+        assertEquals("ctx", data.get_parameters().get(0).get_new_param_name());
+        assertEquals("counter", data.get_variables().get(0).get_new_var_name());
+        assertEquals("MY_CTX*", data.get_datatypes().get(0).get_new_datatype());
+    }
 }

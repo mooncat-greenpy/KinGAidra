@@ -60,7 +60,10 @@ public class ModelDummy implements Model, Serializable {
 
     public Conversation guess(TaskType task_type, Conversation convo, KinGAidraChatTaskService service, PluginTool tool,
             Program program, GhidraState src_state) {
-        if (task_type == TaskType.DECOM_REFACTOR_FUNC_PARAM_VAR && convo.get_msg(convo.get_msgs_len() - 1).contains("func_401000") && convo.get_msg(convo.get_msgs_len() - 1).contains("new_func_name")) {
+        if ((task_type == TaskType.DECOM_REFACTOR_FUNC_PARAM_VAR
+                || task_type == TaskType.DECOM_VIEW_REFACTOR_FUNC_PARAM_VAR)
+                && convo.get_msg(convo.get_msgs_len() - 1).contains("func_401000")
+                && convo.get_msg(convo.get_msgs_len() - 1).contains("new_func_name")) {
             convo.add_assistant_msg("{\n" +
                         "    \"new_func_name\": \"func_401000" + name + "\",\n" +
                         "    \"orig_func_name\": \"func_401000\",\n" +
@@ -73,7 +76,10 @@ public class ModelDummy implements Model, Serializable {
                         "        }\n" +
                         "    ]\n" +
                         "}");
-        } else if (task_type == TaskType.DECOM_REFACTOR_FUNC_PARAM_VAR && convo.get_msg(convo.get_msgs_len() - 1).contains("func_402000") && convo.get_msg(convo.get_msgs_len() - 1).contains("new_func_name")) {
+        } else if ((task_type == TaskType.DECOM_REFACTOR_FUNC_PARAM_VAR
+                || task_type == TaskType.DECOM_VIEW_REFACTOR_FUNC_PARAM_VAR)
+                && convo.get_msg(convo.get_msgs_len() - 1).contains("func_402000")
+                && convo.get_msg(convo.get_msgs_len() - 1).contains("new_func_name")) {
             convo.add_assistant_msg("{\n" +
                         "    \"new_func_name\": \"func_402000" + name + "\",\n" +
                         "    \"orig_func_name\": \"func_402000\",\n" +
@@ -114,9 +120,16 @@ public class ModelDummy implements Model, Serializable {
                         "        }\n" +
                         "    ]\n" +
                         "}");
-        } else if (task_type == TaskType.DECOM_REFACTOR_FUNC_PARAM_VAR && convo.get_msg(convo.get_msgs_len() - 1).contains("Please explain") && (convo.get_msg(convo.get_msgs_len() - 1).contains("func_401000") || convo.get_msg(convo.get_msgs_len() - 1).contains("func_402000"))) {
+        } else if ((task_type == TaskType.DECOM_REFACTOR_FUNC_PARAM_VAR
+                || task_type == TaskType.DECOM_VIEW_REFACTOR_FUNC_PARAM_VAR)
+                && convo.get_msg(convo.get_msgs_len() - 1).contains("Please explain")
+                && (convo.get_msg(convo.get_msgs_len() - 1).contains("func_401000")
+                        || convo.get_msg(convo.get_msgs_len() - 1).contains("func_402000"))) {
             convo.add_assistant_msg("The function is a simple function that returns 0.");
-        } else if (task_type == TaskType.DECOM_REFACTOR_DATATYPE && convo.get_msg(convo.get_msgs_len() - 1).contains("func_401000") && convo.get_msg(convo.get_msgs_len() - 1).contains("new_datatype")) {
+        } else if ((task_type == TaskType.DECOM_REFACTOR_DATATYPE
+                || task_type == TaskType.DECOM_VIEW_REFACTOR_DATATYPE)
+                && convo.get_msg(convo.get_msgs_len() - 1).contains("func_401000")
+                && convo.get_msg(convo.get_msgs_len() - 1).contains("new_datatype")) {
             convo.add_assistant_msg("[\n" +
                                 "    {\n" +
                                 "        \"new_datatype\": \"int" + name + "\",\n" +
@@ -124,7 +137,10 @@ public class ModelDummy implements Model, Serializable {
                                 "        \"var_name\": \"in_EAX\"\n" +
                                 "    }\n" +
                                 "]");
-        } else if (task_type == TaskType.DECOM_REFACTOR_DATATYPE && convo.get_msg(convo.get_msgs_len() - 1).contains("func_402000") && convo.get_msg(convo.get_msgs_len() - 1).contains("new_datatype")) {
+        } else if ((task_type == TaskType.DECOM_REFACTOR_DATATYPE
+                || task_type == TaskType.DECOM_VIEW_REFACTOR_DATATYPE)
+                && convo.get_msg(convo.get_msgs_len() - 1).contains("func_402000")
+                && convo.get_msg(convo.get_msgs_len() - 1).contains("new_datatype")) {
             convo.add_assistant_msg("[\n" +
                                 "    {\n" +
                                 "        \"new_datatype\": \"pointer" + name + "\",\n" +
@@ -167,9 +183,15 @@ public class ModelDummy implements Model, Serializable {
                                 "        \"var_name\": \"in_stack_00000004\"\n" +
                                 "    }\n" +
                                 "]");
-        } else if (task_type == TaskType.DECOM_REFACTOR_DATATYPE && convo.get_msg(convo.get_msgs_len() - 1).contains("Please explain") && (convo.get_msg(convo.get_msgs_len() - 1).contains("func_401000") || convo.get_msg(convo.get_msgs_len() - 1).contains("func_402000"))) {
+        } else if ((task_type == TaskType.DECOM_REFACTOR_DATATYPE
+                || task_type == TaskType.DECOM_VIEW_REFACTOR_DATATYPE)
+                && convo.get_msg(convo.get_msgs_len() - 1).contains("Please explain")
+                && (convo.get_msg(convo.get_msgs_len() - 1).contains("func_401000")
+                        || convo.get_msg(convo.get_msgs_len() - 1).contains("func_402000"))) {
             convo.add_assistant_msg("The function is a simple function that returns 0.");
-        } else if (task_type == TaskType.DECOM_RESOLVE_DATATYPE && convo.get_msg(convo.get_msgs_len() - 1).contains(" PROCESSENTRY32W.")) {
+        } else if ((task_type == TaskType.DECOM_RESOLVE_DATATYPE
+                || task_type == TaskType.DECOM_VIEW_RESOLVE_DATATYPE)
+                && convo.get_msg(convo.get_msgs_len() - 1).contains(" PROCESSENTRY32W.")) {
             convo.add_assistant_msg("Here is the PROCESSENTRY32W structure in C language, along with its dependent data types and structures, for 32-bit systems:\n" +
                                 "```\n" +
                                 "typedef wchar_t WCHAR;\n" +
@@ -202,7 +224,9 @@ public class ModelDummy implements Model, Serializable {
                                 "\n" +
                                 "Also, `WCHAR` is a wide character type, which is a 16-bit Unicode character on Windows.\n" +
                                 "");
-        } else if (task_type == TaskType.DECOM_RESOLVE_DATATYPE && convo.get_msg(convo.get_msgs_len() - 1).contains(" PROCESSENTRY32.")) {
+        } else if ((task_type == TaskType.DECOM_RESOLVE_DATATYPE
+                || task_type == TaskType.DECOM_VIEW_RESOLVE_DATATYPE)
+                && convo.get_msg(convo.get_msgs_len() - 1).contains(" PROCESSENTRY32.")) {
             convo.add_assistant_msg("Here is the `PROCESSENTRY32` structure written in C for a 32-bit environment, including any necessary dependent data types and structures:\n" +
                                 "\n" +
                                 "```c\n" +

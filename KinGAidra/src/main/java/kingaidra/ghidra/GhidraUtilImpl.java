@@ -654,26 +654,32 @@ public class GhidraUtilImpl implements GhidraUtil {
     }
 
     public DataType parse_datatypes(String code) {
+        DataTypeParseResult result = parse_datatypes_with_error(code);
+        return result.get_datatype();
+    }
+
+    public DataTypeParseResult parse_datatypes_with_error(String code) {
+        String normalized_code = code.trim();
         String regex = "#define\\s+(\\S+)\\s+(\\S+)";
         Pattern pattern = Pattern.compile(regex);
-        Matcher matcher = pattern.matcher(code);
+        Matcher matcher = pattern.matcher(normalized_code);
         while (matcher.find()) {
             String define = matcher.group(0);
             String key = matcher.group(1);
             String value = matcher.group(2);
-            code = code.replace(define, "");
-            code = code.replace(key, value);
+            normalized_code = normalized_code.replace(define, "");
+            normalized_code = normalized_code.replace(key, value);
         }
 
         DataTypeManager datatype_manager = program.getDataTypeManager();
         CParser parser = new CParser(datatype_manager);
         DataType dt;
         try {
-            dt = parser.parse(code);
+            dt = parser.parse(normalized_code);
         } catch (Exception e) {
-            return null;
+            return new DataTypeParseResult(null, e.getMessage());
         }
-        return dt;
+        return new DataTypeParseResult(dt, null);
     }
 
     public boolean refact(DecomDiff diff) {
