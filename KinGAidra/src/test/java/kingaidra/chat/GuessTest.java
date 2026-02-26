@@ -124,41 +124,45 @@ public class GuessTest {
         Guess guess = new Guess(ai, model_conf, conf);
         Conversation convo1 = guess.guess(TaskType.CHAT, "msg", util.get_addr(program, 0x402000));
         assertEquals(convo1.get_type(), ConversationType.USER_CHAT);
-        assertEquals(convo1.get_msgs_len(), 2);
-        assertEquals(convo1.get_msg(0), "msg");
-        assertEquals(convo1.get_msg(1), "msgDummy2");
+        assertEquals(convo1.get_msgs_len(), 3);
+        assertEquals(convo1.get_role(0), "system");
+        assertEquals(convo1.get_msg(1), "msg");
+        assertEquals(convo1.get_msg(2), "msgDummy2");
         assertEquals(convo1.get_addrs().length, 0);
         guess.guess(TaskType.CHAT, convo1, "Explain\n<code>", util.get_addr(program, 0x402000));
         assertEquals(convo1.get_type(), ConversationType.USER_CHAT);
-        assertEquals(convo1.get_msgs_len(), 4);
-        assertEquals(convo1.get_msg(0), "msg");
-        assertEquals(convo1.get_msg(1), "msgDummy2");
-        assertTrue(convo1.get_msg(2).contains("int __fastcall func_402000(undefined *param_1)"));
-        assertTrue(convo1.get_msg(3).endsWith("Dummy2"));
+        assertEquals(convo1.get_msgs_len(), 5);
+        assertEquals(convo1.get_role(0), "system");
+        assertEquals(convo1.get_msg(1), "msg");
+        assertEquals(convo1.get_msg(2), "msgDummy2");
+        assertTrue(convo1.get_msg(3).contains("int __fastcall func_402000(undefined *param_1)"));
+        assertTrue(convo1.get_msg(4).endsWith("Dummy2"));
         assertEquals(convo1.get_addrs().length, 1);
         assertEquals(convo1.get_addrs()[0].getOffset(), 0x402000);
 
         Conversation convo2 = guess.guess(TaskType.CHAT, "msg", util.get_addr(program, 0x401000));
         guess.guess(TaskType.CHAT, convo2, "Explain\n<asm>", util.get_addr(program, 0x401000));
         assertEquals(convo2.get_type(), ConversationType.USER_CHAT);
-        assertEquals(convo2.get_msgs_len(), 4);
-        assertEquals(convo2.get_msg(0), "msg");
-        assertEquals(convo2.get_msg(1), "msgDummy2");
-        assertTrue(convo2.get_msg(2)
+        assertEquals(convo2.get_msgs_len(), 5);
+        assertEquals(convo2.get_role(0), "system");
+        assertEquals(convo2.get_msg(1), "msg");
+        assertEquals(convo2.get_msg(2), "msgDummy2");
+        assertTrue(convo2.get_msg(3)
                 .contains("func_401000:\n    PUSH EBP\n    MOV EBP,ESP\n    POP EBP\n    RET\n"));
-        assertTrue(convo2.get_msg(3).endsWith("Dummy2"));
+        assertTrue(convo2.get_msg(4).endsWith("Dummy2"));
         assertEquals(convo2.get_addrs().length, 1);
         assertEquals(convo2.get_addrs()[0].getOffset(), 0x401000);
 
         Conversation convo3 = guess.guess(TaskType.CHAT, "msg", util.get_addr(program, 0x408000));
         guess.guess(TaskType.CHAT, convo3, "Explain\n<calltree>", util.get_addr(program, 0x408000));
         assertEquals(convo3.get_type(), ConversationType.USER_CHAT);
-        assertEquals(convo3.get_msgs_len(), 4);
-        assertEquals(convo3.get_msg(0), "msg");
-        assertEquals(convo3.get_msg(1), "msgDummy2");
-        assertTrue(convo3.get_msg(2).contains("- func_408000\n" +
+        assertEquals(convo3.get_msgs_len(), 5);
+        assertEquals(convo3.get_role(0), "system");
+        assertEquals(convo3.get_msg(1), "msg");
+        assertEquals(convo3.get_msg(2), "msgDummy2");
+        assertTrue(convo3.get_msg(3).contains("- func_408000\n" +
                                 "    - func_407000\n"));
-        assertTrue(convo3.get_msg(3).endsWith("Dummy2"));
+        assertTrue(convo3.get_msg(4).endsWith("Dummy2"));
         assertEquals(convo3.get_addrs().length, 1);
         assertEquals(convo3.get_addrs()[0].getOffset(), 0x408000);
     }
