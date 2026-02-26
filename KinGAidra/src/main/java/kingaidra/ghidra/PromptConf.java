@@ -26,6 +26,7 @@ public class PromptConf {
     public static final String PROMPT_CHAT_GROUP_EXPLAIN_ASM_WITH_AI = "Explain asm with AI";
     public static final String PROMPT_CHAT_GROUP_DECOMPILE_WITH_AI = "Decompile with AI";
     public static final String PROMPT_CHAT_GROUP_EXPLAIN_STRINGS_MALWARE = "Explain strings (malware)";
+    public static final String PROMPT_CHAT_GROUP_QUICK_MALWARE_BEHAVIOR_OVERVIEW = "Quick malware behavior overview";
     public static final String PROMPT_CHAT_GROUP_ADD_COMMENTS_WITH_AI = "Add comments using AI";
     public static final String PROMPT_CHAT_GROUP_WORKFLOWS = "Workflows";
 
@@ -144,6 +145,8 @@ public class PromptConf {
                 return new String[] { PROMPT_GROUP_CHAT, PROMPT_CHAT_GROUP_DECOMPILE_WITH_AI };
             case CHAT_EXPLAIN_STRINGS:
                 return new String[] { PROMPT_GROUP_CHAT, PROMPT_CHAT_GROUP_EXPLAIN_STRINGS_MALWARE };
+            case CHAT_MALWARE_BEHAVIOR_OVERVIEW:
+                return new String[] { PROMPT_GROUP_CHAT, PROMPT_CHAT_GROUP_QUICK_MALWARE_BEHAVIOR_OVERVIEW };
             case ADD_COMMENTS:
                 return new String[] { PROMPT_GROUP_CHAT, PROMPT_CHAT_GROUP_ADD_COMMENTS_WITH_AI };
             case DECOMPILE_VIEW:
@@ -177,6 +180,8 @@ public class PromptConf {
                 return "1: Action: Decompile with AI";
             case CHAT_EXPLAIN_STRINGS:
                 return "1: Action: Explain strings (malware)";
+            case CHAT_MALWARE_BEHAVIOR_OVERVIEW:
+                return "1: Action: Quick malware behavior overview with AI";
             case ADD_COMMENTS:
                 return "1: Action: Add comments using AI";
             case DECOMPILE_VIEW:
@@ -218,6 +223,8 @@ public class PromptConf {
                 return "Prompt used by \"Decompile with AI\".";
             case CHAT_EXPLAIN_STRINGS:
                 return "Prompt used by \"Explain strings (malware)\".";
+            case CHAT_MALWARE_BEHAVIOR_OVERVIEW:
+                return "Prompt used by \"Quick malware behavior overview with AI\".";
             case ADD_COMMENTS:
                 return "Prompt used by \"Add comments using AI\".";
             case DECOMPILE_VIEW:
@@ -614,6 +621,22 @@ public class PromptConf {
                 "\n" +
                 "Strings:\n" +
                 "<strings>");
+
+        default_user_prompts.put(TaskType.CHAT_MALWARE_BEHAVIOR_OVERVIEW,
+                "Provide a quick, high-level overview of the malware behavior from this Ghidra analysis context.\n" +
+                "Carefully investigate function callers/callees and summarize only established facts.\n" +
+                "\n" +
+                "Include:\n" +
+                "- Malware type (Ransomware, RAT, Downloader, etc.)\n" +
+                "- Main execution flow at overview level\n" +
+                "- Major related functions (with address and function name)\n" +
+                "- A simple PlantUML sequence diagram (with function names)\n" +
+                "- Confirmed IOCs only\n" +
+                "- Unknown / unresolved points\n" +
+                "\n" +
+                "Constraints:\n" +
+                "- Facts only. Provide evidence (address and function name) for every claim.\n" +
+                "- No guessing or assumptions. If evidence is unclear, output \"Unknown\".\n");
 
         default_user_prompts.put(TaskType.ADD_COMMENTS,
                 "Please add comments to the following C language function to explain its purpose and logic. The comments should be concise but clear, and should describe the function, parameters, logic, and any important details for each part of the code. Return the results in the following format:\n" +

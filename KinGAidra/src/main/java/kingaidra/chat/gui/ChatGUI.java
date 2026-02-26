@@ -637,6 +637,19 @@ public class ChatGUI extends JPanel {
                 }).popupMenuPath(new String[] {"Explain strings (malware)"}).popupMenuGroup("KinGAidra")
                 .buildAndInstall(plugin);
 
+        new ActionBuilder("Quick malware behavior overview with AI", provider.getName())
+                .withContext(ProgramLocationActionContext.class).enabledWhen(context -> {
+                    return true;
+                }).onAction(context -> {
+                    provider.setVisible(true);
+                    provider.toFront();
+                    provider.change_tab("Chat");
+
+                    reset(null);
+                    guess(TaskType.CHAT_MALWARE_BEHAVIOR_OVERVIEW, ghidra.get_current_addr());
+                }).popupMenuPath(new String[] {"Quick malware behavior overview with AI"}).popupMenuGroup("KinGAidra")
+                .buildAndInstall(plugin);
+
         new ActionBuilder("Add comments using AI", provider.getName())
                 .withContext(ProgramLocationActionContext.class).enabledWhen(context -> {
                     var func = context.getProgram().getFunctionManager()

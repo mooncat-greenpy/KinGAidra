@@ -65,6 +65,9 @@ public class Guess {
             return ai.guess_decom_asm(m, addr);
         } else if (type == TaskType.CHAT_EXPLAIN_STRINGS) {
             return ai.guess_explain_strings(m, addr);
+        } else if (type == TaskType.CHAT_MALWARE_BEHAVIOR_OVERVIEW) {
+            String overview_prompt = conf.get_user_prompt(type, m.get_name());
+            return guess(type, convo, overview_prompt, addr);
         }
         return guess(type, convo, msg, addr);
     }
