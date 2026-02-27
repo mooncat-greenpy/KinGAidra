@@ -19,6 +19,8 @@ import kingaidra.decom.extractor.JsonExtractor;
 import kingaidra.ghidra.PromptConf;
 
 public class Guess {
+    private static final int MALWARE_OVERVIEW_ADDITIONAL_MAX_TRIES = 3;
+
     private Ai ai;
     private ModelConf model_conf;
     private PromptConf conf;
@@ -66,10 +68,42 @@ public class Guess {
         } else if (type == TaskType.CHAT_EXPLAIN_STRINGS) {
             return ai.guess_explain_strings(m, addr);
         } else if (type == TaskType.CHAT_MALWARE_BEHAVIOR_OVERVIEW) {
-            String overview_prompt = conf.get_user_prompt(type, m.get_name());
-            return guess(type, convo, overview_prompt, addr);
+            return guess_malware_behavior_overview(type, convo, m.get_name(), addr);
         }
         return guess(type, convo, msg, addr);
+    }
+
+    private Conversation guess_malware_behavior_overview(
+            TaskType type, Conversation convo, String model_name, Address addr) {
+        Conversation result = ai.guess(
+                type,
+                convo,
+                conf.get_user_prompt(TaskType.CHAT_MALWARE_BEHAVIOR_OVERVIEW, model_name),
+                addr);
+        if (result == null) {
+            return null;
+        }
+
+        String additional_prompt = conf.get_user_prompt(TaskType.CHAT_MALWARE_BEHAVIOR_OVERVIEW_ADDITIONAL, model_name);
+        for (int i = 0; i < MALWARE_OVERVIEW_ADDITIONAL_MAX_TRIES; i++) {
+            result = ai.guess(TaskType.CHAT_MALWARE_BEHAVIOR_OVERVIEW_ADDITIONAL, result, additional_prompt, addr);
+            if (result == null) {
+                return null;
+            }
+            if (is_last_assistant_message_none(result)) {
+                break;
+            }
+        }
+
+        return ai.guess(
+                TaskType.CHAT_MALWARE_BEHAVIOR_OVERVIEW_REPORT,
+                result,
+                conf.get_user_prompt(TaskType.CHAT_MALWARE_BEHAVIOR_OVERVIEW_REPORT, model_name),
+                addr);
+    }
+
+    private boolean is_last_assistant_message_none(Conversation convo) {
+        return "None".equalsIgnoreCase(convo.get_msg(convo.get_msgs_len() - 1).trim());
     }
 
     public Conversation guess_workflow(ChatWorkflow workflow, Address addr) {

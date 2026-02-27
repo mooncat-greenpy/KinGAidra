@@ -146,6 +146,8 @@ public class PromptConf {
             case CHAT_EXPLAIN_STRINGS:
                 return new String[] { PROMPT_GROUP_CHAT, PROMPT_CHAT_GROUP_EXPLAIN_STRINGS_MALWARE };
             case CHAT_MALWARE_BEHAVIOR_OVERVIEW:
+            case CHAT_MALWARE_BEHAVIOR_OVERVIEW_ADDITIONAL:
+            case CHAT_MALWARE_BEHAVIOR_OVERVIEW_REPORT:
                 return new String[] { PROMPT_GROUP_CHAT, PROMPT_CHAT_GROUP_QUICK_MALWARE_BEHAVIOR_OVERVIEW };
             case ADD_COMMENTS:
                 return new String[] { PROMPT_GROUP_CHAT, PROMPT_CHAT_GROUP_ADD_COMMENTS_WITH_AI };
@@ -181,7 +183,11 @@ public class PromptConf {
             case CHAT_EXPLAIN_STRINGS:
                 return "1: Action: Explain strings (malware)";
             case CHAT_MALWARE_BEHAVIOR_OVERVIEW:
-                return "1: Action: Quick malware behavior overview with AI";
+                return "1: Initial analysis prompt";
+            case CHAT_MALWARE_BEHAVIOR_OVERVIEW_ADDITIONAL:
+                return "2: Additional analysis prompt";
+            case CHAT_MALWARE_BEHAVIOR_OVERVIEW_REPORT:
+                return "3: Report prompt";
             case ADD_COMMENTS:
                 return "1: Action: Add comments using AI";
             case DECOMPILE_VIEW:
@@ -224,7 +230,11 @@ public class PromptConf {
             case CHAT_EXPLAIN_STRINGS:
                 return "Prompt used by \"Explain strings (malware)\".";
             case CHAT_MALWARE_BEHAVIOR_OVERVIEW:
-                return "Prompt used by \"Quick malware behavior overview with AI\".";
+                return "Initial analysis prompt used by \"Quick malware behavior overview with AI\".";
+            case CHAT_MALWARE_BEHAVIOR_OVERVIEW_ADDITIONAL:
+                return "Additional analysis prompt used by \"Quick malware behavior overview with AI\". Runs until response is \"None\" or 3 attempts.";
+            case CHAT_MALWARE_BEHAVIOR_OVERVIEW_REPORT:
+                return "Final report prompt used by \"Quick malware behavior overview with AI\".";
             case ADD_COMMENTS:
                 return "Prompt used by \"Add comments using AI\".";
             case DECOMPILE_VIEW:
@@ -623,20 +633,38 @@ public class PromptConf {
                 "<strings>");
 
         default_user_prompts.put(TaskType.CHAT_MALWARE_BEHAVIOR_OVERVIEW,
-                "Provide a quick, high-level overview of the malware behavior from this Ghidra analysis context.\n" +
-                "Carefully investigate function callers/callees and summarize only established facts.\n" +
+                "I want to understand the overall behavior of the malware being analyzed in Ghidra.\n" +
+                "Carefully investigate function callers/callees and create a detailed analysis report for malware analysts.\n" +
+                "Please include the following:\n" +
                 "\n" +
-                "Include:\n" +
                 "- Malware type (Ransomware, RAT, Downloader, etc.)\n" +
-                "- Main execution flow at overview level\n" +
-                "- Major related functions (with address and function name)\n" +
-                "- A simple PlantUML sequence diagram (with function names)\n" +
-                "- Confirmed IOCs only\n" +
-                "- Unknown / unresolved points\n" +
+                "- A PlantUML sequence diagram describing the malware's behavior\n" +
+                "- Include the corresponding function names in the sequence diagram");
+        default_user_prompts.put(TaskType.CHAT_MALWARE_BEHAVIOR_OVERVIEW_ADDITIONAL,
+                "If there are any items that have not been completed or lack sufficient evidence, perform additional work based on facts.\n" +
+                "If everything is complete, output only \"None\".\n" +
                 "\n" +
                 "Constraints:\n" +
-                "- Facts only. Provide evidence (address and function name) for every claim.\n" +
-                "- No guessing or assumptions. If evidence is unclear, output \"Unknown\".\n");
+                "- No guessing. If unknown, write \"Unknown\".");
+        default_user_prompts.put(TaskType.CHAT_MALWARE_BEHAVIOR_OVERVIEW_REPORT,
+                "Using only the facts established so far, create an analysis report for static analysts.\n" +
+                "\n" +
+                "Include:\n" +
+                "- Summary (malware determination result, malware type (Ransomware, RAT, Downloader, etc.), major capabilities, and the scope of the conclusions reached)\n" +
+                "- High-level behavior (main execution paths and thread/module structure)\n" +
+                "- Functional map\n" +
+                "    - Based on the Malware Behavior Catalog\n" +
+                "    - Behaviors that cannot be organized using the Malware Behavior Catalog: include the reason\n" +
+                "- PlantUML sequence diagram (with function names)\n" +
+                "- Details for each behavior/function\n" +
+                "    - Exhaustively document all established facts\n" +
+                "    - Include as much information as possible that is useful for malware analysis\n" +
+                "- IOC list (only those confirmed)\n" +
+                "- Unknowns and unresolved items (list them without speculation)\n" +
+                "\n" +
+                "Constraints:\n" +
+                "- Facts only. Provide evidence (address and function name) for each claim.\n" +
+                "- Guessing and assumptions are prohibited.");
 
         default_user_prompts.put(TaskType.ADD_COMMENTS,
                 "Please add comments to the following C language function to explain its purpose and logic. The comments should be concise but clear, and should describe the function, parameters, logic, and any important details for each part of the code. Return the results in the following format:\n" +
