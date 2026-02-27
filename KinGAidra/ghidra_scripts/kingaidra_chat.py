@@ -784,7 +784,10 @@ def main():
             printerr(e.read())
             exit()
 
-        if fail_count < 5 and response["choices"][0]["finish_reason"] == "stop" and response["choices"][0]["message"]["content"] is None:
+        if fail_count < 10 and "choices" not in response:
+            fail_count += 1
+            continue
+        if fail_count < 10 and response["choices"][0]["finish_reason"] == "stop" and response["choices"][0]["message"]["content"] is None:
             fail_count += 1
             continue
 
@@ -802,6 +805,9 @@ def main():
                 data["messages"].append({"role": "tool", "tool_call_id": i["id"], "content": content})
         elif response["choices"][0]["finish_reason"] == "stop":
             break
+
+        fail_count = 0
+
     result = response["choices"][0]["message"]["content"]
 
     state.addEnvironmentVar("RESPONSE", result)
