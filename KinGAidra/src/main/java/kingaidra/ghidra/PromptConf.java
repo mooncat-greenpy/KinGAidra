@@ -163,7 +163,8 @@ public class PromptConf {
             case REVIEW_DECOM_REFACTOR_DATATYPE:
             case DECOM_RESOLVE_DATATYPE:
                 return new String[] { PROMPT_GROUP_DECOM };
-            case KEYFUNC_CALLTREE:
+            case KEYFUNC_FUNCTIONS:
+            case KEYFUNC_STRINGS:
                 return new String[] { PROMPT_GROUP_KEYFUNC };
             default:
                 return new String[] { PROMPT_GROUP_OTHER };
@@ -210,8 +211,10 @@ public class PromptConf {
                 return "4: Review Refactor Data Types";
             case DECOM_RESOLVE_DATATYPE:
                 return "5: Resolve Struct Definitions";
-            case KEYFUNC_CALLTREE:
-                return "1: Call Tree Prioritization";
+            case KEYFUNC_FUNCTIONS:
+                return "1: Functions Extraction";
+            case KEYFUNC_STRINGS:
+                return "2: Strings Extraction";
             default:
                 return task.name();
         }
@@ -257,8 +260,10 @@ public class PromptConf {
                 return "Decom prompt for reviewing data type refactoring proposals.";
             case DECOM_RESOLVE_DATATYPE:
                 return "Decom prompt for resolving missing struct definitions. <datatype_name> is replaced with the target struct name, and <bit_size> is replaced with the program bit width.";
-            case KEYFUNC_CALLTREE:
-                return "KeyFunc prompt for prioritizing functions from the call tree.";
+            case KEYFUNC_FUNCTIONS:
+                return "KeyFunc prompt for extracting prioritized functions from analysis output.";
+            case KEYFUNC_STRINGS:
+                return "KeyFunc prompt for extracting prioritized strings from Explain strings output.";
             default:
                 return "Unused task prompt.";
         }
@@ -719,18 +724,40 @@ public class PromptConf {
                 "Do not include typedefs, includes, defines, example code, initialization, or comments. " +
                 "Use fixed-width types like unsigned long and wchar_t directly. " +
                 "It is for <bit_size>-bit.");
-        default_user_prompts.put(TaskType.KEYFUNC_CALLTREE,
-                "Done, please list which functions would be good to analyze first to get the big picture of this program.\n" +
-                "Output format.\n" +
+        default_user_prompts.put(TaskType.KEYFUNC_FUNCTIONS,
+                "From the analysis output below, extract only functions that should be prioritized for reverse engineering.\n" +
+                "For each function, include a short reason.\n" +
+                "Output only JSON in the following format:\n" +
                 "```json\n" +
                 "{\n" +
                 "    \"func\": [\n" +
-                "        \"Function1\",\n" +
-                "        \"Function2\",\n" +
-                "        \"Function3\",\n" +
-                "        ...\n" +
+                "        {\n" +
+                "            \"name\": \"Function1\",\n" +
+                "            \"reason\": \"short reason\"\n" +
+                "        },\n" +
+                "        {\n" +
+                "            \"name\": \"Function2\",\n" +
+                "            \"reason\": \"short reason\"\n" +
+                "        }\n" +
                 "    ]\n" +
                 "}\n" +
-                "```");
+                "```\n" +
+                "If there is no valid function, return an empty array.\n" +
+                "\n" +
+                "Source: ");
+        default_user_prompts.put(TaskType.KEYFUNC_STRINGS,
+                "From the analysis output below, extract only strings useful for prioritizing reverse engineering.\n" +
+                "Output only JSON in the following format:\n" +
+                "```json\n" +
+                "{\n" +
+                "    \"str\": [\n" +
+                "        \"string1\",\n" +
+                "        \"string2\"\n" +
+                "    ]\n" +
+                "}\n" +
+                "```\n" +
+                "If there is no valid string, return an empty array.\n" +
+                "\n" +
+                "Source: ");
     }
 }

@@ -72,7 +72,8 @@ public class MainProvider extends ComponentProvider {
         main_panel.add("DecomView", llm_decom_panel);
 
         // Currently considering a feature to identify areas that should be prioritized for analysis in binary analysis
-        keyfunc_panel = new KeyFuncGUI(this, this.dockingTool, program, plugin, owner, srv, ghidra, chat_model_conf, conf, ai, logger);
+        keyfunc_panel = new KeyFuncGUI(this, this.dockingTool, program, plugin, owner, srv, ghidra,
+                chat_model_conf, conf, ai, container, logger);
         main_panel.add("KeyFunc", keyfunc_panel);
 
         setVisible(true);

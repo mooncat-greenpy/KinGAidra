@@ -2,15 +2,12 @@ package kingaidra.keyfunc;
 
 import org.junit.jupiter.api.Test;
 
-import ghidra.program.model.listing.Data;
 import ghidra.program.model.listing.Function;
 import ghidra.program.model.listing.Program;
 import ghidra.util.task.TaskMonitor;
 import kingaidra.ai.Ai;
-import kingaidra.ai.convo.Conversation;
 import kingaidra.ai.convo.ConversationContainer;
 import kingaidra.ai.convo.ConversationContainerDummy;
-import kingaidra.ai.convo.ConversationType;
 import kingaidra.ai.model.Model;
 import kingaidra.ai.model.ModelConfSingle;
 import kingaidra.ghidra.GhidraPreferences;
@@ -24,6 +21,8 @@ import kingaidra.testutil.ModelDummy;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
+
+import java.util.Map;
 
 public class GuessTest {
     @Test
@@ -105,7 +104,7 @@ public class GuessTest {
     }
 
     @Test
-    void test_guess() throws Exception {
+    void test_guess_by_chat_histories() throws Exception {
         GhidraTestUtil util = new GhidraTestUtil();
         Program program = util.create_program();
         GhidraUtil gu = new GhidraUtilImpl(program, TaskMonitor.DUMMY);
@@ -118,58 +117,22 @@ public class GuessTest {
         pref.store("Dummy3", new ModelDummy("Dummy3", "dummy.py", false));
         ModelConfSingle model_conf = new ModelConfSingle("keyfunc", pref);
         Guess guess = new Guess(gu, ai, model_conf, conf);
-        Function[] funcs = guess.guess("- func_404000\n" +
-                                "    - func_403000\n" +
-                                "        - func_401000\n" +
-                                "        - func_402000\n" +
-                                "    - func_405000\n" +
-                                "- func_406000\n" +
-                                "    - func_405000\n" +
-                                "        - func_402000\n" +
-                                "- func_408000\n" +
-                                "    - func_407000\n", null);
-        assertEquals(funcs.length, 3);
-        assertEquals(funcs[0].getEntryPoint().getOffset(), 0x401000);
-        assertEquals(funcs[0].getName(), "func_401000");
-        assertEquals(funcs[1].getEntryPoint().getOffset(), 0x404000);
-        assertEquals(funcs[1].getName(), "func_404000");
-        assertEquals(funcs[2].getEntryPoint().getOffset(), 0x406000);
-        assertEquals(funcs[2].getName(), "func_406000");
 
-        Conversation convo = container.get_convo(container.get_ids()[0]);
-        assertEquals(convo.get_type(), ConversationType.SYSTEM_KEYFUNC);
-    }
-
-    @Test
-    void test_guess_by_strings() throws Exception {
-        GhidraTestUtil util = new GhidraTestUtil();
-        Program program = util.create_program();
-        GhidraUtil gu = new GhidraUtilImpl(program, TaskMonitor.DUMMY);
-        ConversationContainer container = new ConversationContainerDummy();
-        PromptConf conf = new PromptConf();
-        Ai ai = new Ai(null, program, gu, container, null, conf);
-        GhidraPreferences<Model> pref = new ChatModelPreferencesDummy();
-        pref.store("Dummy1", new ModelDummy("Dummy1", "dummy.py", false));
-        pref.store("Dummy2", new ModelDummy("Dummy2", "dummy.py", true));
-        pref.store("Dummy3", new ModelDummy("Dummy3", "dummy.py", false));
-        ModelConfSingle model_conf = new ModelConfSingle("keyfunc", pref);
-        Guess guess = new Guess(gu, ai, model_conf, conf);
-        String[] strings = guess.guess_by_strings();
-        assertEquals(strings.length, 4);
-        assertEquals(strings[0], "string1");
-        assertEquals(strings[1], "string2");
-        assertEquals(strings[2], "string3");
-        assertEquals(strings[3], "ing2");
-        Data[] data = guess.guess_string_data();
-        assertEquals(data.length, 3);
-        assertEquals(data[0].getAddress(), util.get_addr(program, 0x40f000));
-        assertEquals(data[0].getValue(), "string1");
-        assertEquals(data[1].getAddress(), util.get_addr(program, 0x40f100));
-        assertEquals(data[1].getValue(), "string2");
-        assertEquals(data[2].getAddress(), util.get_addr(program, 0x40f200));
-        assertEquals(data[2].getValue(), "string3");
-
-        Conversation convo = container.get_convo(container.get_ids()[0]);
-        assertEquals(convo.get_type(), ConversationType.USER_CHAT);
+        Map.Entry<Function, String>[] funcs = guess.guess_by_chat_histories(util.get_addr(program, 0x401000));
+        assertTrue(funcs.length >= 2);
+        boolean has_malware_401 = false;
+        boolean has_malware_404 = false;
+        for (Map.Entry<Function, String> entry : funcs) {
+            if (entry.getKey().getName().equals("func_401000")
+                    && entry.getValue().contains("entry flow and dispatch")) {
+                has_malware_401 = true;
+            }
+            if (entry.getKey().getName().equals("func_404000")
+                    && entry.getValue().contains("C2 communication")) {
+                has_malware_404 = true;
+            }
+        }
+        assertTrue(has_malware_401);
+        assertTrue(has_malware_404);
     }
 }

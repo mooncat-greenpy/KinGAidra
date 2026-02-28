@@ -2,6 +2,8 @@ package kingaidra.chat;
 
 import org.junit.jupiter.api.Test;
 
+import ghidra.app.script.GhidraState;
+import ghidra.framework.plugintool.PluginTool;
 import ghidra.program.model.listing.Program;
 import ghidra.util.task.TaskMonitor;
 import kingaidra.ai.Ai;
@@ -11,6 +13,7 @@ import kingaidra.ai.convo.ConversationContainerDummy;
 import kingaidra.ai.convo.ConversationType;
 import kingaidra.ai.model.Model;
 import kingaidra.ai.model.ModelConfSingle;
+import kingaidra.ai.task.KinGAidraChatTaskService;
 import kingaidra.ai.task.TaskType;
 import kingaidra.ghidra.GhidraPreferences;
 import kingaidra.ghidra.GhidraUtil;
@@ -29,6 +32,23 @@ import java.util.List;
 import java.util.Map;
 
 public class GuessTest {
+    private static class AdditionalPromptNoneModelDummy extends ChatModelDummy {
+        public AdditionalPromptNoneModelDummy(String name, String script, boolean active) {
+            super(name, script, active);
+        }
+
+        @Override
+        public Conversation guess(TaskType task_type, Conversation convo, KinGAidraChatTaskService service, PluginTool tool,
+                Program program, GhidraState src_state) {
+            String last_msg = convo.get_msg(convo.get_msgs_len() - 1);
+            if (task_type == TaskType.CHAT_MALWARE_BEHAVIOR_OVERVIEW_ADDITIONAL && "additional".equals(last_msg)) {
+                convo.add_assistant_msg("None");
+                return convo;
+            }
+            return super.guess(task_type, convo, service, tool, program, src_state);
+        }
+    }
+
     @Test
     void test_constructor() throws Exception {
         GhidraTestUtil util = new GhidraTestUtil();
@@ -165,6 +185,78 @@ public class GuessTest {
         assertTrue(convo3.get_msg(4).endsWith("Dummy2"));
         assertEquals(convo3.get_addrs().length, 1);
         assertEquals(convo3.get_addrs()[0].getOffset(), 0x408000);
+    }
+
+    @Test
+    void test_guess_malware_behavior_overview_additional_runs_up_to_three_times() throws Exception {
+        GhidraTestUtil util = new GhidraTestUtil();
+        Program program = util.create_program();
+        GhidraUtil gu = new GhidraUtilImpl(program, TaskMonitor.DUMMY);
+        ConversationContainer container = new ConversationContainerDummy();
+        PromptConf conf = new PromptConf();
+        Ai ai = new Ai(null, program, gu, container, null, conf);
+        GhidraPreferences<Model> pref = new ChatModelPreferencesDummy();
+        pref.store("Dummy1", new ChatModelDummy("Dummy1", "dummy.py", false));
+        pref.store("Dummy2", new ChatModelDummy("Dummy2", "dummy.py", true));
+        pref.store("Dummy3", new ChatModelDummy("Dummy3", "dummy.py", false));
+        ModelConfSingle model_conf = new ModelConfSingle("chat", pref);
+        Guess guess = new Guess(ai, model_conf, conf);
+
+        conf.set_user_prompt(TaskType.CHAT_MALWARE_BEHAVIOR_OVERVIEW, "", "initial");
+        conf.set_user_prompt(TaskType.CHAT_MALWARE_BEHAVIOR_OVERVIEW_ADDITIONAL, "", "additional");
+        conf.set_user_prompt(TaskType.CHAT_MALWARE_BEHAVIOR_OVERVIEW_REPORT, "", "report");
+
+        Conversation convo = guess.guess(
+                TaskType.CHAT_MALWARE_BEHAVIOR_OVERVIEW,
+                "ignored",
+                util.get_addr(program, 0x401000));
+        assertEquals(convo.get_type(), ConversationType.USER_CHAT);
+        assertEquals(convo.get_msgs_len(), 11);
+        assertEquals(convo.get_role(0), "system");
+        assertEquals(convo.get_msg(1), "initial");
+        assertEquals(convo.get_msg(2), "initialDummy2");
+        assertEquals(convo.get_msg(3), "additional");
+        assertEquals(convo.get_msg(4), "additionalDummy2");
+        assertEquals(convo.get_msg(5), "additional");
+        assertEquals(convo.get_msg(6), "additionalDummy2");
+        assertEquals(convo.get_msg(7), "additional");
+        assertEquals(convo.get_msg(8), "additionalDummy2");
+        assertEquals(convo.get_msg(9), "report");
+        assertEquals(convo.get_msg(10), "reportDummy2");
+    }
+
+    @Test
+    void test_guess_malware_behavior_overview_stops_additional_on_none() throws Exception {
+        GhidraTestUtil util = new GhidraTestUtil();
+        Program program = util.create_program();
+        GhidraUtil gu = new GhidraUtilImpl(program, TaskMonitor.DUMMY);
+        ConversationContainer container = new ConversationContainerDummy();
+        PromptConf conf = new PromptConf();
+        Ai ai = new Ai(null, program, gu, container, null, conf);
+        GhidraPreferences<Model> pref = new ChatModelPreferencesDummy();
+        pref.store("Dummy1", new AdditionalPromptNoneModelDummy("Dummy1", "dummy.py", false));
+        pref.store("Dummy2", new AdditionalPromptNoneModelDummy("Dummy2", "dummy.py", true));
+        pref.store("Dummy3", new AdditionalPromptNoneModelDummy("Dummy3", "dummy.py", false));
+        ModelConfSingle model_conf = new ModelConfSingle("chat", pref);
+        Guess guess = new Guess(ai, model_conf, conf);
+
+        conf.set_user_prompt(TaskType.CHAT_MALWARE_BEHAVIOR_OVERVIEW, "", "initial");
+        conf.set_user_prompt(TaskType.CHAT_MALWARE_BEHAVIOR_OVERVIEW_ADDITIONAL, "", "additional");
+        conf.set_user_prompt(TaskType.CHAT_MALWARE_BEHAVIOR_OVERVIEW_REPORT, "", "report");
+
+        Conversation convo = guess.guess(
+                TaskType.CHAT_MALWARE_BEHAVIOR_OVERVIEW,
+                "ignored",
+                util.get_addr(program, 0x401000));
+        assertEquals(convo.get_type(), ConversationType.USER_CHAT);
+        assertEquals(convo.get_msgs_len(), 7);
+        assertEquals(convo.get_role(0), "system");
+        assertEquals(convo.get_msg(1), "initial");
+        assertEquals(convo.get_msg(2), "initialDummy2");
+        assertEquals(convo.get_msg(3), "additional");
+        assertEquals(convo.get_msg(4), "None");
+        assertEquals(convo.get_msg(5), "report");
+        assertEquals(convo.get_msg(6), "reportDummy2");
     }
 
     @Test

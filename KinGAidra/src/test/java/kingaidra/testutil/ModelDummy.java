@@ -266,13 +266,36 @@ public class ModelDummy implements Model, Serializable {
                                 "10. **`szExeFile`**: The executable file's full path.\n" +
                                 "\n" +
                                 "Additionally, I defined **`MAX_PATH`** as `260`, which is the typical maximum length of file paths in Windows.");
-        } else if (task_type == TaskType.KEYFUNC_CALLTREE && convo.get_msg(convo.get_msgs_len() - 1).contains("please list which functions")) {
+        } else if (task_type == TaskType.CHAT_MALWARE_BEHAVIOR_OVERVIEW) {
+            convo.add_assistant_msg("overview");
+        } else if (task_type == TaskType.CHAT_MALWARE_BEHAVIOR_OVERVIEW_ADDITIONAL) {
+            convo.add_assistant_msg("None");
+        } else if (task_type == TaskType.CHAT_MALWARE_BEHAVIOR_OVERVIEW_REPORT) {
+            convo.add_assistant_msg("report:\n- func_401000 starts main behavior\n- func_404000 handles C2");
+        } else if (task_type == TaskType.KEYFUNC_FUNCTIONS
+                && convo.get_msg(convo.get_msgs_len() - 1).contains("Source: Quick malware behavior overview with AI")) {
             convo.add_assistant_msg("```json\n" +
                         "{\n" +
                         "    \"func\": [\n" +
-                        "        \"func_401000\",\n" +
-                        "        \"func_404000\",\n" +
-                        "        \"func_406000\"\n" +
+                        "        {\n" +
+                            "            \"name\": \"func_401000\",\n" +
+                        "            \"reason\": \"entry flow and dispatch\"\n" +
+                        "        },\n" +
+                        "        {\n" +
+                        "            \"name\": \"func_404000\",\n" +
+                        "            \"reason\": \"C2 communication\"\n" +
+                        "        }\n" +
+                        "    ]\n" +
+                        "}\n" +
+                        "```");
+        } else if (task_type == TaskType.KEYFUNC_STRINGS
+                && convo.get_msg(convo.get_msgs_len() - 1).contains("Source: Explain strings")) {
+            convo.add_assistant_msg("```json\n" +
+                        "{\n" +
+                        "    \"str\": [\n" +
+                        "        \"string1\",\n" +
+                        "        \"string2\",\n" +
+                        "        \"string3\"\n" +
                         "    ]\n" +
                         "}\n" +
                         "```");

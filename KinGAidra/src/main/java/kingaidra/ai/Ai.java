@@ -8,6 +8,7 @@ import java.util.LinkedHashSet;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Set;
+import java.util.UUID;
 import java.util.function.BiFunction;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -321,5 +322,9 @@ public class Ai {
             container.add_convo(rep);
         }
         return rep;
+    }
+
+    public Conversation get_history_convo(UUID id) {
+        return container.get_convo(id);
     }
 }
