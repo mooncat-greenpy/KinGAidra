@@ -1,3 +1,4 @@
+#@runtime PyGhidra
 #@author mooncat-greenpy
 #@category KinGAidra
 #@keybinding
@@ -6,17 +7,8 @@
 
 # pyghidraRun + pip install langchain langchain-mcp-adapters langchain-openai langgraph
 
-import kingaidra
 
 import os
-import json
-import asyncio
-
-from langchain_openai import ChatOpenAI
-from langchain_mcp_adapters.client import MultiServerMCPClient
-from langchain.agents import create_agent
-from langchain_core.messages import convert_to_messages, messages_to_dict as _messages_to_dict
-from langgraph.checkpoint.memory import InMemorySaver
 
 URL = "https://api.openai.com/v1"
 MODEL = "gpt-5.2"
@@ -28,6 +20,9 @@ OPTIONAL_DATA = {}
 
 KINGAIDRA_MCP_NAME = "ghidra_mcp"
 KINGAIDRA_MCP_TRANSPORT = "http"
+
+from langchain_openai import ChatOpenAI
+from langchain_mcp_adapters.client import MultiServerMCPClient
 
 def _init_llm():
     model = ChatOpenAI(
@@ -60,16 +55,29 @@ def _init_mcp_tools(kingaidra_mcp_url):
     )
     return asyncio.run(client.get_tools())
 
+
+# Only modify the code above this comment.
+# Do not modify the code below this comment.
+# The same applies when copying and using this script.
+
+
+# <KinGAidra Marker For Update: kingaidra_chat_langchain.py v1.1.0>
+
+
+import kingaidra
+
+import json
+import asyncio
+
+from langchain.agents import create_agent
+from langchain_core.messages import convert_to_messages, messages_to_dict as _messages_to_dict
+from langgraph.checkpoint.memory import InMemorySaver
+
 def _create_agent(model, tools, thread_id):
     checkpointer = InMemorySaver()
     agent = create_agent(model, tools=tools, checkpointer=checkpointer)
     config = {"configurable": {"thread_id": thread_id}}
     return agent, config
-
-
-# Only modify the code above this comment.
-# Do not modify the code below this comment.
-
 
 def _get_chat_task_service():
     tool = state.getTool()

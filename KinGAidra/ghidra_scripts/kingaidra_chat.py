@@ -23,7 +23,7 @@ FIXED_SCRIPT_FILE = "kingaidra_mcp_tool_tmp_script.py"
 # The same applies when copying and using this script.
 
 
-# <KinGAidra Marker For Update: v1.1.0>
+# <KinGAidra Marker For Update: kingaidra_chat.py v1.1.0>
 
 
 import urllib2

@@ -1,3 +1,4 @@
+#@runtime PyGhidra
 #@author mooncat-greenpy
 #@category KinGAidra
 #@keybinding
@@ -6,10 +7,8 @@
 
 # pyghidraRun + pip install git+https://github.com/mooncat-greenpy/codex-cli-helpers
 
-import json
-import os
 
-import kingaidra
+import os
 
 MODEL = "gpt-5.3-codex"
 MODEL_REASONING_EFFORT = "xhigh" # e.g. "high", "medium"
@@ -23,6 +22,17 @@ CODEX_SESSION_PREFIX = "codex_session:"
 
 KINGAIDRA_MCP_NAME = "ghidra_mcp"
 
+
+# Only modify the code above this comment.
+# Do not modify the code below this comment.
+# The same applies when copying and using this script.
+
+
+# <KinGAidra Marker For Update: kingaidra_chat_codex.py v1.1.0>
+
+
+import kingaidra
+import json
 
 def _load_codex_cli():
     try:
