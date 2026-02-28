@@ -24,10 +24,13 @@ import kingaidra.ai.convo.ConversationType;
 import kingaidra.ai.model.Model;
 import kingaidra.ai.task.KinGAidraChatTaskService;
 import kingaidra.ai.task.TaskType;
+import kingaidra.chat.workflow.ChatWorkflow;
 import kingaidra.ghidra.PromptConf;
 import kingaidra.ghidra.GhidraUtil;
 
 public class Ai {
+    private static final int MALWARE_OVERVIEW_ADDITIONAL_MAX_TRIES = 3;
+
     private PluginTool tool;
     private Program program;
     private GhidraUtil ghidra;
@@ -307,6 +310,63 @@ public class Ai {
         convo.add_system_msg(conf.get_system_prompt(task, m.get_name()));
         String msg = conf.get_user_prompt(task, m.get_name());
         return guess(task, convo, msg, addr);
+    }
+
+    public Conversation run_malware_behavior_overview(Model m, Address addr) {
+        if (m == null) {
+            return null;
+        }
+        TaskType task = TaskType.CHAT_MALWARE_BEHAVIOR_OVERVIEW;
+        Conversation convo = new Conversation(ConversationType.USER_CHAT, m);
+        convo.add_system_msg(conf.get_system_prompt(task, m.get_name()));
+
+        Conversation result = guess(task, convo, conf.get_user_prompt(task, m.get_name()), addr);
+        if (result == null) {
+            return null;
+        }
+
+        String additional_prompt = conf.get_user_prompt(TaskType.CHAT_MALWARE_BEHAVIOR_OVERVIEW_ADDITIONAL, m.get_name());
+        for (int i = 0; i < MALWARE_OVERVIEW_ADDITIONAL_MAX_TRIES; i++) {
+            result = guess(TaskType.CHAT_MALWARE_BEHAVIOR_OVERVIEW_ADDITIONAL, result, additional_prompt, addr);
+            if (result == null) {
+                return null;
+            }
+            if (is_last_assistant_message_none(result)) {
+                break;
+            }
+        }
+
+        return guess(
+                TaskType.CHAT_MALWARE_BEHAVIOR_OVERVIEW_REPORT,
+                result,
+                conf.get_user_prompt(TaskType.CHAT_MALWARE_BEHAVIOR_OVERVIEW_REPORT, m.get_name()),
+                addr);
+    }
+
+    public Conversation run_workflow(Model m, ChatWorkflow workflow, Address addr) {
+        if (workflow == null || workflow.get_step_prompts().isEmpty() || m == null) {
+            return null;
+        }
+
+        Conversation convo = new Conversation(ConversationType.USER_CHAT, m);
+        String workflow_system_prompt = workflow.get_system_prompt();
+        if (workflow_system_prompt == null || workflow_system_prompt.isEmpty()) {
+            workflow_system_prompt = conf.get_system_prompt(TaskType.CHAT, m.get_name());
+        }
+        convo.add_system_msg(workflow_system_prompt);
+
+        Conversation result = convo;
+        for (String prompt : workflow.get_step_prompts()) {
+            result = guess(TaskType.CHAT, result, prompt, addr);
+            if (result == null) {
+                return null;
+            }
+        }
+        return result;
+    }
+
+    private boolean is_last_assistant_message_none(Conversation convo) {
+        return "None".equalsIgnoreCase(convo.get_msg(convo.get_msgs_len() - 1).trim());
     }
 
     public Conversation guess(TaskType type, Conversation convo, String msg, Address addr) {
