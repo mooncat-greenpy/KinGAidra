@@ -1,5 +1,6 @@
 package kingaidra.chat.gui;
 
+import java.awt.Color;
 import java.awt.Dimension;
 import java.awt.FlowLayout;
 import java.awt.image.BufferedImage;
@@ -66,6 +67,7 @@ public class ChatGUI extends JPanel {
     private static final String TOOL_OPTIONS_ROOT = "KinGAidra";
     private static final Pattern ADDRESS_TOKEN_PATTERN = Pattern.compile("(?i)0x[0-9a-f]+");
     private static final Pattern IDENTIFIER_TOKEN_PATTERN = Pattern.compile("[A-Za-z_][A-Za-z0-9_]*");
+    private static final Color CHAT_HISTORY_BACKGROUND = Color.WHITE;
 
     private JTextArea input_area;
     private JButton restart_btn;
@@ -127,17 +129,24 @@ public class ChatGUI extends JPanel {
         md_plantuml_extractor = new MarkdownPlantUmlExtractor();
     }
 
+    private <T extends JComponent> T with_chat_history_background(T component) {
+        component.setOpaque(true);
+        component.setBackground(CHAT_HISTORY_BACKGROUND);
+        return component;
+    }
+
     private JComponent build_plain_text_component(String text) {
-        JEditorPane edit_panel = new JEditorPane();
+        JEditorPane edit_panel = with_chat_history_background(new JEditorPane());
         edit_panel.setText(text);
         edit_panel.setEditable(false);
         return edit_panel;
     }
 
     private JComponent build_markdown_text_component(String markdown) {
-        JEditorPane edit_panel = new JEditorPane();
+        JEditorPane edit_panel = with_chat_history_background(new JEditorPane());
         edit_panel.setContentType("text/html");
-        edit_panel.setText("<html><body>" + md_html_renderer.render(markdown) + "</body></html>");
+        edit_panel.setText("<html><body style='background-color:#ffffff;'>" +
+                md_html_renderer.render(markdown) + "</body></html>");
         edit_panel.setEditable(false);
         install_markdown_navigation(edit_panel);
         return edit_panel;
@@ -271,15 +280,15 @@ public class ChatGUI extends JPanel {
             label.setHorizontalAlignment(SwingConstants.LEFT);
             label.setAlignmentX(LEFT_ALIGNMENT);
 
-            JPanel wrapper = new JPanel(new FlowLayout(FlowLayout.LEFT, 0, 0));
+            JPanel wrapper = with_chat_history_background(new JPanel(new FlowLayout(FlowLayout.LEFT, 0, 0)));
             wrapper.setAlignmentX(LEFT_ALIGNMENT);
             wrapper.add(label);
             return wrapper;
         } catch (Exception e) {
             logger.append_message("PlantUML render failed: " + e.getMessage());
-            String html = "<html><body><b>PlantUML render failed.</b><pre>"
+            String html = "<html><body style='background-color:#ffffff;'><b>PlantUML render failed.</b><pre>"
                     + escape_html(plantuml_src) + "</pre></body></html>";
-            JEditorPane edit_panel = new JEditorPane();
+            JEditorPane edit_panel = with_chat_history_background(new JEditorPane());
             edit_panel.setContentType("text/html");
             edit_panel.setText(html);
             edit_panel.setEditable(false);
@@ -288,7 +297,7 @@ public class ChatGUI extends JPanel {
     }
 
     private JComponent build_markdown_component(String markdown) {
-        JPanel panel = new JPanel();
+        JPanel panel = with_chat_history_background(new JPanel());
         panel.setLayout(new BoxLayout(panel, BoxLayout.Y_AXIS));
         List<MarkdownPlantUmlExtractor.Segment> segments =
                 md_plantuml_extractor.split_segments(markdown);
