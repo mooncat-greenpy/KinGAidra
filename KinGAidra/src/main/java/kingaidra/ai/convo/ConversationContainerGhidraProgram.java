@@ -122,7 +122,7 @@ public class ConversationContainerGhidraProgram implements ConversationContainer
     public UUID[] get_ids() {
         Table table = get_table(CONVO_TABLE_NAME);
         if (table == null) {
-            return null;
+            return new UUID[] {};
         }
         List<UUID> uuids = new ArrayList<>(table.getRecordCount());
         try {
@@ -133,7 +133,7 @@ public class ConversationContainerGhidraProgram implements ConversationContainer
                 uuids.add(UUID.fromString(uuid));
             }
         } catch (IOException e) {
-            return null;
+            return new UUID[] {};
         }
 
         return uuids.toArray(new UUID[] {});
