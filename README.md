@@ -5,31 +5,39 @@ It stores analysis conversations per program and supports repeatable GUI/headles
 
 ## What You Get
 
-- **Keep analysis context in one place**: conversations and generated results stay with each program, and you can access that history directly from Ghidra without using external chat tools.
-- **Standardize team procedures**: define repeatable multi-step workflows and run them from the Ghidra UI.
-- **Use the same flow in automation**: execute the same named actions/workflows in headless mode for batch processing and reporting.
-- **Go beyond chat responses**: generate explanations, refactor suggestions, comments, key-function priorities, and full-program exports.
+- **SOP-as-code:** define multi-step workflows as JSON and run them as UI actions.
+- **Traceable by default:** conversations and generated results are saved per program in and can be reopened directly in Ghidra (no external chat tools needed).
+- **UI + headless parity:** run the same named actions/workflows via UI or `analyzeHeadless`.
+- **Analyst-friendly navigation:** AI outputs can be rendered in Markdown and include clickable addresses to jump to relevant locations in Ghidra (Chat/DecomView/KeyFunc).
+- **Beyond chat:** generate explanations, refactor suggestions, comments, key-function prioritization, and whole-program exports.
+
+## Documentation
+
+- [Installation Guide](./INSTALLATION.md)
+- [Usage Guide](./USAGE.md)
+- [Use Case Guide](./USE_CASES.md)
+- [Changelog](./CHANGELOG.md)
 
 ## Quick Start
 
-1. Install the extension ZIP from the [releases page](https://github.com/mooncat-greenpy/KinGAidra/releases).
+1. Download extension ZIP from [releases](https://github.com/mooncat-greenpy/KinGAidra/releases).
 2. Open Ghidra and enable `KinGAidra` in `File -> Install Extensions`, then restart.
 3. In `Window -> Script Manager`, open a chat script (for example `kingaidra_chat.py`) and set required values such as `URL`, `MODEL`, and `API_KEY`, then save the script.
 4. In KinGAidra config (gear icon), enable one model for Chat.
 5. Right-click a function and run `Explain using AI`.
 6. Open History and confirm the conversation was saved for the current program.
 
+## Use Cases
+
+For scenario-based walkthroughs with screenshots, see:
+
+- [Use Case Guide](./USE_CASES.md)
+
 ## Core Features
 
 ### Chat
 
-- Ask free-form reverse engineering questions in Ghidra, then reuse the saved conversation later from the History view.
-- Placeholders in prompts are resolved against the current program:
-  - `<code>`, `<code:address>`, `<code:address:recursive_count>`: decompiled code
-  - `<asm>`, `<asm:address>`, `<asm:address:recursive_count>`: assembly code
-  - `<aasm>`, `<aasm:address>`, `<aasm:address:recursive_count>`: assembly code with addresses
-  - `<strings>`, `<strings:index>`, `<strings:index:count>`: list of strings
-  - `<calltree>`, `<calltree:address>`, `<calltree:address:depth>`: call tree
+Ask free-form reverse engineering questions in Ghidra, then reuse the saved conversation later from the History view.
 
 **Chat Example**
 
@@ -110,27 +118,7 @@ analyzeHeadless <PROJECT_DIR> <PROJECT_NAME> \
   --output workflow_result.md
 ```
 
-## Installation
-
-1. Download extension ZIP from [releases](https://github.com/mooncat-greenpy/KinGAidra/releases).
-2. In Ghidra: `File -> Install Extensions`.
-3. Add ZIP, enable `KinGAidra`, restart Ghidra.
-
-### Export and analyze whole program (without API key)
-
-1. Run `kingaidra_export.py`.
-
-![](img/export_script.png)
-
-2. Zip the generated export directory.
-
-![](img/export_zip.png)
-
-3. Upload the ZIP to your web UI and ask for analysis.
-
-![ChatGPT example: attach ZIP and prompt](img/export_chat_1.png)
-
-![ChatGPT example: response](img/export_chat_2.png)
+More examples: [USAGE.md](./USAGE.md)
 
 ## FAQ
 
