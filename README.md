@@ -1,22 +1,22 @@
 # KinGAidra
 
-KinGAidra is a Ghidra extension that brings AI-assisted reverse engineering workflows into the Ghidra workspace.
-It stores analysis conversations per program and supports repeatable GUI/headless operations.
+KinGAidra is a Ghidra extension that brings AI-assisted reverse engineering workflows directly into the Ghidra workspace.
+It stores conversations and generated results per program, so you can reopen them later in Ghidra—and export the program to share the full conversation history with teammates.
+It also supports repeatable actions in both the GUI and headless modes.
 
 ## What You Get
 
 - **SOP-as-code:** define multi-step workflows as JSON and run them as UI actions.
-- **Traceable by default:** conversations and generated results are saved per program in and can be reopened directly in Ghidra (no external chat tools needed).
-- **UI + headless parity:** run the same named actions/workflows via UI or `analyzeHeadless`.
+- **Built-in traceability:** conversations and generated results are saved per program in and can be reopened directly in Ghidra (no external chat tools needed). Exporting the program also lets you share the conversation history together.
+- **UI & headless parity:** run the same named actions/workflows via UI or headless.
 - **Analyst-friendly navigation:** AI outputs can be rendered in Markdown and include clickable addresses to jump to relevant locations in Ghidra (Chat/DecomView/KeyFunc).
-- **Beyond chat:** generate explanations, refactor suggestions, comments, key-function prioritization, and whole-program exports.
+- **More than chat:** generate explanations, refactor suggestions, comments, key-function prioritization, and whole-program exports.
 
 ## Documentation
 
 - [Installation Guide](./INSTALLATION.md)
 - [Usage Guide](./USAGE.md)
 - [Use Case Guide](./USE_CASES.md)
-- [Changelog](./CHANGELOG.md)
 
 ## Quick Start
 
@@ -61,6 +61,8 @@ Generates rename/datatype proposals and can apply them to Ghidra.
 
 - Generates LLM-based C view per function.
 - Stores generated views in conversation history and supports regeneration/refactor.
+
+![DecomView Example](./img/usecase3_decomview_initial.png)
 
 ### Commenting
 

@@ -1,13 +1,13 @@
 # Usage Guide
 
-This guide explains daily usage for Chat, Decom, DecomView, KeyFunc, History, and headless automation.
+This guide explains usage.
 
 - KinGAidra stores generated conversations in the current Ghidra program database.
 - History is project-scoped: when you switch program files, you see the history for that program.
 
 ## Chat Tab
 
-Use Chat for free-form prompts plus Ghidra-aware placeholders.
+Use Chat for free-form prompts.
 
 ### Placeholder syntax
 
