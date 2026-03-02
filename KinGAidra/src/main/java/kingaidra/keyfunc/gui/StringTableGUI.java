@@ -145,7 +145,7 @@ public class StringTableGUI extends JPanel {
                 extends AbstractProgramBasedDynamicTableColumn<StringDataEntry, String> {
             @Override
             public String getColumnName() {
-                return "Value";
+                return "Reason";
             }
 
             @Override
