@@ -1,13 +1,16 @@
 package kingaidra.chat.gui;
 
 import java.awt.Color;
+import java.awt.Container;
 import java.awt.Dimension;
 import java.awt.FlowLayout;
+import java.awt.Rectangle;
 import java.awt.image.BufferedImage;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
+import java.awt.event.MouseWheelEvent;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -23,6 +26,8 @@ import javax.swing.JLabel;
 import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 import javax.swing.JScrollPane;
+import javax.swing.JScrollBar;
+import javax.swing.Scrollable;
 import javax.swing.JTextArea;
 import javax.swing.SwingConstants;
 import javax.swing.SwingUtilities;
@@ -68,6 +73,13 @@ public class ChatGUI extends JPanel {
     private static final Pattern ADDRESS_TOKEN_PATTERN = Pattern.compile("(?i)0x[0-9a-f]+");
     private static final Pattern IDENTIFIER_TOKEN_PATTERN = Pattern.compile("[A-Za-z_][A-Za-z0-9_]*");
     private static final Color CHAT_HISTORY_BACKGROUND = Color.WHITE;
+    private static final String MARKDOWN_WRAP_STYLE = "<style>"
+            + "body{background-color:#ffffff;margin:0;white-space:normal;"
+            + "overflow-wrap:anywhere;word-wrap:break-word;}"
+            + "table{width:100%;table-layout:fixed;}"
+            + "p,li,td,th,code,span,a{overflow-wrap:anywhere;word-wrap:break-word;}"
+            + "pre{white-space:pre-wrap;overflow-wrap:anywhere;word-wrap:break-word;}"
+            + "</style>";
 
     private JTextArea input_area;
     private JButton restart_btn;
@@ -102,6 +114,33 @@ public class ChatGUI extends JPanel {
     private boolean add_comments_busy;
     private boolean history_read_only;
 
+    private static class ViewportWidthPanel extends JPanel implements Scrollable {
+        @Override
+        public Dimension getPreferredScrollableViewportSize() {
+            return getPreferredSize();
+        }
+
+        @Override
+        public int getScrollableUnitIncrement(Rectangle visibleRect, int orientation, int direction) {
+            return 16;
+        }
+
+        @Override
+        public int getScrollableBlockIncrement(Rectangle visibleRect, int orientation, int direction) {
+            return Math.max(16, visibleRect.height - 16);
+        }
+
+        @Override
+        public boolean getScrollableTracksViewportWidth() {
+            return true;
+        }
+
+        @Override
+        public boolean getScrollableTracksViewportHeight() {
+            return false;
+        }
+    }
+
     public ChatGUI(MainProvider provider, Tool dockingTool, Program program, Plugin plugin,
             String owner, KinGAidraChatTaskService srv, GhidraUtil ghidra, ModelConf model_conf, PromptConf conf, ConversationContainer container, Ai ai, Logger logger) {
         super();
@@ -135,6 +174,57 @@ public class ChatGUI extends JPanel {
         return component;
     }
 
+    private JComponent wrap_horizontal_scroll(JComponent component) {
+        JScrollPane scroll = with_chat_history_background(new JScrollPane(component));
+        scroll.getViewport().setOpaque(true);
+        scroll.getViewport().setBackground(CHAT_HISTORY_BACKGROUND);
+        scroll.setBorder(null);
+        scroll.setHorizontalScrollBarPolicy(JScrollPane.HORIZONTAL_SCROLLBAR_AS_NEEDED);
+        scroll.setVerticalScrollBarPolicy(JScrollPane.VERTICAL_SCROLLBAR_NEVER);
+        scroll.setWheelScrollingEnabled(false);
+        install_parent_vertical_wheel_passthrough(scroll);
+        scroll.setMinimumSize(new Dimension(0, 0));
+        scroll.setMaximumSize(new Dimension(Integer.MAX_VALUE, Integer.MAX_VALUE));
+        return scroll;
+    }
+
+    private void install_parent_vertical_wheel_passthrough(JScrollPane child_scroll) {
+        child_scroll.addMouseWheelListener(e -> {
+            JScrollPane parent_scroll = find_parent_scroll_pane(child_scroll);
+            if (parent_scroll == null) {
+                return;
+            }
+            JScrollBar vertical = parent_scroll.getVerticalScrollBar();
+            if (vertical == null) {
+                return;
+            }
+            int direction = e.getWheelRotation();
+            if (direction == 0) {
+                return;
+            }
+            int delta;
+            if (e.getScrollType() == MouseWheelEvent.WHEEL_BLOCK_SCROLL) {
+                delta = direction * vertical.getBlockIncrement(direction);
+            } else {
+                int unit = Math.max(1, vertical.getUnitIncrement(direction));
+                delta = e.getUnitsToScroll() * unit;
+            }
+            vertical.setValue(vertical.getValue() + delta);
+            e.consume();
+        });
+    }
+
+    private JScrollPane find_parent_scroll_pane(JComponent component) {
+        Container parent = component.getParent();
+        while (parent != null) {
+            if (parent instanceof JScrollPane) {
+                return (JScrollPane) parent;
+            }
+            parent = parent.getParent();
+        }
+        return null;
+    }
+
     private JComponent build_plain_text_component(String text) {
         JEditorPane edit_panel = with_chat_history_background(new JEditorPane());
         edit_panel.setText(text);
@@ -145,11 +235,13 @@ public class ChatGUI extends JPanel {
     private JComponent build_markdown_text_component(String markdown) {
         JEditorPane edit_panel = with_chat_history_background(new JEditorPane());
         edit_panel.setContentType("text/html");
-        edit_panel.setText("<html><body style='background-color:#ffffff;'>" +
-                md_html_renderer.render(markdown) + "</body></html>");
+        edit_panel.setText("<html><head>" + MARKDOWN_WRAP_STYLE + "</head><body>"
+                + md_html_renderer.render(markdown) + "</body></html>");
         edit_panel.setEditable(false);
+        edit_panel.setMinimumSize(new Dimension(0, 0));
+        edit_panel.setMaximumSize(new Dimension(Integer.MAX_VALUE, Integer.MAX_VALUE));
         install_markdown_navigation(edit_panel);
-        return edit_panel;
+        return wrap_horizontal_scroll(edit_panel);
     }
 
     private void install_markdown_navigation(JEditorPane edit_panel) {
@@ -278,27 +370,26 @@ public class ChatGUI extends JPanel {
             JLabel label = new JLabel(new ImageIcon(img));
             label.setVerticalAlignment(SwingConstants.TOP);
             label.setHorizontalAlignment(SwingConstants.LEFT);
-            label.setAlignmentX(LEFT_ALIGNMENT);
-
-            JPanel wrapper = with_chat_history_background(new JPanel(new FlowLayout(FlowLayout.LEFT, 0, 0)));
-            wrapper.setAlignmentX(LEFT_ALIGNMENT);
-            wrapper.add(label);
-            return wrapper;
+            return wrap_horizontal_scroll(label);
         } catch (Exception e) {
             logger.append_message("PlantUML render failed: " + e.getMessage());
-            String html = "<html><body style='background-color:#ffffff;'><b>PlantUML render failed.</b><pre>"
+            String html = "<html><head>" + MARKDOWN_WRAP_STYLE + "</head><body><b>PlantUML render failed.</b><pre>"
                     + escape_html(plantuml_src) + "</pre></body></html>";
             JEditorPane edit_panel = with_chat_history_background(new JEditorPane());
             edit_panel.setContentType("text/html");
             edit_panel.setText(html);
             edit_panel.setEditable(false);
-            return edit_panel;
+            edit_panel.setMinimumSize(new Dimension(0, 0));
+            edit_panel.setMaximumSize(new Dimension(Integer.MAX_VALUE, Integer.MAX_VALUE));
+            return wrap_horizontal_scroll(edit_panel);
         }
     }
 
     private JComponent build_markdown_component(String markdown) {
         JPanel panel = with_chat_history_background(new JPanel());
         panel.setLayout(new BoxLayout(panel, BoxLayout.Y_AXIS));
+        panel.setMinimumSize(new Dimension(0, 0));
+        panel.setMaximumSize(new Dimension(Integer.MAX_VALUE, Integer.MAX_VALUE));
         List<MarkdownPlantUmlExtractor.Segment> segments =
                 md_plantuml_extractor.split_segments(markdown);
         for (MarkdownPlantUmlExtractor.Segment segment : segments) {
@@ -480,7 +571,7 @@ public class ChatGUI extends JPanel {
         input_area.setAlignmentX(LEFT_ALIGNMENT);
 
 
-        JPanel p = new JPanel();
+        JPanel p = with_chat_history_background(new ViewportWidthPanel());
         p.setLayout(new BoxLayout(p, BoxLayout.Y_AXIS));
         Border line_border = new LineBorder(getBackground(), 10, true);
         if (cur_convo != null) {
@@ -488,6 +579,7 @@ public class ChatGUI extends JPanel {
                 JPanel msg_panel = new JPanel();
                 msg_panel.setLayout(new BoxLayout(msg_panel, BoxLayout.X_AXIS));
                 msg_panel.setAlignmentX(LEFT_ALIGNMENT);
+                msg_panel.setMaximumSize(new Dimension(Integer.MAX_VALUE, Integer.MAX_VALUE));
                 msg_panel.setBorder(line_border);
 
                 String role = cur_convo.get_role(i);
@@ -499,9 +591,13 @@ public class ChatGUI extends JPanel {
                 }
                 text = get_display_text(role, text, tool_call_id, tool_calls);
                 JComponent msg_component = build_message_component(text);
+                msg_component.setMinimumSize(new Dimension(0, 0));
+                msg_component.setMaximumSize(new Dimension(Integer.MAX_VALUE, Integer.MAX_VALUE));
 
                 JLabel role_label = new JLabel(role);
                 role_label.setPreferredSize(new Dimension(50, 0));
+                role_label.setMinimumSize(new Dimension(50, 0));
+                role_label.setMaximumSize(new Dimension(50, Integer.MAX_VALUE));
 
                 if (Conversation.USER_ROLE.equals(role)) {
                     msg_panel.add(role_label);
@@ -519,6 +615,7 @@ public class ChatGUI extends JPanel {
         p.add(btn_panel);
         JScrollPane s = new JScrollPane(p);
         s.getVerticalScrollBar().setUnitIncrement(10);
+        s.setHorizontalScrollBarPolicy(JScrollPane.HORIZONTAL_SCROLLBAR_NEVER);
 
         input_area.setText("");
         input_area.setRows(10);
