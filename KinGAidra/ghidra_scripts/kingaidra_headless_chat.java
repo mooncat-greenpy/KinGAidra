@@ -7,6 +7,9 @@
 import java.io.BufferedWriter;
 import java.io.File;
 import java.io.FileWriter;
+import java.net.InetSocketAddress;
+import java.net.ServerSocket;
+import java.net.Socket;
 import java.util.LinkedHashMap;
 import java.util.Map;
 
@@ -14,6 +17,7 @@ import ghidra.app.script.GhidraScript;
 import ghidra.framework.plugintool.PluginTool;
 import ghidra.program.model.address.Address;
 import ghidra.util.task.TaskMonitor;
+import ghidra.util.task.TaskMonitorAdapter;
 import kingaidra.ai.Ai;
 import kingaidra.ai.convo.Conversation;
 import kingaidra.ai.convo.ConversationContainer;
@@ -33,6 +37,14 @@ import kingaidra.ghidra.PromptConf;
 public class kingaidra_headless_chat extends GhidraScript {
 
     private static final String DEFAULT_OUTPUT_SUFFIX = "_kingaidra_headless_chat.md";
+    private static final String HEADLESS_MCP_MODEL_SCRIPT_CODEX = "kingaidra_chat_codex.py";
+    private static final String HEADLESS_MCP_MODEL_SCRIPT_LANGCHAIN = "kingaidra_chat_langchain.py";
+    private static final String HEADLESS_MCP_SCRIPT = "kingaidra_mcp.py";
+    private static final String HEADLESS_MCP_HOST = "127.0.0.1";
+    private static final String HEADLESS_MCP_URL_PATH = "/mcp";
+    private static final String HEADLESS_MCP_URL_ENV = "KINGAIDRA_MCP_URL";
+    private static final long HEADLESS_MCP_READY_TIMEOUT_MS = 5000L;
+    private static final long HEADLESS_MCP_POLL_INTERVAL_MS = 100L;
     private static final Map<String, TaskType> ACTION_TASKS = create_action_tasks();
 
     private static final class Opts {
@@ -41,6 +53,16 @@ public class kingaidra_headless_chat extends GhidraScript {
         private String model_script = null;
         private String output = null;
         private boolean help = false;
+    }
+
+    private static final class HeadlessMcpHandle {
+        private final TaskMonitorAdapter monitor;
+        private final Thread thread;
+
+        private HeadlessMcpHandle(TaskMonitorAdapter monitor, Thread thread) {
+            this.monitor = monitor;
+            this.thread = thread;
+        }
     }
 
     private static Map<String, TaskType> create_action_tasks() {
@@ -210,6 +232,81 @@ public class kingaidra_headless_chat extends GhidraScript {
         throw new IllegalStateException("No active model. Configure chat models first.");
     }
 
+    private boolean should_start_headless_mcp(Model model) {
+        if (!(model instanceof ModelByScript)) {
+            return false;
+        }
+        String script = ((ModelByScript) model).get_script();
+        if (script == null || script.isEmpty()) {
+            return false;
+        }
+        String script_name = new File(script).getName();
+        return HEADLESS_MCP_MODEL_SCRIPT_CODEX.equals(script_name)
+                || HEADLESS_MCP_MODEL_SCRIPT_LANGCHAIN.equals(script_name);
+    }
+
+    private int reserve_port() throws Exception {
+        ServerSocket server = new ServerSocket(0);
+        try {
+            return server.getLocalPort();
+        } finally {
+            server.close();
+        }
+    }
+
+    private void wait_until_listening(String host, int port) throws Exception {
+        long deadline = System.currentTimeMillis() + HEADLESS_MCP_READY_TIMEOUT_MS;
+        while (true) {
+            Socket socket = new Socket();
+            try {
+                socket.connect(new InetSocketAddress(host, port), (int) HEADLESS_MCP_POLL_INTERVAL_MS);
+                return;
+            } catch (Exception e) {
+            } finally {
+                socket.close();
+            }
+            if (System.currentTimeMillis() > deadline) {
+                throw new IllegalStateException("Failed to start MCP server in headless mode.");
+            }
+            Thread.sleep(HEADLESS_MCP_POLL_INTERVAL_MS);
+        }
+    }
+
+    private HeadlessMcpHandle start_headless_mcp(Model model) throws Exception {
+        if (!should_start_headless_mcp(model)) {
+            return null;
+        }
+
+        int port = reserve_port();
+        String[] mcp_args = new String[] {HEADLESS_MCP_HOST, String.valueOf(port)};
+        TaskMonitorAdapter mcp_monitor = new TaskMonitorAdapter(true);
+
+        Thread mcp_thread = new Thread(() -> {
+            new GhidraUtilImpl(currentProgram, mcp_monitor).run_script(HEADLESS_MCP_SCRIPT, mcp_args, mcp_monitor);
+        }, "KinGAidra-Headless-MCP-" + currentProgram.getName());
+        mcp_thread.setDaemon(true);
+        mcp_thread.start();
+
+        try {
+            wait_until_listening(HEADLESS_MCP_HOST, port);
+        } catch (Exception e) {
+            mcp_monitor.cancel();
+            throw e;
+        }
+
+        String mcp_url = "http://" + HEADLESS_MCP_HOST + ":" + port + HEADLESS_MCP_URL_PATH;
+        state.addEnvironmentVar(HEADLESS_MCP_URL_ENV, mcp_url);
+        return new HeadlessMcpHandle(mcp_monitor, mcp_thread);
+    }
+
+    private void stop_headless_mcp(HeadlessMcpHandle handle) throws Exception {
+        if (handle == null) {
+            return;
+        }
+        handle.monitor.cancel();
+        handle.thread.join();
+    }
+
     @Override
     public void run() throws Exception {
         Opts opts;
@@ -241,38 +338,43 @@ public class kingaidra_headless_chat extends GhidraScript {
         ai.set_ghidra_state(state);
 
         Model model = resolve_model(opts);
-        Address addr = ghidra.get_current_addr();
-        TaskType action_task = resolve_action_task(opts.action);
-        ChatWorkflow workflow = null;
-        if (action_task == null) {
-            workflow = resolve_workflow(conf, opts.action);
-        }
-        if (action_task == null) {
-            action_task = resolve_action_task(opts.question);
-        }
-        if (action_task == null && workflow == null) {
-            workflow = resolve_workflow(conf, opts.question);
-        }
-
-        Conversation result;
-        if (action_task != null) {
-            result = run_action(ai, model, action_task, addr);
-        } else if (workflow != null) {
-            result = ai.run_workflow(model, workflow, addr);
-        } else {
-            if (opts.question == null || opts.question.trim().isEmpty()) {
-                throw new IllegalArgumentException("Unknown action: " + opts.action);
+        HeadlessMcpHandle mcp_handle = start_headless_mcp(model);
+        try {
+            Address addr = ghidra.get_current_addr();
+            TaskType action_task = resolve_action_task(opts.action);
+            ChatWorkflow workflow = null;
+            if (action_task == null) {
+                workflow = resolve_workflow(conf, opts.action);
             }
-            Conversation convo = new Conversation(ConversationType.USER_CHAT, model);
-            result = ai.guess(TaskType.CHAT, convo, opts.question, addr);
-        }
+            if (action_task == null) {
+                action_task = resolve_action_task(opts.question);
+            }
+            if (action_task == null && workflow == null) {
+                workflow = resolve_workflow(conf, opts.question);
+            }
 
-        if (result == null) {
-            throw new RuntimeException("LLM call failed. Check model script and API settings.");
-        }
+            Conversation result;
+            if (action_task != null) {
+                result = run_action(ai, model, action_task, addr);
+            } else if (workflow != null) {
+                result = ai.run_workflow(model, workflow, addr);
+            } else {
+                if (opts.question == null || opts.question.trim().isEmpty()) {
+                    throw new IllegalArgumentException("Unknown action: " + opts.action);
+                }
+                Conversation convo = new Conversation(ConversationType.USER_CHAT, model);
+                result = ai.guess(TaskType.CHAT, convo, opts.question, addr);
+            }
 
-        String assistant = get_last_assistant(result);
-        write_markdown(output_path, assistant);
-        println("Output saved: " + output_path);
+            if (result == null) {
+                throw new RuntimeException("LLM call failed. Check model script and API settings.");
+            }
+
+            String assistant = get_last_assistant(result);
+            write_markdown(output_path, assistant);
+            println("Output saved: " + output_path);
+        } finally {
+            stop_headless_mcp(mcp_handle);
+        }
     }
 }

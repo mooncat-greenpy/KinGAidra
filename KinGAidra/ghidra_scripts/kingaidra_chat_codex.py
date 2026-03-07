@@ -19,6 +19,7 @@ CODEX_BINARY = "codex" # "codex.cmd"
 CODEX_WORKDIR = os.environ.get("CODEX_WORKDIR") or os.path.join(os.getcwd(), "codex_dir")
 CODEX_EXTRA_ARGS = ["--sandbox", "read-only"]
 CODEX_SESSION_PREFIX = "codex_session:"
+HEADLESS_MCP_URL_ENV = "KINGAIDRA_MCP_URL"
 
 KINGAIDRA_MCP_NAME = "ghidra_mcp"
 
@@ -152,6 +153,9 @@ def _get_chat_task_service():
 
 
 def _ensure_kingaidra_mcp_url():
+    env_url = state.getEnvironmentVar(HEADLESS_MCP_URL_ENV)
+    if env_url:
+        return str(env_url)
     service = _get_chat_task_service()
     if service is None:
         return None

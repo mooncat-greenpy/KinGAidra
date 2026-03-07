@@ -17,6 +17,7 @@ POST_MSG = ""  # e.g. "Please respond in XXXX."
 TOOLS_FLAG = True
 OPTIONAL_HEADERS = {}
 OPTIONAL_DATA = {}
+HEADLESS_MCP_URL_ENV = "KINGAIDRA_MCP_URL"
 
 KINGAIDRA_MCP_NAME = "ghidra_mcp"
 KINGAIDRA_MCP_TRANSPORT = "http"
@@ -86,6 +87,9 @@ def _get_chat_task_service():
     return tool.getService(kingaidra.ai.task.KinGAidraChatTaskService)
 
 def _ensure_kingaidra_mcp_url():
+    env_url = state.getEnvironmentVar(HEADLESS_MCP_URL_ENV)
+    if env_url:
+        return str(env_url)
     service = _get_chat_task_service()
     if service is None:
         return None
