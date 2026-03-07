@@ -89,7 +89,7 @@ public class ChatGUI extends JPanel {
     private JLabel info_label;
     private JPanel btn_panel;
     private JCheckBox md_chk;
-    private JCheckBox tool_chk;
+    private JCheckBox detail_chk;
 
     private DockingAction log_action;
     private final List<DockingAction> workflow_actions = new ArrayList<>();
@@ -490,11 +490,17 @@ public class ChatGUI extends JPanel {
         return "";
     }
 
-    private boolean show_message(String role) {
-        if (tool_chk == null || tool_chk.isSelected()) {
-            return true;
+    private boolean show_message(String role, String tool_call_id,
+            List<Map<String, Object>> tool_calls) {
+        boolean hide_detail_messages = (detail_chk == null || !detail_chk.isSelected());
+        if ((Conversation.TOOL_ROLE.equals(role) || Conversation.SYSTEM_ROLE.equals(role))
+                && hide_detail_messages) {
+            return false;
         }
-        if (Conversation.TOOL_ROLE.equals(role)) {
+        if (tool_call_id != null && !tool_call_id.isEmpty() && hide_detail_messages) {
+            return false;
+        }
+        if (tool_calls != null && !tool_calls.isEmpty() && hide_detail_messages) {
             return false;
         }
         return true;
@@ -549,7 +555,7 @@ public class ChatGUI extends JPanel {
         btn_panel.add(delete_btn);
 
         btn_panel.add(md_chk);
-        btn_panel.add(tool_chk);
+        btn_panel.add(detail_chk);
 
         refresh_btn.addActionListener(new ActionListener() {
             @Override
@@ -586,7 +592,7 @@ public class ChatGUI extends JPanel {
                 String text = cur_convo.get_msg(i);
                 String tool_call_id = cur_convo.get_tool_call_id(i);
                 List<Map<String, Object>> tool_calls = cur_convo.get_tool_calls(i);
-                if (!show_message(role)) {
+                if (!show_message(role, tool_call_id, tool_calls)) {
                     continue;
                 }
                 text = get_display_text(role, text, tool_call_id, tool_calls);
@@ -658,7 +664,7 @@ public class ChatGUI extends JPanel {
         lgui = new LogGUI(container, this, plugin, program, logger);
 
         md_chk = new JCheckBox("markdown");
-        tool_chk = new JCheckBox("tool");
+        detail_chk = new JCheckBox("detail");
 
         build_panel();
     }

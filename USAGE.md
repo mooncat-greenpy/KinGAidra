@@ -38,7 +38,7 @@ Notes:
 - `Delete`: delete currently loaded conversation from history.
 - `Refresh`: rebuild chat rendering while keeping current input text.
 - `markdown` checkbox: switch message rendering between plain text and markdown/html rendering.
-- `tool` checkbox: hide/show tool-result/tool-call messages.
+- `detail` checkbox: hide/show detail messages (`system` role, `tool` role, and messages containing `tool_call_id` or `tool_calls`).
 - In markdown mode, single-click `0x...` token to jump to address.
 - In markdown mode, single-click identifier token to jump to the first matching function.
 - Some loaded history conversations are read-only: input is locked and `Submit` is disabled.

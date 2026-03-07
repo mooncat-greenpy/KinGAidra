@@ -62,7 +62,7 @@ For `kingaidra_chat_langchain.py` and `kingaidra_chat_codex.py`, install Python 
 First, run `pyghidraRun` once to confirm which Python executable is used:
 
 ```bash
-<GHIDRA_INSTALL_DIR>/support/pyghidraRun -m pip --version
+<GHIDRA_INSTALL_DIR>/support/pyghidraRun beef
 ```
 
 Check this line in the output:
@@ -227,10 +227,6 @@ Use this when API calls are not allowed.
 
 - Enable `kingaidra_gen_copy_text.py` and copy resolved context text into your external UI.
 - Or run `kingaidra_export.py` and analyze exported data outside KinGAidra.
-
-Detailed steps:
-
-- [USE_CASES.md](./USE_CASES.md)
 
 ### Script Editing Safety Rule
 
