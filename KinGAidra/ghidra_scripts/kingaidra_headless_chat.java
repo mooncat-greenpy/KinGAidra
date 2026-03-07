@@ -7,13 +7,20 @@
 import java.io.BufferedWriter;
 import java.io.File;
 import java.io.FileWriter;
+import java.lang.reflect.Constructor;
+import java.lang.reflect.Method;
 import java.net.InetSocketAddress;
 import java.net.ServerSocket;
 import java.net.Socket;
 import java.util.LinkedHashMap;
+import java.util.List;
 import java.util.Map;
 
 import ghidra.app.script.GhidraScript;
+import ghidra.framework.ToolUtils;
+import ghidra.framework.model.ToolTemplate;
+import ghidra.framework.options.Options;
+import ghidra.framework.options.ToolOptions;
 import ghidra.framework.plugintool.PluginTool;
 import ghidra.program.model.address.Address;
 import ghidra.util.task.TaskMonitor;
@@ -232,6 +239,70 @@ public class kingaidra_headless_chat extends GhidraScript {
         throw new IllegalStateException("No active model. Configure chat models first.");
     }
 
+    private Object call(Object obj, String method_name, Class<?>[] types, Object... args) {
+        if (obj == null) {
+            return null;
+        }
+        try {
+            Method method = obj.getClass().getMethod(method_name, types);
+            return method.invoke(obj, args);
+        } catch (Exception e) {
+            return null;
+        }
+    }
+
+    private ToolOptions to_tool_options(Object category) {
+        if (category == null) {
+            return null;
+        }
+        try {
+            for (Constructor<?> ctor : ToolOptions.class.getConstructors()) {
+                Class<?>[] params = ctor.getParameterTypes();
+                if (params.length == 1 && params[0].isInstance(category)) {
+                    return (ToolOptions) ctor.newInstance(category);
+                }
+            }
+        } catch (Exception e) {
+            return null;
+        }
+        return null;
+    }
+
+    private Options resolve_kingaidra_options(PluginTool tool) {
+        if (tool != null) {
+            return tool.getOptions("KinGAidra");
+        }
+
+        Map<String, ToolTemplate> templates = ToolUtils.loadUserTools();
+        for (ToolTemplate template : templates.values()) {
+            Object tool_elem = template.getToolElement();
+            if (tool_elem == null) {
+                continue;
+            }
+            Object options_elem = call(tool_elem, "getChild", new Class<?>[] { String.class }, "OPTIONS");
+            if (options_elem == null) {
+                continue;
+            }
+
+            Object categories_obj = call(options_elem, "getChildren", new Class<?>[] { String.class },
+                    ToolOptions.XML_ELEMENT_NAME);
+            if (!(categories_obj instanceof List<?> categories)) {
+                continue;
+            }
+            for (Object category : categories) {
+                ToolOptions loaded = to_tool_options(category);
+                if (loaded == null) {
+                    continue;
+                }
+                if ("KinGAidra".equals(loaded.getName())) {
+                    return loaded;
+                }
+            }
+        }
+
+        return null;
+    }
+
     private boolean should_start_headless_mcp(Model model) {
         if (!(model instanceof ModelByScript)) {
             return false;
@@ -334,6 +405,10 @@ public class kingaidra_headless_chat extends GhidraScript {
         GhidraUtil ghidra = new GhidraUtilImpl(currentProgram, TaskMonitor.DUMMY);
         ConversationContainer container = new ConversationContainerGhidraProgram(currentProgram, ghidra);
         PromptConf conf = new PromptConf();
+        Options options = resolve_kingaidra_options(tool);
+        if (options != null) {
+            conf.bind_options(options);
+        }
         Ai ai = new Ai(tool, currentProgram, ghidra, container, srv, conf);
         ai.set_ghidra_state(state);
 
