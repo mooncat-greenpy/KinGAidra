@@ -15,7 +15,7 @@ MODEL_REASONING_EFFORT = "xhigh" # e.g. "high", "medium"
 POST_MSG = ""
 TOOLS_FLAG = True
 
-CODEX_BINARY = "codex"
+CODEX_BINARY = "codex" # "codex.cmd"
 CODEX_WORKDIR = os.environ.get("CODEX_WORKDIR") or os.path.join(os.getcwd(), "codex_dir")
 CODEX_EXTRA_ARGS = ["--sandbox", "read-only"]
 CODEX_SESSION_PREFIX = "codex_session:"

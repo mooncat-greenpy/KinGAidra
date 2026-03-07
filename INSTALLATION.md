@@ -183,7 +183,7 @@ In `kingaidra_chat_codex.py`, configure these fields:
 
 - `MODEL`: Model passed to Codex CLI (`--model` is added automatically).
 - `MODEL_REASONING_EFFORT`: Adds `-c model_reasoning_effort=...` when set.
-- `CODEX_BINARY`: Codex CLI executable name or full path.
+- `CODEX_BINARY`: Codex CLI executable name or full path. On Windows, set this to `codex.cmd`.
 - `CODEX_WORKDIR`: Working directory used by Codex CLI; `.codex` state is expected under this path.
 - `CODEX_EXTRA_ARGS`: Extra Codex CLI arguments appended to each run.
 - `POST_MSG`: Text appended to selected KinGAidra tasks before sending.
@@ -212,7 +212,7 @@ codex login
 ```
 
 3. In `kingaidra_chat_codex.py`, set at least:
-   - `CODEX_BINARY` (if not `codex` in PATH)
+   - `CODEX_BINARY` (if not `codex` in PATH; on Windows use `codex.cmd`)
    - `CODEX_WORKDIR` (same directory used above)
    - `MODEL`
 4. Open KinGAidra config (gear icon), add/select a model mapped to `kingaidra_chat_codex.py`, and enable it for Chat.
