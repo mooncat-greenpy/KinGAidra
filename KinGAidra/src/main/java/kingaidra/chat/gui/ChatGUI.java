@@ -577,7 +577,8 @@ public class ChatGUI extends JPanel {
         input_area.setAlignmentX(LEFT_ALIGNMENT);
 
 
-        JPanel p = with_chat_history_background(new ViewportWidthPanel());
+        JPanel p = new ViewportWidthPanel();
+        p.setOpaque(false);
         p.setLayout(new BoxLayout(p, BoxLayout.Y_AXIS));
         Border line_border = new LineBorder(getBackground(), 10, true);
         if (cur_convo != null) {
@@ -620,6 +621,8 @@ public class ChatGUI extends JPanel {
         p.add(input_area);
         p.add(btn_panel);
         JScrollPane s = new JScrollPane(p);
+        s.getViewport().setOpaque(true);
+        s.getViewport().setBackground(getBackground());
         s.getVerticalScrollBar().setUnitIncrement(10);
         s.setHorizontalScrollBarPolicy(JScrollPane.HORIZONTAL_SCROLLBAR_NEVER);
 
