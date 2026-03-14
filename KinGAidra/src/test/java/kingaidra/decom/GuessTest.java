@@ -34,7 +34,7 @@ public class GuessTest {
         Ai ai = new Ai(null, program, gu, container, null, conf);
         GhidraPreferences<Model> pref = new ChatModelPreferencesDummy();
         pref.store("Dummy", new ModelDummy("Dummy", "dummy.py", true));
-        ModelConfMultiple model_conf = new ModelConfMultiple("decom", pref);
+        ModelConfMultiple model_conf = new ModelConfMultiple("refactor", pref);
         Guess guess = new Guess(gu, ai, model_conf, conf);
         assertTrue(model_conf.exist_model("Dummy"));
         assertFalse(model_conf.exist_model("Dummy1"));
@@ -56,7 +56,7 @@ public class GuessTest {
         Ai ai = new Ai(null, program, gu, container, null, conf);
         GhidraPreferences<Model> pref = new ChatModelPreferencesDummy();
         pref.store("Dummy", new ModelDummy("Dummy", "dummy.py", true));
-        ModelConfMultiple model_conf = new ModelConfMultiple("decom", pref);
+        ModelConfMultiple model_conf = new ModelConfMultiple("refactor", pref);
         Guess guess = new Guess(gu, ai, model_conf, conf);
         model_conf.set_model_name("Dummy", "d");
         model_conf.set_model_script("d", "d.py");
@@ -75,7 +75,7 @@ public class GuessTest {
         Ai ai = new Ai(null, program, gu, container, null, conf);
         GhidraPreferences<Model> pref = new ChatModelPreferencesDummy();
         pref.store("Dummy", new ModelDummy("Dummy", "dummy.py", true));
-        ModelConfMultiple model_conf = new ModelConfMultiple("decom", pref);
+        ModelConfMultiple model_conf = new ModelConfMultiple("refactor", pref);
         Guess guess = new Guess(gu, ai, model_conf, conf);
         model_conf.set_model_status(model_conf.get_models()[0], false);
         assertEquals(model_conf.get_model_status(model_conf.get_models()[0]), false);
@@ -93,7 +93,7 @@ public class GuessTest {
         Ai ai = new Ai(null, program, gu, container, null, conf);
         GhidraPreferences<Model> pref = new ChatModelPreferencesDummy();
         pref.store("Dummy", new ModelDummy("Dummy", "dummy.py", true));
-        ModelConfMultiple model_conf = new ModelConfMultiple("decom", pref);
+        ModelConfMultiple model_conf = new ModelConfMultiple("refactor", pref);
         Guess guess = new Guess(gu, ai, model_conf, conf);
         DecomDiff diff = guess.guess(guess.get_model_conf().get_models()[0], util.get_addr(program, 0x402000), false);
         assertEquals(diff.get_name().get_new_name(), "func_402000Dummy");
@@ -123,7 +123,7 @@ public class GuessTest {
         GhidraPreferences<Model> pref = new ChatModelPreferencesDummy();
         pref.store("Dummy1", new ModelDummy("Dummy1", "dummy.py", true));
         pref.store("Dummy2", new ModelDummy("Dummy2", "dummy.py", true));
-        ModelConfMultiple model_conf = new ModelConfMultiple("decom", pref);
+        ModelConfMultiple model_conf = new ModelConfMultiple("refactor", pref);
         Guess guess = new Guess(gu, ai, model_conf, conf);
         DecomDiff[] diffs = guess.guess_all(util.get_addr(program, 0x402000));
 
@@ -164,7 +164,7 @@ public class GuessTest {
         GhidraPreferences<Model> pref = new ChatModelPreferencesDummy();
         pref.store("Dummy1", new ModelDummy("Dummy1", "dummy.py", true));
         pref.store("Dummy2", new ModelDummy("Dummy2", "dummy.py", true));
-        ModelConfMultiple model_conf = new ModelConfMultiple("decom", pref);
+        ModelConfMultiple model_conf = new ModelConfMultiple("refactor", pref);
         Guess guess = new Guess(gu, ai, model_conf, conf);
         guess.get_model_conf().set_model_status(guess.get_model_conf().get_models()[1], false);
         DecomDiff[] diffs = guess.guess_selected(util.get_addr(program, 0x402000));

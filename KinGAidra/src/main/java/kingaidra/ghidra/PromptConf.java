@@ -16,7 +16,7 @@ public class PromptConf {
     public static final String PROMPT_OPTIONS_ROOT = "Prompts";
 
     public static final String PROMPT_GROUP_CHAT = "Chat";
-    public static final String PROMPT_GROUP_DECOM = "Decom";
+    public static final String PROMPT_GROUP_DECOM = "Refactor";
     public static final String PROMPT_GROUP_DECOM_VIEW = "DecomView";
     public static final String PROMPT_GROUP_KEYFUNC = "KeyFunc";
     public static final String PROMPT_GROUP_OTHER = "Other";

@@ -220,7 +220,7 @@ public class DecomGUI extends JPanel {
     }
 
     public void initActions(MainProvider provider, Tool dockingTool) {
-        new ActionBuilder("Refactoring using AI", provider.getName())
+        new ActionBuilder("Refactor using AI", provider.getName())
                 .withContext(ProgramLocationActionContext.class).enabledWhen(context -> {
                     var func = context.getProgram().getFunctionManager()
                             .getFunctionContaining(context.getAddress());
@@ -235,10 +235,10 @@ public class DecomGUI extends JPanel {
 
                     provider.setVisible(true);
                     provider.toFront();
-                    provider.change_tab("Decom");
+                    provider.change_tab("Refactor");
 
                     guess_btn.doClick();
-                }).popupMenuPath(new String[] {"Refactoring using AI"}).popupMenuGroup("KinGAidra")
+                }).popupMenuPath(new String[] {"Refactor using AI"}).popupMenuGroup("KinGAidra")
                 .buildAndInstall(plugin);
     }
 

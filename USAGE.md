@@ -53,16 +53,16 @@ KinGAidra adds actions directly from code locations:
 - `Explain strings (malware)`
 - `Quick malware behavior overview with AI`
 - `Add comments using AI`
-- `Refactoring using AI`
+- `Refactor using AI`
 - `Decompile using AI (view)`
 - `Custom Workflow using AI -> <workflow name>` (if configured)
 
-## Decom Tab (Refactoring)
+## Refactor Tab
 
-`Decom` proposes function/parameter/variable rename and datatype improvements.
+`Refactor` proposes function/parameter/variable rename and datatype improvements.
 
 1. Move cursor to a function.
-2. Run `Refactoring using AI` (popup), or open `Decom` and click `Guess`.
+2. Run `Refactor using AI` (popup), or open `Refactor` and click `Guess`.
 3. Review proposals.
 4. Apply refactor in Ghidra.
 

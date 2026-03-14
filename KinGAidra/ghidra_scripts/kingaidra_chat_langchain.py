@@ -44,7 +44,7 @@ def _init_mcp_tools(kingaidra_mcp_url):
     connections = {
         # ...
     }
-    print("KinGAidra MCP URL:", kingaidra_mcp_url)
+
     if kingaidra_mcp_url:
         connections[KINGAIDRA_MCP_NAME] = {
             "transport": KINGAIDRA_MCP_TRANSPORT,

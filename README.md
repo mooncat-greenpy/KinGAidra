@@ -51,7 +51,7 @@ Ask free-form reverse engineering questions in Ghidra, then reuse the saved conv
 
 ![Decompile Assembly](./img/decom_asm.png)
 
-### Decom (Refactoring)
+### Refactor
 
 Generates rename/datatype proposals and can apply them to Ghidra.
 
@@ -62,7 +62,7 @@ Generates rename/datatype proposals and can apply them to Ghidra.
 - Generates LLM-based C view per function.
 - Stores generated views in conversation history and supports regeneration/refactor.
 
-![DecomView Example](./img/usecase3_decomview_initial.png)
+![DecomView Example](./img/decomview.png)
 
 ### Commenting
 
