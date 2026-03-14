@@ -44,7 +44,8 @@ dependencies {
 	// Any external dependencies added here will automatically be copied to the lib/ directory when
 	// this extension is built.	
 	testImplementation 'org.junit.jupiter:junit-jupiter:5.10.2'
-	implementation 'com.vladsch.flexmark:flexmark-all:0.64.6'
+	implementation 'com.vladsch.flexmark:flexmark:0.64.6'
+	implementation 'com.vladsch.flexmark:flexmark-ext-tables:0.64.6'
 	implementation 'net.sourceforge.plantuml:plantuml-mit:1.2026.1'
 	implementation 'com.fasterxml.jackson.core:jackson-databind:2.15.2'
 	implementation 'com.fifesoft:rsyntaxtextarea:3.5.4'

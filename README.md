@@ -137,3 +137,8 @@ Each workflow appears as a popup action and can also be executed in headless mod
 ### Can the same workflow run in CI or batch mode?
 
 Yes. Use `kingaidra_headless_chat.java --action "<workflow name>"` to execute the same named action/workflow without GUI.
+
+## License
+
+KinGAidra is licensed under the Apache License 2.0.
+See [KinGAidra/LICENSE](./KinGAidra/LICENSE) for the full license text and [KinGAidra/THIRD_PARTY_LICENSES.md](./KinGAidra/THIRD_PARTY_LICENSES.md) for bundled dependency licenses.
