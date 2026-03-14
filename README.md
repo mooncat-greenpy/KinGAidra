@@ -33,23 +33,19 @@ For scenario-based walkthroughs with screenshots, see:
 
 - [Use Case Guide](./USE_CASES.md)
 
-## Core Features
+## UI Overview
+
+Quick overview of the main KinGAidra UI screens.
+
+![Overview](./img/overview.png)
 
 ### Chat
 
-Ask free-form reverse engineering questions in Ghidra, then reuse the saved conversation later from the History view.
+Ask free-form reverse engineering questions in Ghidra, click addresses or function names to jump to them, and reopen saved conversations later from the History view.
 
 **Chat Example**
 
 ![Chat Example](./img/test_chat.png)
-
-**Explain Decompiled Code**
-
-![Explain Decompiled Code](./img/explain.png)
-
-**Decompile Assembly**
-
-![Decompile Assembly](./img/decom_asm.png)
 
 ### Refactor
 
@@ -64,12 +60,6 @@ Generates rename/datatype proposals and can apply them to Ghidra.
 
 ![DecomView Example](./img/decomview.png)
 
-### Commenting
-
-- Generates comment suggestions and applies them to the current function.
-
-![Commenting Example](./img/comment.png)
-
 ### KeyFunc
 
 - Prioritizes functions using chat-derived evidence.
@@ -83,6 +73,20 @@ Generates rename/datatype proposals and can apply them to Ghidra.
 - Selecting an entry restores the conversation in UI.
 
 ![History Example](./img/log.png)
+
+### Popup Actions
+
+**Explain Decompiled Code**
+
+![Explain Decompiled Code](./img/explain.png)
+
+**Decompile Assembly**
+
+![Decompile Assembly](./img/decom_asm.png)
+
+**Generates comment and applies them to the current function**
+
+![Commenting Example](./img/comment.png)
 
 ## Custom Workflow JSON
 
