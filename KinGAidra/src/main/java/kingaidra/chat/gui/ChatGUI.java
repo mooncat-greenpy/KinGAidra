@@ -497,7 +497,7 @@ public class ChatGUI extends JPanel {
                 && hide_detail_messages) {
             return false;
         }
-        if (tool_call_id != null && !tool_call_id.isEmpty() && hide_detail_messages) {
+        if (Conversation.TOOL_ROLE.equals(role) && tool_call_id != null && !tool_call_id.isEmpty() && hide_detail_messages) {
             return false;
         }
         if (tool_calls != null && !tool_calls.isEmpty() && hide_detail_messages) {
