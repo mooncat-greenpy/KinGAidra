@@ -1,7 +1,7 @@
 # Changelog
 
 
-## [x.x.x]
+## [2.0.0]
 
 ### Added
 
