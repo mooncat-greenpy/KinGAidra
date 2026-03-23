@@ -17,6 +17,7 @@ It also supports repeatable actions in both the GUI and headless modes.
 - [Installation Guide](./INSTALLATION.md)
 - [Usage Guide](./USAGE.md)
 - [Use Case Guide](./USE_CASES.md)
+- [Local LLM](./LOCAL_LLM.md)
 
 ## Quick Start
 
