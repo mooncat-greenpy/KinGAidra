@@ -272,6 +272,22 @@ public class AiTest {
     }
 
     @Test
+    void test_resolve_calltree_keeps_placeholder_for_non_function_address() throws Exception {
+        GhidraTestUtil util = new GhidraTestUtil();
+        Program program = util.create_program();
+        GhidraUtil gu = new GhidraUtilImpl(program, TaskMonitor.DUMMY);
+        ConversationContainer container = new ConversationContainerDummy();
+        PromptConf conf = new PromptConf();
+        Ai ai = new Ai(null, program, gu, container, null, conf);
+
+        Conversation convo = new Conversation(ConversationType.SYSTEM_DECOM, new ChatModelDummy("Dummy", "dummy.py", true));
+        String ret = ai.resolve_calltree(convo, "Explain\n<calltree:40f000>\nend", null);
+
+        assertEquals("Explain\n<calltree:40f000>\nend", ret);
+        assertEquals(convo.get_addrs().length, 0);
+    }
+
+    @Test
     void test_resolve_strings() throws Exception {
         GhidraTestUtil util = new GhidraTestUtil();
         Program program = util.create_program();
