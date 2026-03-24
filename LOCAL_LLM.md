@@ -189,11 +189,11 @@ Be precise, evidence-driven, and operationally useful.
 
 
 User prompt:
-```markdown
+````markdown
 Extract obfuscated strings from the decompiled code below.
 
 Code:
-\`\`\`c
+```c
 
 /* WARNING: Function: __security_check_cookie replaced with injection: security_check_cookie */
 
@@ -526,8 +526,8 @@ undefined8 FUN_1800169d4(longlong param_1)
 }
 
 
-\`\`\`
 ```
+````
 
 
 LLM output:
@@ -1292,7 +1292,7 @@ bool FUN_180016628(longlong param_1)
 
 
 LLM output:
-```markdown
+````markdown
 **1. Call‑graph around the “string‑obfuscation” routine**
 
 | Function (address) | Role in the chain | Direct callers | Direct callees |
@@ -1399,7 +1399,7 @@ The clear‑text literals are themselves still “gibberish” but they are *one
 * **De‑obfuscation** – the runtime routine `FUN_180016408` reverses that transformation after copying the raw bytes into a temporary buffer.  
 * **Dynamic resolution** – the decoded name is matched against a hard‑coded list; when a match occurs the real address is fetched from the Import Address Table and saved in a user‑controlled structure.  
 * **Decoded API set** – the two resolver routines together expose **48 Windows API functions** ranging from basic file‑I/O and process control to CryptoAPI and Registry functions. These are the building blocks the malware later uses to hide its activity, load additional modules, and perform its malicious actions.
-```
+````
 
 
 User prompt:
@@ -1452,7 +1452,7 @@ Function result:
 
 
 LLM output:
-```markdown
+````markdown
 **Re‑analysis of the “string‑obfuscation” routine**
 
 | Step | What the code does | Evidence |
@@ -1472,10 +1472,10 @@ The loop is run once for each character, the second inner loop does nothing else
 
 Thus the *obfuscation* is a **single‑byte XOR‑plus‑one** transformation; the *de‑obfuscation* is the inverse:
 
-\`\`\`python
+```python
 def decode(obf):
     return ''.join(chr(((ord(c) ^ 0x03) - 1) & 0xFF) for c in obf)
-\`\`\`
+```
 
 ---
 
@@ -1611,7 +1611,7 @@ After one decode they become strings that contain many control characters (`\x1f
 6. **Use the resolved pointers** – later code (`FUN_180016628` and the rest of the malicious payload) invokes the functions via the stored pointers.
 
 Because the transformation is a simple XOR‑plus‑one, **all strings that are decoded with the same routine can be recovered statically** using the `decode()` function shown above.  The tables we listed (48 Windows API names + 12 WinHTTP‑related names) constitute the full set of function names that the malware resolves at run‑time.  Any remaining unreadable literals are probably **second‑stage encrypted data** and would require locating the next decryption routine before they can be interpreted.
-```
+````
 
 
 User prompt:
