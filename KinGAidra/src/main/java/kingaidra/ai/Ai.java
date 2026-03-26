@@ -54,15 +54,36 @@ public class Ai {
         this.state = state;
     }
 
+    private Long resolve_placeholder_arg1(String arg1_str) {
+        List<Function> func_list = ghidra.get_func(arg1_str);
+        if (func_list.size() > 0) {
+            return func_list.get(0).getEntryPoint().getOffset();
+        }
+
+        try {
+            return Long.parseLong(arg1_str, 16);
+        } catch (NumberFormatException e) {
+            return null;
+        }
+    }
+
+    private Long resolve_placeholder_arg2(String arg2_str) {
+        if (arg2_str == null) {
+            return null;
+        }
+        return Long.parseLong(arg2_str, 16);
+    }
+
     private String resolve_placeholder(String msg, Address addr, String placeholder, BiFunction<Long, Long, String> replace_func) {
-        if (msg.contains("<" + placeholder + ">")) {
+        String plain_placeholder = "<" + placeholder + ">";
+        if (msg.contains(plain_placeholder)) {
             Long addr_value = null;
             if (addr != null) {
                 addr_value = addr.getOffset();
             }
             String replacement = replace_func.apply(addr_value, null);
             if (replacement != null) {
-                msg = msg.replace("<" + placeholder + ">", replacement);
+                msg = msg.replace(plain_placeholder, replacement);
             }
         }
 
@@ -70,25 +91,12 @@ public class Ai {
         Matcher matcher = pattern.matcher(msg);
         StringBuffer result = new StringBuffer();
         while (matcher.find()) {
-            String arg1_str = matcher.group(1);
-            List<Function> func_list = ghidra.get_func(arg1_str);
-            long arg1_value;
-            if (func_list.size() > 0) {
-                arg1_value = func_list.get(0).getEntryPoint().getOffset();
-            } else {
-                try {
-                    arg1_value = Long.parseLong(arg1_str, 16);
-                } catch(NumberFormatException e) {
-                    continue;
-                }
+            Long arg1_value = resolve_placeholder_arg1(matcher.group(1));
+            if (arg1_value == null) {
+                continue;
             }
 
-            String arg2_str = matcher.group(3);
-            Long arg2_value = null;
-            if (arg2_str != null) {
-                arg2_value = Long.parseLong(arg2_str, 16);
-            }
-
+            Long arg2_value = resolve_placeholder_arg2(matcher.group(3));
             String replacement = replace_func.apply(arg1_value, arg2_value);
             if (replacement == null) {
                 matcher.appendReplacement(result, Matcher.quoteReplacement(matcher.group(0)));
@@ -100,33 +108,50 @@ public class Ai {
         return result.toString();
     }
 
+    private interface CodeResolver {
+        String get(Address func_addr);
+    }
+
+    private String resolve_code(Conversation convo, Long func_addr_value, Long depth, CodeResolver resolver) {
+        Address func_addr = null;
+        if (func_addr_value != null) {
+            func_addr = ghidra.get_addr(func_addr_value);
+        }
+        if (func_addr == null) {
+            return null;
+        }
+
+        String code = resolver.get(func_addr);
+        if (code == null) {
+            return null;
+        }
+
+        Function match_func = ghidra.get_func(func_addr);
+        if (match_func != null) {
+            convo.add_addr(match_func.getEntryPoint());
+        }
+
+        if (depth != null) {
+            List<Function> callee_list = get_callee_upto_depth(match_func, depth);
+            for (Function cur_func : callee_list) {
+                code += "\n\n";
+                code += resolver.get(cur_func.getEntryPoint());
+            }
+        }
+
+        return code;
+    }
+
     public String resolve_asm_code(Conversation convo, String msg, Address addr) {
         return resolve_placeholder(msg, addr, "asm", new BiFunction<Long, Long, String>() {
             @Override
             public String apply(Long func_addr_value, Long depth) {
-                Address func_addr = null;
-                if (func_addr_value != null) {
-                    func_addr = ghidra.get_addr(func_addr_value);
-                }
-                if (func_addr == null) {
-                    return null;
-                }
-                String asm_code = ghidra.get_asm(func_addr);
-                if (asm_code == null) {
-                    return null;
-                }
-                Function match_func = ghidra.get_func(func_addr);
-                if (match_func != null) {
-                    convo.add_addr(match_func.getEntryPoint());
-                    if (depth != null) {
-                        List<Function> callee_list = get_callee_upto_depth(match_func, depth);
-                        for (Function cur_func : callee_list) {
-                            asm_code += "\n\n";
-                            asm_code += ghidra.get_asm(cur_func.getEntryPoint());
-                        }
+                return resolve_code(convo, func_addr_value, depth, new CodeResolver() {
+                    @Override
+                    public String get(Address func_addr) {
+                        return ghidra.get_asm(func_addr);
                     }
-                }
-                return asm_code;
+                });
             }
         });
     }
@@ -135,29 +160,12 @@ public class Ai {
         return resolve_placeholder(msg, addr, "aasm", new BiFunction<Long, Long, String>() {
             @Override
             public String apply(Long func_addr_value, Long depth) {
-                Address func_addr = null;
-                if (func_addr_value != null) {
-                    func_addr = ghidra.get_addr(func_addr_value);
-                }
-                if (func_addr == null) {
-                    return null;
-                }
-                String asm_code = ghidra.get_asm(func_addr, true);
-                if (asm_code == null) {
-                    return null;
-                }
-                Function match_func = ghidra.get_func(func_addr);
-                if (match_func != null) {
-                    convo.add_addr(match_func.getEntryPoint());
-                    if (depth != null) {
-                        List<Function> callee_list = get_callee_upto_depth(match_func, depth);
-                        for (Function cur_func : callee_list) {
-                            asm_code += "\n\n";
-                            asm_code += ghidra.get_asm(cur_func.getEntryPoint(), true);
-                        }
+                return resolve_code(convo, func_addr_value, depth, new CodeResolver() {
+                    @Override
+                    public String get(Address func_addr) {
+                        return ghidra.get_asm(func_addr, true);
                     }
-                }
-                return asm_code;
+                });
             }
         });
     }
@@ -166,31 +174,12 @@ public class Ai {
         return resolve_placeholder(msg, addr, "code", new BiFunction<Long, Long, String>() {
             @Override
             public String apply(Long func_addr_value, Long depth) {
-                Address func_addr = null;
-                if (func_addr_value != null) {
-                    func_addr = ghidra.get_addr(func_addr_value);
-                }
-                if (func_addr == null) {
-                    return null;
-                }
-                String src_code = ghidra.get_decom(func_addr);
-                if (src_code == null) {
-                    return null;
-                }
-                Function match_func = ghidra.get_func(func_addr);
-                if (match_func != null) {
-                    convo.add_addr(match_func.getEntryPoint());
-                }
-
-                if (depth != null) {
-                    List<Function> callee_list = get_callee_upto_depth(match_func, depth);
-                    for (Function cur_func : callee_list) {
-                        src_code += "\n\n";
-                        src_code += ghidra.get_decom(cur_func.getEntryPoint());
+                return resolve_code(convo, func_addr_value, depth, new CodeResolver() {
+                    @Override
+                    public String get(Address func_addr) {
+                        return ghidra.get_decom(func_addr);
                     }
-                }
-
-                return src_code;
+                });
             }
         });
     }
@@ -250,9 +239,6 @@ public class Ai {
                     calltree = ghidra.get_func_call_tree();
                 } else {
                     Function match_func = ghidra.get_func(func_addr);
-                    if (match_func == null) {
-                        return null;
-                    }
                     if (depth != null) {
                         calltree = ghidra.get_func_call_tree(match_func, depth.intValue());
                     } else {
@@ -283,34 +269,36 @@ public class Ai {
         });
     }
 
-    public Conversation guess_explain_decom(Model m, Address addr) {
-        TaskType task = TaskType.CHAT_EXPLAIN_DECOM;
+    private Conversation create_chat_conversation(Model m, TaskType task) {
         Conversation convo = new Conversation(ConversationType.USER_CHAT, m);
         convo.add_system_msg(conf.get_system_prompt(task, m.get_name()));
+        return convo;
+    }
+
+    public Conversation guess_explain_decom(Model m, Address addr) {
+        TaskType task = TaskType.CHAT_EXPLAIN_DECOM;
+        Conversation convo = create_chat_conversation(m, task);
         String msg = conf.get_user_prompt(task, m.get_name());
         return guess(task, convo, msg, addr);
     }
 
     public Conversation guess_explain_asm(Model m, Address addr) {
         TaskType task = TaskType.CHAT_EXPLAIN_ASM;
-        Conversation convo = new Conversation(ConversationType.USER_CHAT, m);
-        convo.add_system_msg(conf.get_system_prompt(task, m.get_name()));
+        Conversation convo = create_chat_conversation(m, task);
         String msg = conf.get_user_prompt(task, m.get_name());
         return guess(task, convo, msg, addr);
     }
 
     public Conversation guess_decom_asm(Model m, Address addr) {
         TaskType task = TaskType.CHAT_DECOM_ASM;
-        Conversation convo = new Conversation(ConversationType.USER_CHAT, m);
-        convo.add_system_msg(conf.get_system_prompt(task, m.get_name()));
+        Conversation convo = create_chat_conversation(m, task);
         String msg = conf.get_user_prompt(task, m.get_name());
         return guess(task, convo, msg, addr);
     }
 
     public Conversation guess_explain_strings(Model m, Address addr) {
         TaskType task = TaskType.CHAT_EXPLAIN_STRINGS;
-        Conversation convo = new Conversation(ConversationType.USER_CHAT, m);
-        convo.add_system_msg(conf.get_system_prompt(task, m.get_name()));
+        Conversation convo = create_chat_conversation(m, task);
         String msg = conf.get_user_prompt(task, m.get_name());
         return guess(task, convo, msg, addr);
     }
@@ -320,8 +308,7 @@ public class Ai {
             return null;
         }
         TaskType task = TaskType.CHAT_MALWARE_BEHAVIOR_OVERVIEW;
-        Conversation convo = new Conversation(ConversationType.USER_CHAT, m);
-        convo.add_system_msg(conf.get_system_prompt(task, m.get_name()));
+        Conversation convo = create_chat_conversation(m, task);
 
         Conversation result = guess(task, convo, conf.get_user_prompt(task, m.get_name()), addr);
         if (result == null) {
@@ -372,12 +359,17 @@ public class Ai {
         return "None".equalsIgnoreCase(convo.get_msg(convo.get_msgs_len() - 1).trim());
     }
 
-    public Conversation guess(TaskType type, Conversation convo, String msg, Address addr) {
+    private String expand_guess_placeholders(Conversation convo, String msg, Address addr) {
         msg = resolve_src_code(convo, msg, addr);
         msg = resolve_asm_code(convo, msg, addr);
         msg = resolve_asm_code_with_addr(convo, msg, addr);
         msg = resolve_calltree(convo, msg, addr);
         msg = resolve_strings(convo, msg);
+        return msg;
+    }
+
+    public Conversation guess(TaskType type, Conversation convo, String msg, Address addr) {
+        msg = expand_guess_placeholders(convo, msg, addr);
         convo.add_user_msg(msg);
 
         Conversation rep = convo.get_model().guess(type, convo, service, tool, program, state);

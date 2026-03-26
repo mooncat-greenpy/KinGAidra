@@ -108,12 +108,22 @@ public class PromptConf {
     private static final String DEFAULT_WORKFLOWS_JSON = "[]";
 
     private final Map<TaskType, String> default_user_prompts = new EnumMap<>(TaskType.class);
-    private final Map<TaskType, String> user_prompt_overrides = new EnumMap<>(TaskType.class);
-    private final Map<TaskType, String> system_prompt_overrides = new EnumMap<>(TaskType.class);
 
     private String system_prompt;
     private String workflows_json;
     private Options options;
+
+    private static final class UserPromptMetadata {
+        private final String[] group_path;
+        private final String label;
+        private final String description;
+
+        private UserPromptMetadata(String[] group_path, String label, String description) {
+            this.group_path = group_path;
+            this.label = label;
+            this.description = description;
+        }
+    }
 
     public PromptConf() {
         system_prompt = DEFAULT_SYSTEM_PROMPT; // "You are a senior reverse-engineer.";
@@ -133,140 +143,131 @@ public class PromptConf {
         return new String[] { PROMPT_GROUP_CHAT, PROMPT_CHAT_GROUP_WORKFLOWS };
     }
 
-    public static String[] get_user_prompt_group_path(TaskType task) {
+    private static UserPromptMetadata get_user_prompt_metadata(TaskType task) {
         switch (task) {
             case CHAT:
-                return new String[] { PROMPT_GROUP_CHAT, PROMPT_CHAT_GROUP_CHAT_TEMPLATE };
+                return new UserPromptMetadata(
+                        new String[] { PROMPT_GROUP_CHAT, PROMPT_CHAT_GROUP_CHAT_TEMPLATE },
+                        "1: Chat Template (manual)",
+                        "Prompt used for chat messages in the Chat tab.");
             case CHAT_EXPLAIN_DECOM:
-                return new String[] { PROMPT_GROUP_CHAT, PROMPT_CHAT_GROUP_EXPLAIN_WITH_AI };
+                return new UserPromptMetadata(
+                        new String[] { PROMPT_GROUP_CHAT, PROMPT_CHAT_GROUP_EXPLAIN_WITH_AI },
+                        "1: Action: Explain with AI",
+                        "Prompt used by \"Explain with AI\" for decompiled C code.");
             case CHAT_EXPLAIN_ASM:
-                return new String[] { PROMPT_GROUP_CHAT, PROMPT_CHAT_GROUP_EXPLAIN_ASM_WITH_AI };
+                return new UserPromptMetadata(
+                        new String[] { PROMPT_GROUP_CHAT, PROMPT_CHAT_GROUP_EXPLAIN_ASM_WITH_AI },
+                        "1: Action: Explain asm with AI",
+                        "Prompt used by \"Explain asm with AI\".");
             case CHAT_DECOM_ASM:
-                return new String[] { PROMPT_GROUP_CHAT, PROMPT_CHAT_GROUP_DECOMPILE_WITH_AI };
+                return new UserPromptMetadata(
+                        new String[] { PROMPT_GROUP_CHAT, PROMPT_CHAT_GROUP_DECOMPILE_WITH_AI },
+                        "1: Action: Decompile with AI",
+                        "Prompt used by \"Decompile with AI\".");
             case CHAT_EXPLAIN_STRINGS:
-                return new String[] { PROMPT_GROUP_CHAT, PROMPT_CHAT_GROUP_EXPLAIN_STRINGS_MALWARE };
+                return new UserPromptMetadata(
+                        new String[] { PROMPT_GROUP_CHAT, PROMPT_CHAT_GROUP_EXPLAIN_STRINGS_MALWARE },
+                        "1: Action: Explain strings (malware)",
+                        "Prompt used by \"Explain strings (malware)\".");
             case CHAT_MALWARE_BEHAVIOR_OVERVIEW:
+                return new UserPromptMetadata(
+                        new String[] { PROMPT_GROUP_CHAT, PROMPT_CHAT_GROUP_QUICK_MALWARE_BEHAVIOR_OVERVIEW },
+                        "1: Initial analysis prompt",
+                        "Initial analysis prompt used by \"Quick malware behavior overview with AI\".");
             case CHAT_MALWARE_BEHAVIOR_OVERVIEW_ADDITIONAL:
+                return new UserPromptMetadata(
+                        new String[] { PROMPT_GROUP_CHAT, PROMPT_CHAT_GROUP_QUICK_MALWARE_BEHAVIOR_OVERVIEW },
+                        "2: Additional analysis prompt",
+                        "Additional analysis prompt used by \"Quick malware behavior overview with AI\". Runs until response is \"None\" or 3 attempts.");
             case CHAT_MALWARE_BEHAVIOR_OVERVIEW_REPORT:
-                return new String[] { PROMPT_GROUP_CHAT, PROMPT_CHAT_GROUP_QUICK_MALWARE_BEHAVIOR_OVERVIEW };
+                return new UserPromptMetadata(
+                        new String[] { PROMPT_GROUP_CHAT, PROMPT_CHAT_GROUP_QUICK_MALWARE_BEHAVIOR_OVERVIEW },
+                        "3: Report prompt",
+                        "Final report prompt used by \"Quick malware behavior overview with AI\".");
             case ADD_COMMENTS:
-                return new String[] { PROMPT_GROUP_CHAT, PROMPT_CHAT_GROUP_ADD_COMMENTS_WITH_AI };
+                return new UserPromptMetadata(
+                        new String[] { PROMPT_GROUP_CHAT, PROMPT_CHAT_GROUP_ADD_COMMENTS_WITH_AI },
+                        "1: Action: Add comments using AI",
+                        "Prompt used by \"Add comments using AI\".");
             case DECOMPILE_VIEW:
+                return new UserPromptMetadata(
+                        new String[] { PROMPT_GROUP_DECOM_VIEW },
+                        "1: Action: Decompile using AI (view)",
+                        "Prompt used by \"Decompile using AI (view)\".");
             case DECOMPILE_VIEW_INSTRUCTION:
+                return new UserPromptMetadata(
+                        new String[] { PROMPT_GROUP_DECOM_VIEW },
+                        "2: Action: Apply instruction (view)",
+                        "Prompt used when applying additional instructions to existing DecomView output.");
             case DECOM_VIEW_REFACTOR_FUNC_PARAM_VAR:
+                return new UserPromptMetadata(
+                        new String[] { PROMPT_GROUP_DECOM_VIEW },
+                        "3: Refactor Names (view)",
+                        "DecomView prompt for renaming function, parameter, and variable names in Ghidra decompile.");
             case DECOM_VIEW_REFACTOR_DATATYPE:
+                return new UserPromptMetadata(
+                        new String[] { PROMPT_GROUP_DECOM_VIEW },
+                        "4: Refactor Data Types (view)",
+                        "DecomView prompt for proposing datatype fixes for Ghidra decompile.");
             case DECOM_VIEW_RESOLVE_DATATYPE:
-                return new String[] { PROMPT_GROUP_DECOM_VIEW };
+                return new UserPromptMetadata(
+                        new String[] { PROMPT_GROUP_DECOM_VIEW },
+                        "5: Resolve Struct Definitions (view)",
+                        "DecomView prompt for generating missing struct definitions from Ghidra+DecomView context.");
             case DECOM_REFACTOR_FUNC_PARAM_VAR:
+                return new UserPromptMetadata(
+                        new String[] { PROMPT_GROUP_DECOM },
+                        "1: Refactor Names",
+                        "Decom prompt for renaming functions, parameters, and variables.");
             case REVIEW_DECOM_REFACTOR_FUNC_PARAM_VAR:
+                return new UserPromptMetadata(
+                        new String[] { PROMPT_GROUP_DECOM },
+                        "2: Review Refactor Names",
+                        "Decom prompt for reviewing rename proposals.");
             case DECOM_REFACTOR_DATATYPE:
+                return new UserPromptMetadata(
+                        new String[] { PROMPT_GROUP_DECOM },
+                        "3: Refactor Data Types",
+                        "Decom prompt for refactoring data types.");
             case REVIEW_DECOM_REFACTOR_DATATYPE:
+                return new UserPromptMetadata(
+                        new String[] { PROMPT_GROUP_DECOM },
+                        "4: Review Refactor Data Types",
+                        "Decom prompt for reviewing data type refactoring proposals.");
             case DECOM_RESOLVE_DATATYPE:
-                return new String[] { PROMPT_GROUP_DECOM };
+                return new UserPromptMetadata(
+                        new String[] { PROMPT_GROUP_DECOM },
+                        "5: Resolve Struct Definitions",
+                        "Decom prompt for resolving missing struct definitions. <datatype_name> is replaced with the target struct name, and <bit_size> is replaced with the program bit width.");
             case KEYFUNC_FUNCTIONS:
+                return new UserPromptMetadata(
+                        new String[] { PROMPT_GROUP_KEYFUNC },
+                        "1: Functions Extraction",
+                        "KeyFunc prompt for extracting prioritized functions from analysis output.");
             case KEYFUNC_STRINGS:
-                return new String[] { PROMPT_GROUP_KEYFUNC };
+                return new UserPromptMetadata(
+                        new String[] { PROMPT_GROUP_KEYFUNC },
+                        "2: Strings Extraction",
+                        "KeyFunc prompt for extracting prioritized strings from Explain strings output.");
             default:
-                return new String[] { PROMPT_GROUP_OTHER };
+                return new UserPromptMetadata(
+                        new String[] { PROMPT_GROUP_OTHER },
+                        task.name(),
+                        "Unused task prompt.");
         }
+    }
+
+    public static String[] get_user_prompt_group_path(TaskType task) {
+        return get_user_prompt_metadata(task).group_path.clone();
     }
 
     public static String get_user_prompt_label(TaskType task) {
-        switch (task) {
-            case CHAT:
-                return "1: Chat Template (manual)";
-            case CHAT_EXPLAIN_DECOM:
-                return "1: Action: Explain with AI";
-            case CHAT_EXPLAIN_ASM:
-                return "1: Action: Explain asm with AI";
-            case CHAT_DECOM_ASM:
-                return "1: Action: Decompile with AI";
-            case CHAT_EXPLAIN_STRINGS:
-                return "1: Action: Explain strings (malware)";
-            case CHAT_MALWARE_BEHAVIOR_OVERVIEW:
-                return "1: Initial analysis prompt";
-            case CHAT_MALWARE_BEHAVIOR_OVERVIEW_ADDITIONAL:
-                return "2: Additional analysis prompt";
-            case CHAT_MALWARE_BEHAVIOR_OVERVIEW_REPORT:
-                return "3: Report prompt";
-            case ADD_COMMENTS:
-                return "1: Action: Add comments using AI";
-            case DECOMPILE_VIEW:
-                return "1: Action: Decompile using AI (view)";
-            case DECOMPILE_VIEW_INSTRUCTION:
-                return "2: Action: Apply instruction (view)";
-            case DECOM_VIEW_REFACTOR_FUNC_PARAM_VAR:
-                return "3: Refactor Names (view)";
-            case DECOM_VIEW_REFACTOR_DATATYPE:
-                return "4: Refactor Data Types (view)";
-            case DECOM_VIEW_RESOLVE_DATATYPE:
-                return "5: Resolve Struct Definitions (view)";
-            case DECOM_REFACTOR_FUNC_PARAM_VAR:
-                return "1: Refactor Names";
-            case REVIEW_DECOM_REFACTOR_FUNC_PARAM_VAR:
-                return "2: Review Refactor Names";
-            case DECOM_REFACTOR_DATATYPE:
-                return "3: Refactor Data Types";
-            case REVIEW_DECOM_REFACTOR_DATATYPE:
-                return "4: Review Refactor Data Types";
-            case DECOM_RESOLVE_DATATYPE:
-                return "5: Resolve Struct Definitions";
-            case KEYFUNC_FUNCTIONS:
-                return "1: Functions Extraction";
-            case KEYFUNC_STRINGS:
-                return "2: Strings Extraction";
-            default:
-                return task.name();
-        }
+        return get_user_prompt_metadata(task).label;
     }
 
     public static String get_user_prompt_description(TaskType task) {
-        switch (task) {
-            case CHAT:
-                return "Prompt used for chat messages in the Chat tab.";
-            case CHAT_EXPLAIN_DECOM:
-                return "Prompt used by \"Explain with AI\" for decompiled C code.";
-            case CHAT_EXPLAIN_ASM:
-                return "Prompt used by \"Explain asm with AI\".";
-            case CHAT_DECOM_ASM:
-                return "Prompt used by \"Decompile with AI\".";
-            case CHAT_EXPLAIN_STRINGS:
-                return "Prompt used by \"Explain strings (malware)\".";
-            case CHAT_MALWARE_BEHAVIOR_OVERVIEW:
-                return "Initial analysis prompt used by \"Quick malware behavior overview with AI\".";
-            case CHAT_MALWARE_BEHAVIOR_OVERVIEW_ADDITIONAL:
-                return "Additional analysis prompt used by \"Quick malware behavior overview with AI\". Runs until response is \"None\" or 3 attempts.";
-            case CHAT_MALWARE_BEHAVIOR_OVERVIEW_REPORT:
-                return "Final report prompt used by \"Quick malware behavior overview with AI\".";
-            case ADD_COMMENTS:
-                return "Prompt used by \"Add comments using AI\".";
-            case DECOMPILE_VIEW:
-                return "Prompt used by \"Decompile using AI (view)\".";
-            case DECOMPILE_VIEW_INSTRUCTION:
-                return "Prompt used when applying additional instructions to existing DecomView output.";
-            case DECOM_VIEW_REFACTOR_FUNC_PARAM_VAR:
-                return "DecomView prompt for renaming function, parameter, and variable names in Ghidra decompile.";
-            case DECOM_VIEW_REFACTOR_DATATYPE:
-                return "DecomView prompt for proposing datatype fixes for Ghidra decompile.";
-            case DECOM_VIEW_RESOLVE_DATATYPE:
-                return "DecomView prompt for generating missing struct definitions from Ghidra+DecomView context.";
-            case DECOM_REFACTOR_FUNC_PARAM_VAR:
-                return "Decom prompt for renaming functions, parameters, and variables.";
-            case REVIEW_DECOM_REFACTOR_FUNC_PARAM_VAR:
-                return "Decom prompt for reviewing rename proposals.";
-            case DECOM_REFACTOR_DATATYPE:
-                return "Decom prompt for refactoring data types.";
-            case REVIEW_DECOM_REFACTOR_DATATYPE:
-                return "Decom prompt for reviewing data type refactoring proposals.";
-            case DECOM_RESOLVE_DATATYPE:
-                return "Decom prompt for resolving missing struct definitions. <datatype_name> is replaced with the target struct name, and <bit_size> is replaced with the program bit width.";
-            case KEYFUNC_FUNCTIONS:
-                return "KeyFunc prompt for extracting prioritized functions from analysis output.";
-            case KEYFUNC_STRINGS:
-                return "KeyFunc prompt for extracting prioritized strings from Explain strings output.";
-            default:
-                return "Unused task prompt.";
-        }
+        return get_user_prompt_metadata(task).description;
     }
 
     public static Options get_group_options(Options root, String[] path) {
@@ -298,16 +299,10 @@ public class PromptConf {
     }
 
     public String get_system_prompt(TaskType task, String model_name) {
-        String override = system_prompt_overrides.get(task);
-        return override == null ? get_default_system_prompt() : override;
+        return get_default_system_prompt();
     }
 
     public void set_system_prompt(TaskType task, String system_prompt) {
-        if (system_prompt == null || system_prompt.isEmpty()) {
-            system_prompt_overrides.remove(task);
-        } else {
-            system_prompt_overrides.put(task, system_prompt);
-        }
     }
 
     public String get_default_user_prompt(TaskType task) {
@@ -322,21 +317,14 @@ public class PromptConf {
             Options group_options = get_group_options(prompt_root, get_user_prompt_group_path(task));
             return group_options.getString(get_user_prompt_option_name(task), default_prompt);
         }
-        String override = user_prompt_overrides.get(task);
-        return override == null ? default_prompt : override;
+        return default_prompt;
     }
 
-    public void set_user_prompt(TaskType task, String model_name, String system_prompt) {
+    public void set_user_prompt(TaskType task, String model_name, String user_prompt) {
         if (options != null) {
             Options prompt_root = options.getOptions(PROMPT_OPTIONS_ROOT);
             Options group_options = get_group_options(prompt_root, get_user_prompt_group_path(task));
-            group_options.setString(get_user_prompt_option_name(task), system_prompt == null ? "" : system_prompt);
-            return;
-        }
-        if (system_prompt == null || system_prompt.isEmpty()) {
-            user_prompt_overrides.remove(task);
-        } else {
-            user_prompt_overrides.put(task, system_prompt);
+            group_options.setString(get_user_prompt_option_name(task), user_prompt);
         }
     }
 

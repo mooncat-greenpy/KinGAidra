@@ -81,7 +81,7 @@ public class ConversationContainerGhidraProgram implements ConversationContainer
         return null;
     }
 
-    private static byte[] obj_to_bytes(Object obj) {
+    private byte[] serialize_stored_object(Object obj) {
         ByteArrayOutputStream byte_out = new ByteArrayOutputStream();
         ObjectOutputStream out;
         try {
@@ -93,7 +93,10 @@ public class ConversationContainerGhidraProgram implements ConversationContainer
         return null;
     }
 
-    private static Object bytes_to_obj(byte[] bytes) {
+    private Object deserialize_stored_object(byte[] bytes) {
+        if (bytes == null) {
+            return null;
+        }
         ByteArrayInputStream byte_in = new ByteArrayInputStream(bytes);
         ObjectInputStream in;
         try {
@@ -102,6 +105,14 @@ public class ConversationContainerGhidraProgram implements ConversationContainer
         } catch (IOException | ClassNotFoundException e) {
         }
         return null;
+    }
+
+    private <T> T deserialize_stored_object(byte[] bytes, Class<T> expected_type) {
+        Object obj = deserialize_stored_object(bytes);
+        if (!expected_type.isInstance(obj)) {
+            return null;
+        }
+        return expected_type.cast(obj);
     }
 
     private static final int RECORD_UUID_INDEX_V1 = 0;
@@ -158,19 +169,26 @@ public class ConversationContainerGhidraProgram implements ConversationContainer
         }
 
         String uuid = record.getString(RECORD_UUID_INDEX_V1);
-        ConversationType type = ConversationType.valueOf(record.getString(RECORD_TYPE_INDEX_V1));
-        Model model = (Model) bytes_to_obj(record.getBinaryData(RECORD_MODEL_INDEX_V1));
+        ConversationType type;
+        try {
+            type = ConversationType.valueOf(record.getString(RECORD_TYPE_INDEX_V1));
+        } catch (IllegalArgumentException | NullPointerException e) {
+            return null;
+        }
+        Model model = deserialize_stored_object(record.getBinaryData(RECORD_MODEL_INDEX_V1),
+                Model.class);
         if (model == null) {
             return null;
         }
         String created = record.getString(RECORD_CREATED_INDEX_V1);
         String updated = record.getString(RECORD_UPDATED_INDEX_V1);
-        Object msgs_obj = bytes_to_obj(record.getBinaryData(RECORD_MESSAGES_INDEX_V1));
-        if (!(msgs_obj instanceof Message[])) {
+        Message[] msgs = deserialize_stored_object(record.getBinaryData(RECORD_MESSAGES_INDEX_V1),
+                Message[].class);
+        if (msgs == null) {
             return null;
         }
-        Message[] msgs = (Message[]) msgs_obj;
-        Long[] addrs_value = (Long[]) bytes_to_obj(record.getBinaryData(RECORD_ADDRESSES_INDEX_V1));
+        Long[] addrs_value = deserialize_stored_object(
+                record.getBinaryData(RECORD_ADDRESSES_INDEX_V1), Long[].class);
         if (addrs_value == null) {
             return null;
         }
@@ -186,6 +204,7 @@ public class ConversationContainerGhidraProgram implements ConversationContainer
 
     public void add_convo(Conversation convo) {
         int tid = program.startTransaction("KinGAidra database");
+        boolean success = false;
         try {
             Table table = create_or_open_table(CONVO_TABLE_NAME, CONVERSATION_SCHEMA_V1);
             if (table == null) {
@@ -195,7 +214,7 @@ public class ConversationContainerGhidraProgram implements ConversationContainer
                     .createRecord(new StringField(convo.get_uuid().toString()));
             record.setString(RECORD_UUID_INDEX_V1, convo.get_uuid().toString());
             record.setString(RECORD_TYPE_INDEX_V1, convo.get_type().toString());
-            byte[] model_byte = obj_to_bytes(convo.get_model());
+            byte[] model_byte = serialize_stored_object(convo.get_model());
             if (model_byte == null) {
                 return;
             }
@@ -210,7 +229,7 @@ public class ConversationContainerGhidraProgram implements ConversationContainer
                         convo.get_tool_call_id(i),
                         convo.get_tool_calls(i));
             }
-            byte[] msgs_byte = obj_to_bytes(msgs);
+            byte[] msgs_byte = serialize_stored_object(msgs);
             if (msgs_byte == null) {
                 return;
             }
@@ -219,7 +238,7 @@ public class ConversationContainerGhidraProgram implements ConversationContainer
             for (Address addr : convo.get_addrs()) {
                 addrs.add(addr.getOffset());
             }
-            byte[] addrs_byte = obj_to_bytes(addrs.toArray(new Long[] {}));
+            byte[] addrs_byte = serialize_stored_object(addrs.toArray(new Long[] {}));
             if (addrs_byte == null) {
                 return;
             }
@@ -227,26 +246,28 @@ public class ConversationContainerGhidraProgram implements ConversationContainer
 
             try {
                 table.putRecord(record);
+                success = true;
             } catch (IOException e) {
             }
         } finally {
-            program.endTransaction(tid, true);
+            program.endTransaction(tid, success);
         }
     }
 
     public void del_convo(UUID id) {
         int tid = program.startTransaction("KinGAidra database");
+        boolean success = false;
         try {
             Table table = create_or_open_table(CONVO_TABLE_NAME, CONVERSATION_SCHEMA_V1);
             if (table == null) {
                 return;
             }
             try {
-                table.deleteRecord(new StringField(id.toString()));
+                success = table.deleteRecord(new StringField(id.toString()));
             } catch (IOException e) {
             }
         } finally {
-            program.endTransaction(tid, true);
+            program.endTransaction(tid, success);
         }
     }
 
