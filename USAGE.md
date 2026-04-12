@@ -235,9 +235,7 @@ Exposed MCP tools:
 - `get_function_list`
 - `get_callee_function`
 - `get_caller_function`
-- `get_asm_by_address`
 - `get_asm`
-- `get_decompiled_code_by_address`
 - `get_decompiled_code`
 - `refactoring`
 - `add_comments`

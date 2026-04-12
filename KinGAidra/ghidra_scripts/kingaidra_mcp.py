@@ -10,7 +10,7 @@ import anyio
 import uvicorn
 import socket
 
-from typing import List
+from typing import Annotated, List
 from pydantic import BaseModel, Field
 
 from mcp.server.fastmcp import FastMCP
@@ -29,6 +29,8 @@ logging.disable(logging.CRITICAL)
 
 DEFAULT_HOST = "127.0.0.1"
 FIXED_SCRIPT_FILE = "kingaidra_mcp_tool_tmp_script.py"
+
+FunctionTargetArg = Annotated[str, Field(description="Function name or hex address (e.g. 0x401000)")]
 
 
 class RefactorParam(BaseModel):
@@ -54,6 +56,26 @@ def _parse_hex_address(addr_str: str) -> int:
     if not s or any(c not in "0123456789abcdef" for c in s):
         raise ValueError("Invalid address format")
     return int(s, 16)
+
+def _get_target_funcs(ghidra, target: str):
+    funcs = ghidra.get_func(target)
+    if funcs and len(funcs) > 0:
+        return funcs, None
+
+    try:
+        addr = ghidra.get_addr(_parse_hex_address(target))
+    except ValueError:
+        if target.lower().startswith("0x"):
+            return [], "Invalid address format"
+        return [], "Invalid function name"
+
+    if not addr:
+        return [], "Invalid address"
+
+    func = ghidra.get_func(addr)
+    if not func:
+        return [], "Invalid address"
+    return [func], None
 
 def _hexdump(base_addr, buf) -> str:
     if buf is None:
@@ -217,12 +239,12 @@ def build_server(binary_id: str) -> FastMCP:
             return "Failed"
 
     @mcp.tool()
-    def get_callee_function(func_name: str) -> str:
-        """Retrieve functions that are called by the specified function and return their names and addresses."""
+    def get_callee_function(function: FunctionTargetArg) -> str:
+        """Retrieve functions that are called by the specified function and return their names and addresses. `function` accepts a function name or hex address."""
         try:
-            func_list = ghidra.get_func(func_name)
-            if not func_list or len(func_list) == 0:
-                return "Invalid function name"
+            func_list, error = _get_target_funcs(ghidra, function)
+            if error:
+                return error
 
             out = ""
             for f in func_list:
@@ -236,12 +258,12 @@ def build_server(binary_id: str) -> FastMCP:
             return "Failed"
 
     @mcp.tool()
-    def get_caller_function(func_name: str) -> str:
-        """Retrieve functions that call the specified function and return their names and addresses."""
+    def get_caller_function(function: FunctionTargetArg) -> str:
+        """Retrieve functions that call the specified function and return their names and addresses. `function` accepts a function name or hex address."""
         try:
-            func_list = ghidra.get_func(func_name)
-            if not func_list or len(func_list) == 0:
-                return "Invalid function name"
+            func_list, error = _get_target_funcs(ghidra, function)
+            if error:
+                return error
 
             out = ""
             for f in func_list:
@@ -255,58 +277,40 @@ def build_server(binary_id: str) -> FastMCP:
             return "Failed"
 
     @mcp.tool()
-    def get_asm_by_address(address: str) -> str:
-        """Retrieve the assembly code of the specified function. Address is hex string (e.g. 0x401000)."""
+    def get_asm(function: FunctionTargetArg) -> str:
+        """Retrieve the assembly code of the specified function. `function` accepts a function name or hex address (e.g. 0x401000)."""
         try:
-            addr_int = _parse_hex_address(address)
-            addr = ghidra.get_addr(addr_int)
-            if not addr:
-                return "Invalid address"
-            content = ghidra.get_asm(addr)
-            return content if content else "Invalid address"
-        except ValueError:
-            return "Invalid address format"
-        except Exception:
-            return "Failed"
-
-    @mcp.tool()
-    def get_asm(func_name: str) -> str:
-        """Retrieve the assembly code of the specified function."""
-        try:
-            funcs = ghidra.get_func(func_name)
-            if not funcs or len(funcs) != 1:
+            funcs, error = _get_target_funcs(ghidra, function)
+            if error:
+                return error
+            if len(funcs) < 1:
                 return "Failed"
-            f = funcs[0]
-            content = ghidra.get_asm(f.getEntryPoint(), True)
-            return content if content else "Failed"
+            out = ""
+            for f in funcs:
+                content = ghidra.get_asm(f.getEntryPoint(), True)
+                if not content:
+                    continue
+                out += "%s [%#x]\n%s\n\n" % (f.getName(), f.getEntryPoint().getOffset(), content)
+            return out if out else "Failed"
         except Exception:
             return "Failed"
 
     @mcp.tool()
-    def get_decompiled_code_by_address(address: str) -> str:
-        """Retrieve the decompiled code of the specified function in C language. Address is hex string (e.g. 0x401000)."""
+    def get_decompiled_code(function: FunctionTargetArg) -> str:
+        """Retrieve the decompiled code of the specified function in C language. `function` accepts a function name or hex address (e.g. 0x401000)."""
         try:
-            addr_int = _parse_hex_address(address)
-            addr = ghidra.get_addr(addr_int)
-            if not addr:
-                return "Invalid address"
-            content = ghidra.get_decom(addr)
-            return content if content else "Invalid address"
-        except ValueError:
-            return "Invalid address format"
-        except Exception:
-            return "Failed"
-
-    @mcp.tool()
-    def get_decompiled_code(func_name: str) -> str:
-        """Retrieve the decompiled code of the specified function in C language."""
-        try:
-            funcs = ghidra.get_func(func_name)
-            if not funcs or len(funcs) != 1:
+            funcs, error = _get_target_funcs(ghidra, function)
+            if error:
+                return error
+            if len(funcs) < 1:
                 return "Failed"
-            f = funcs[0]
-            content = ghidra.get_decom(f.getEntryPoint())
-            return (content + "\n\n") if content else "Failed"
+            out = ""
+            for f in funcs:
+                content = ghidra.get_decom(f.getEntryPoint())
+                if not content:
+                    continue
+                out += "%s [%#x]\n%s\n\n" % (f.getName(), f.getEntryPoint().getOffset(), content)
+            return out if out else "Failed"
         except Exception:
             return "Failed"
 
