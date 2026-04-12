@@ -230,6 +230,7 @@ Runtime operation:
 Exposed MCP tools:
 
 - `get_current_address`
+- `get_binary_info`
 - `get_function_address_by_name`
 - `get_function_list`
 - `get_callee_function`

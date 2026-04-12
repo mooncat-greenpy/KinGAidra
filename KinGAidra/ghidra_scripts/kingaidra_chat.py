@@ -36,6 +36,7 @@ import java.io.StringWriter as StringWriter
 
 import kingaidra
 
+from ghidra.framework import Application
 import ghidra.util.task.TaskMonitor as TaskMonitor
 import ghidra.program.model.data.DataTypeWriter as DataTypeWriter
 
@@ -99,6 +100,19 @@ def add_tools(data):
             "function": {
                 "name": "get_current_address",
                 "description": "Returns the user's selected address.",
+                "parameters": {
+                    "type": "object",
+                    "properties": {},
+                    "additionalProperties": False
+                },
+                "strict": True
+            }
+        },
+        {
+            "type": "function",
+            "function": {
+                "name": "get_binary_info",
+                "description": "Retrieve basic information about the current binary.",
                 "parameters": {
                     "type": "object",
                     "properties": {},
@@ -491,6 +505,16 @@ def handle_tool_call(tool_call, ghidra):
     content = ""
     if func_name == "get_current_address":
         content = "%#x" % (ghidra.get_current_addr().getOffset())
+    elif func_name == "get_binary_info":
+        prog = currentProgram
+        content = json.dumps({
+            "program_name": prog.getName(),
+            "language_id": str(prog.getLanguageID()),
+            "arch": str(prog.getLanguage().getProcessor()),
+            "compiler": str(prog.getCompilerSpec().getCompilerSpecID()),
+            "image_base": prog.getImageBase().toString(),
+            "ghidra_version": Application.getApplicationVersion(),
+        }, indent=2, ensure_ascii=False)
     elif func_name == "get_function_address_by_name":
         same_name_funcs = ghidra.get_func(args["name"])
         if not same_name_funcs:

@@ -16,6 +16,7 @@ from pydantic import BaseModel, Field
 from mcp.server.fastmcp import FastMCP
 
 import kingaidra
+from ghidra.framework import Application
 import ghidra.util.task.TaskMonitor as TaskMonitor
 import ghidra.program.model.data.DataTypeWriter as DataTypeWriter
 
@@ -174,6 +175,19 @@ def build_server(binary_id: str) -> FastMCP:
             return "%#x" % (addr.getOffset())
         except Exception:
             return "Failed"
+
+    @mcp.tool()
+    def get_binary_info() -> dict:
+        """Retrieve basic information about the current binary."""
+        prog = currentProgram
+        return {
+            "program_name": prog.getName(),
+            "language_id": str(prog.getLanguageID()),
+            "arch": str(prog.getLanguage().getProcessor()),
+            "compiler": str(prog.getCompilerSpec().getCompilerSpecID()),
+            "image_base": prog.getImageBase().toString(),
+            "ghidra_version": Application.getApplicationVersion(),
+        }
 
     @mcp.tool()
     def get_function_address_by_name(name: str) -> str:
