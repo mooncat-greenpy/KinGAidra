@@ -88,6 +88,7 @@ public class ChatGUI extends JPanel {
     private JButton refresh_btn;
     private JLabel info_label;
     private JPanel btn_panel;
+    private JCheckBox planner_chk;
     private JCheckBox md_chk;
     private JCheckBox detail_chk;
 
@@ -533,7 +534,11 @@ public class ChatGUI extends JPanel {
         submit_btn.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
-                guess(TaskType.CHAT, ghidra.get_current_addr());
+                if (planner_chk != null && planner_chk.isSelected()) {
+                    guess_planned_workflow(ghidra.get_current_addr());
+                } else {
+                    guess(TaskType.CHAT, ghidra.get_current_addr());
+                }
             }
         });
         submit_btn.setPreferredSize(button_size);
@@ -554,6 +559,7 @@ public class ChatGUI extends JPanel {
         delete_btn.setToolTipText("Delete chat from history");
         btn_panel.add(delete_btn);
 
+        btn_panel.add(planner_chk);
         btn_panel.add(md_chk);
         btn_panel.add(detail_chk);
 
@@ -666,6 +672,8 @@ public class ChatGUI extends JPanel {
         ggui = new GuessGUI(guess, logger);
         lgui = new LogGUI(container, this, plugin, program, logger);
 
+        planner_chk = new JCheckBox("planner");
+        planner_chk.setToolTipText("Generate workflow JSON from the current request and run the workflow");
         md_chk = new JCheckBox("markdown");
         detail_chk = new JCheckBox("detail");
 
@@ -899,6 +907,7 @@ public class ChatGUI extends JPanel {
         submit_btn.setEnabled(false);
         delete_btn.setEnabled(false);
         refresh_btn.setEnabled(false);
+        planner_chk.setEnabled(false);
         info_label.setText("Working ...");
         try {
             cur_convo = convo;
@@ -910,6 +919,7 @@ public class ChatGUI extends JPanel {
             submit_btn.setEnabled(!history_read_only);
             delete_btn.setEnabled(true);
             refresh_btn.setEnabled(true);
+            planner_chk.setEnabled(true);
             apply_history_view_state();
             check_and_set_busy(false);
             validate();
@@ -930,6 +940,7 @@ public class ChatGUI extends JPanel {
             submit_btn.setEnabled(false);
             delete_btn.setEnabled(false);
             refresh_btn.setEnabled(false);
+            planner_chk.setEnabled(false);
             info_label.setText("Working ...");
         }
         SwingWorker<Conversation, Void> worker = new SwingWorker<>() {
@@ -961,6 +972,7 @@ public class ChatGUI extends JPanel {
                     submit_btn.setEnabled(true);
                     delete_btn.setEnabled(true);
                     refresh_btn.setEnabled(true);
+                    planner_chk.setEnabled(true);
                     check_and_set_busy(false);
                     validate();
                     repaint();
@@ -974,6 +986,69 @@ public class ChatGUI extends JPanel {
         }
     }
 
+    public void guess_planned_workflow(Address addr) {
+        if (history_read_only) {
+            logger.append_message("History view is read-only");
+            return;
+        }
+
+        final boolean show_in_chat_tab = check_and_set_busy(true);
+        final Conversation base_convo = show_in_chat_tab ? cur_convo : null;
+        final String input_text = input_area.getText();
+
+        if (show_in_chat_tab) {
+            restart_btn.setEnabled(false);
+            submit_btn.setEnabled(false);
+            delete_btn.setEnabled(false);
+            refresh_btn.setEnabled(false);
+            planner_chk.setEnabled(false);
+            info_label.setText("Working ...");
+        }
+
+        SwingWorker<Conversation, Void> worker = new SwingWorker<>() {
+            @Override
+            protected Conversation doInBackground() {
+                if (addr == null) {
+                    return base_convo;
+                }
+                return ggui.run_planned_workflow(input_text, addr);
+            }
+
+            @Override
+            protected void done() {
+                if (!show_in_chat_tab) {
+                    return;
+                }
+
+                try {
+                    cur_convo = get();
+                    build_panel();
+                    info_label.setText(cur_convo == null ? "Failed!" : "Finished!");
+                } catch (Exception e) {
+                    cur_convo = null;
+                    info_label.setText("Failed!");
+                } finally {
+                    restart_btn.setEnabled(true);
+                    submit_btn.setEnabled(false);
+                    delete_btn.setEnabled(true);
+                    refresh_btn.setEnabled(true);
+                    planner_chk.setEnabled(true);
+                    apply_history_view_state();
+                    check_and_set_busy(false);
+                    validate();
+                    repaint();
+                }
+            }
+        };
+
+        worker.execute();
+
+        if (show_in_chat_tab) {
+            validate();
+        }
+    }
+
+
     public void guess_workflow(ChatWorkflow workflow, Address addr) {
         final boolean show_in_chat_tab = check_and_set_busy(true);
         final Conversation base_convo = cur_convo;
@@ -982,6 +1057,7 @@ public class ChatGUI extends JPanel {
             submit_btn.setEnabled(false);
             delete_btn.setEnabled(false);
             refresh_btn.setEnabled(false);
+            planner_chk.setEnabled(false);
             info_label.setText("Working ...");
         }
         SwingWorker<Conversation, Void> worker = new SwingWorker<>() {
@@ -1010,6 +1086,7 @@ public class ChatGUI extends JPanel {
                     submit_btn.setEnabled(true);
                     delete_btn.setEnabled(true);
                     refresh_btn.setEnabled(true);
+                    planner_chk.setEnabled(true);
                     check_and_set_busy(false);
                     validate();
                     repaint();

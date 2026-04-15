@@ -22,4 +22,5 @@ public enum TaskType {
     DECOM_RESOLVE_DATATYPE,
     KEYFUNC_FUNCTIONS,
     KEYFUNC_STRINGS,
+    CHAT_PLAN,
 }

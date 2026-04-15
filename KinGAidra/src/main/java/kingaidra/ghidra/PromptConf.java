@@ -28,6 +28,7 @@ public class PromptConf {
     public static final String PROMPT_CHAT_GROUP_EXPLAIN_STRINGS_MALWARE = "Explain strings (malware)";
     public static final String PROMPT_CHAT_GROUP_QUICK_MALWARE_BEHAVIOR_OVERVIEW = "Quick malware behavior overview";
     public static final String PROMPT_CHAT_GROUP_ADD_COMMENTS_WITH_AI = "Add comments using AI";
+    public static final String PROMPT_CHAT_GROUP_PLAN = "Plan";
     public static final String PROMPT_CHAT_GROUP_WORKFLOWS = "Workflows";
 
     public static final String OPTION_SYSTEM_PROMPT = "Default System Prompt";
@@ -185,6 +186,11 @@ public class PromptConf {
                         new String[] { PROMPT_GROUP_CHAT, PROMPT_CHAT_GROUP_QUICK_MALWARE_BEHAVIOR_OVERVIEW },
                         "3: Report prompt",
                         "Final report prompt used by \"Quick malware behavior overview with AI\".");
+            case CHAT_PLAN:
+                return new UserPromptMetadata(
+                        new String[] { PROMPT_GROUP_CHAT, PROMPT_CHAT_GROUP_PLAN },
+                        "1: Plan",
+                        "Plan");
             case ADD_COMMENTS:
                 return new UserPromptMetadata(
                         new String[] { PROMPT_GROUP_CHAT, PROMPT_CHAT_GROUP_ADD_COMMENTS_WITH_AI },
@@ -351,15 +357,19 @@ public class PromptConf {
     }
 
     public List<ChatWorkflow> get_workflows() {
+        String workflows_json = get_workflows_json();
+        return get_workflows(workflows_json, get_default_system_prompt());
+    }
+
+    public static List<ChatWorkflow> get_workflows(String workflows_json, String default_system_prompt) {
         List<ChatWorkflow> workflows = new ArrayList<>();
-        String raw = get_workflows_json();
-        if (raw == null || raw.trim().isEmpty()) {
+        if (workflows_json == null || workflows_json.trim().isEmpty()) {
             return workflows;
         }
 
         try {
             ObjectMapper mapper = new ObjectMapper();
-            JsonNode root = mapper.readTree(raw);
+            JsonNode root = mapper.readTree(workflows_json);
             if (root == null || !root.isArray()) {
                 return workflows;
             }
@@ -390,7 +400,7 @@ public class PromptConf {
                 if (tasks.isEmpty()) {
                     continue;
                 }
-                String workflow_system_prompt = get_default_system_prompt();
+                String workflow_system_prompt = default_system_prompt;
                 JsonNode system_prompt_node = workflow_node.get("system_prompt");
                 if (system_prompt_node != null && system_prompt_node.isTextual()) {
                     workflow_system_prompt = system_prompt_node.asText("");
@@ -658,6 +668,54 @@ public class PromptConf {
                 "Constraints:\n" +
                 "- Facts only. Provide evidence (address and function name) for each claim.\n" +
                 "- Guessing and assumptions are prohibited.");
+        default_user_prompts.put(TaskType.CHAT_PLAN,
+                "You are an assistant that converts a user's analysis request into an \"analysis role definition JSON for execution.\"\n" +
+                "Read the user's instructions and output only a JSON array in the following format.\n" +
+                "\n" +
+                "[\n" +
+                "    {\n" +
+                "        \"name\": \"Role Name\",\n" +
+                "        \"system_prompt\": \"Detailed system prompt for the role.\",\n" +
+                "        \"tasks\": [\n" +
+                "            \"Task 1 prompt\",\n" +
+                "            \"Task 2 prompt\",\n" +
+                "            \"Task 3 prompt\"\n" +
+                "        ]\n" +
+                "    }\n" +
+                "]\n" +
+                "\n" +
+                "Requirements:\n" +
+                "\n" +
+                "* Output must be valid JSON only. Do not include any introduction, explanation, or Markdown code fences.\n" +
+                "* The top level of the JSON must be an array.\n" +
+                "* Each element must contain the following three keys:\n" +
+                "\n" +
+                "  * \"name\": The role name. Use a concise and specific English name.\n" +
+                "  * \"system_prompt\": An English prompt that describes in detail the investigation or analysis policy the role should follow.\n" +
+                "  * \"tasks\": A list of concrete investigation items as an array of English strings.\n" +
+                "* If the user's request is about a single theme, output one element. If it contains multiple themes, split them into multiple elements by meaning.\n" +
+                "* In \"system_prompt,\" naturally incorporate the target, perspectives, tools to use, cautions, and expected depth of analysis explicitly stated by the user.\n" +
+                "* \"tasks\" must be actionable and specific in scope. Avoid vague wording.\n" +
+                "* If the user specifies tool names or search methods, reflect them as directly as possible.\n" +
+                "* Do not add too much information that the user did not provide. However, you may add the minimum necessary details to make the request workable.\n" +
+                "* The contents of \"name,\" \"system_prompt,\" and \"tasks\" must be written in English.\n" +
+                "* Avoid duplicating the same content.\n" +
+                "* If the request involves malware analysis, reverse engineering, Ghidra, static analysis, behavioral analysis, or similar topics, you may use domain-appropriate technical terminology.\n" +
+                "* If the user's request is something like \"create someone responsible for investigating X,\" use suitable role names such as analyst, investigator, hunter, or triage, depending on the subject.\n" +
+                "\n" +
+                "Conversion policy:\n" +
+                "\n" +
+                "1. Extract \"what should be investigated\" from the user's request.\n" +
+                "2. If necessary, break the request down into multiple analytical perspectives.\n" +
+                "3. For each perspective:\n" +
+                "\n" +
+                "   * Assign a concise role name\n" +
+                "   * Summarize the execution policy in \"system_prompt\"\n" +
+                "   * List about 3 to 6 concrete tasks\n" +
+                "4. Finally, return only the JSON array.\n" +
+                "\n" +
+                "User instruction:\n"
+        );
 
         default_user_prompts.put(TaskType.ADD_COMMENTS,
                 "Please add comments to the following C language function to explain its purpose and logic. The comments should be concise but clear, and should describe the function, parameters, logic, and any important details for each part of the code. Return the results in the following format:\n" +

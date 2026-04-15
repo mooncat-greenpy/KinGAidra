@@ -333,6 +333,27 @@ public class Ai {
                 addr);
     }
 
+    public Conversation plan_and_run_workflow(Model m, String msg, Address addr) {
+        TaskType task = TaskType.CHAT_PLAN;
+        Conversation planner_convo = create_chat_conversation(m, task);
+        String planner_request = conf.get_user_prompt(task, m.get_name()) + msg;
+
+        Conversation planner_result = guess(TaskType.CHAT, planner_convo, planner_request, addr);
+        if (planner_result == null || planner_result.get_msgs_len() <= 0) {
+            return null;
+        }
+
+        String workflow_json = planner_result.get_msg(planner_result.get_msgs_len() - 1);
+        List<ChatWorkflow> planned_workflows =
+            conf.get_workflows(workflow_json, conf.get_default_system_prompt());
+
+        if (planned_workflows.isEmpty()) {
+            return planner_result;
+        }
+
+        return run_workflow(m, planned_workflows.get(0), addr);
+    }
+
     public Conversation run_workflow(Model m, ChatWorkflow workflow, Address addr) {
         if (workflow == null || workflow.get_step_prompts().isEmpty() || m == null) {
             return null;

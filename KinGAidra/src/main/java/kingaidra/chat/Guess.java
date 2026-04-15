@@ -83,6 +83,10 @@ public class Guess {
         return run_workflow(get_active_model(), workflow, addr);
     }
 
+    public Conversation guess_planned_workflow(String msg, Address addr) {
+       return ai.plan_and_run_workflow(get_active_model(), msg, addr);
+    }
+
     public List<Map.Entry<String, String>> guess_src_code_comments(Address addr) {
         List<Map.Entry<String, String>> comments = new LinkedList<>();
 
