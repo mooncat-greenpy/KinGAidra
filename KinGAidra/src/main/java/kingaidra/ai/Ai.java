@@ -334,8 +334,17 @@ public class Ai {
     }
 
     public Conversation plan_and_run_workflow(Model m, String msg, Address addr) {
+        return plan_and_run_workflow(m, null, msg, addr);
+    }
+
+    public Conversation plan_and_run_workflow(Model m, Conversation convo, String msg, Address addr) {
         TaskType task = TaskType.CHAT_PLAN;
-        Conversation planner_convo = create_chat_conversation(m, task);
+        Conversation planner_convo;
+        if (convo == null) {
+            planner_convo = create_chat_conversation(m, task);
+        } else {
+            planner_convo = convo.duplicate();
+        }
         String planner_request = conf.get_user_prompt(task, m.get_name()) + msg;
 
         Conversation planner_result = guess(TaskType.CHAT, planner_convo, planner_request, addr);
@@ -351,20 +360,26 @@ public class Ai {
             return planner_result;
         }
 
-        return run_workflow(m, planned_workflows.get(0), addr);
+        return run_workflow(m, convo, planned_workflows.get(0), addr);
     }
 
     public Conversation run_workflow(Model m, ChatWorkflow workflow, Address addr) {
+        return run_workflow(m, null, workflow, addr);
+    }
+
+    public Conversation run_workflow(Model m, Conversation convo, ChatWorkflow workflow, Address addr) {
         if (workflow == null || workflow.get_step_prompts().isEmpty() || m == null) {
             return null;
         }
 
-        Conversation convo = new Conversation(ConversationType.USER_CHAT, m);
-        String workflow_system_prompt = workflow.get_system_prompt();
-        if (workflow_system_prompt == null || workflow_system_prompt.isEmpty()) {
-            workflow_system_prompt = conf.get_system_prompt(TaskType.CHAT, m.get_name());
+        if (convo == null) {
+            convo = new Conversation(ConversationType.USER_CHAT, m);
+            String workflow_system_prompt = workflow.get_system_prompt();
+            if (workflow_system_prompt == null || workflow_system_prompt.isEmpty()) {
+                workflow_system_prompt = conf.get_system_prompt(TaskType.CHAT, m.get_name());
+            }
+            convo.add_system_msg(workflow_system_prompt);
         }
-        convo.add_system_msg(workflow_system_prompt);
 
         Conversation result = convo;
         for (String prompt : workflow.get_step_prompts()) {

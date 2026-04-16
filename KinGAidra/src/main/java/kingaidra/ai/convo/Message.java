@@ -29,6 +29,13 @@ public class Message implements Serializable {
 		this.tool_calls = tool_calls;
 	}
 
+	public Message(Message src) {
+		this.role = src.role;
+		this.content = src.content;
+		this.tool_call_id = src.tool_call_id;
+		this.tool_calls = src.tool_calls;
+	}
+
 	@JsonProperty("role")
 	public String get_role() {
 		return role;

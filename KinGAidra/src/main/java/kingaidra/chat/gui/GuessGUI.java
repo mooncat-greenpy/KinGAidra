@@ -39,6 +39,10 @@ public class GuessGUI extends JPanel {
         return guess.guess_planned_workflow(msg, addr);
     }
 
+    public Conversation run_planned_workflow(Conversation convo, String msg, Address addr) {
+        return guess.guess_planned_workflow(convo, msg, addr);
+    }
+
     public List<Map.Entry<String, String>> run_guess_src_code_comments(Address addr) {
         return guess.guess_src_code_comments(addr);
     }

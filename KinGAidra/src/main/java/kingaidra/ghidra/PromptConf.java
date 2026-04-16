@@ -670,7 +670,8 @@ public class PromptConf {
                 "- Guessing and assumptions are prohibited.");
         default_user_prompts.put(TaskType.CHAT_PLAN,
                 "You are an assistant that converts a user's analysis request into an \"analysis role definition JSON for execution.\"\n" +
-                "Read the user's instructions and output only a JSON array in the following format.\n" +
+                "Read the user's current instruction and, if available, the relevant conversation history. Use the conversation history only as supplementary context, and prioritize the current user instruction if there is any conflict. If no conversation history is provided, rely only on the current user instruction.\n" +
+                "Output only a JSON array in the following format.\n" +
                 "\n" +
                 "[\n" +
                 "    {\n" +
@@ -694,10 +695,11 @@ public class PromptConf {
                 "  * \"system_prompt\": An English prompt that describes in detail the investigation or analysis policy the role should follow.\n" +
                 "  * \"tasks\": A list of concrete investigation items as an array of English strings.\n" +
                 "* If the user's request is about a single theme, output one element. If it contains multiple themes, split them into multiple elements by meaning.\n" +
-                "* In \"system_prompt,\" naturally incorporate the target, perspectives, tools to use, cautions, and expected depth of analysis explicitly stated by the user.\n" +
+                "* In \"system_prompt,\" naturally incorporate the target, perspectives, tools to use, cautions, and expected depth of analysis explicitly stated by the user in the current instruction and, if available, the relevant conversation history.\n" +
                 "* \"tasks\" must be actionable and specific in scope. Avoid vague wording.\n" +
                 "* If the user specifies tool names or search methods, reflect them as directly as possible.\n" +
                 "* Do not add too much information that the user did not provide. However, you may add the minimum necessary details to make the request workable.\n" +
+                "* Do not infer unstated requirements solely from missing conversation history.\n" +
                 "* The contents of \"name,\" \"system_prompt,\" and \"tasks\" must be written in English.\n" +
                 "* Avoid duplicating the same content.\n" +
                 "* If the request involves malware analysis, reverse engineering, Ghidra, static analysis, behavioral analysis, or similar topics, you may use domain-appropriate technical terminology.\n" +
@@ -705,7 +707,7 @@ public class PromptConf {
                 "\n" +
                 "Conversion policy:\n" +
                 "\n" +
-                "1. Extract \"what should be investigated\" from the user's request.\n" +
+                "1. Extract \"what should be investigated\" from the current user instruction, using relevant conversation history only when available and helpful.\n" +
                 "2. If necessary, break the request down into multiple analytical perspectives.\n" +
                 "3. For each perspective:\n" +
                 "\n" +

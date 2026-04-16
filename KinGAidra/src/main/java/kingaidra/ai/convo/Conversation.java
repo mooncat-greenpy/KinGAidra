@@ -57,6 +57,22 @@ public class Conversation implements Serializable {
         this.updated = updated;
     }
 
+    public Conversation duplicate() {
+        Message[] msgs = new Message[this.messages.size()];
+        for (int i = 0; i < this.messages.size(); i++) {
+            msgs[i] = new Message(this.messages.get(i));
+        }
+        return new Conversation(
+            UUID.randomUUID().toString(),
+            this.type,
+            this.model,
+            this.created,
+            this.updated,
+            msgs,
+            this.addrs.toArray(new Address[0])
+        );
+    }
+
     public UUID get_uuid() {
         return uuid;
     }

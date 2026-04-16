@@ -1011,7 +1011,10 @@ public class ChatGUI extends JPanel {
                 if (addr == null) {
                     return base_convo;
                 }
-                return ggui.run_planned_workflow(input_text, addr);
+                if (base_convo == null) {
+                    return ggui.run_planned_workflow(input_text, addr);
+                }
+                return ggui.run_planned_workflow(base_convo, input_text, addr);
             }
 
             @Override
@@ -1029,9 +1032,10 @@ public class ChatGUI extends JPanel {
                     info_label.setText("Failed!");
                 } finally {
                     restart_btn.setEnabled(true);
-                    submit_btn.setEnabled(false);
+                    submit_btn.setEnabled(true);
                     delete_btn.setEnabled(true);
                     refresh_btn.setEnabled(true);
+                    planner_chk.setSelected(false);
                     planner_chk.setEnabled(true);
                     apply_history_view_state();
                     check_and_set_busy(false);
