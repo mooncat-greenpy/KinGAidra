@@ -21,4 +21,8 @@ public class GuessGUI extends JPanel {
     public DecomDiff[] run_guess(Address addr) {
         return guess.guess_selected(addr);
     }
+
+    public DecomDiff[] run_guess(Address addr, String reference_code) {
+        return guess.guess_selected(addr, false, reference_code);
+    }
 }

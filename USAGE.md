@@ -84,8 +84,8 @@ Additional operations:
 1. Move cursor to a function.
 2. Run `Decompile using AI (view)`.
 3. Optionally provide additional instruction and click `Apply Instruction`.
-4. Optionally click `Refactor Ghidra` to apply from generated view.
-5. Use `Saved Function` selector to browse stored results.
+4. Optionally click `Send to Refactor` to generate refactor candidates from the current view.
+5. Review and apply the generated candidates in the `Refactor` tab.
 
 Additional operations:
 

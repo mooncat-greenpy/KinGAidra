@@ -59,10 +59,7 @@ import kingaidra.ai.convo.Conversation;
 import kingaidra.ai.convo.ConversationContainer;
 import kingaidra.ai.convo.ConversationType;
 import kingaidra.ai.model.ModelConf;
-import kingaidra.decom.DecomDiff;
-import kingaidra.decom.Guess;
 import kingaidra.decom.LlmDecompile;
-import kingaidra.decom.Refactor;
 import kingaidra.ghidra.GhidraUtil;
 import kingaidra.ghidra.PromptConf;
 import kingaidra.gui.MainProvider;
@@ -81,12 +78,12 @@ public class LlmDecompileGUI extends JPanel {
 
     private Program program;
     private PluginTool plugin;
+    private MainProvider provider;
     private GhidraUtil ghidra;
+    private DecomGUI decom_gui;
     private ConversationContainer container;
     private Logger logger;
     private LlmDecompile llm_decompile;
-    private Guess refactor_guess;
-    private Refactor refactor;
     private ConcurrentMap<Address, String> decompile_results;
     private ConcurrentMap<Address, String> decompile_updated;
 
@@ -167,16 +164,16 @@ public class LlmDecompileGUI extends JPanel {
 
     public LlmDecompileGUI(MainProvider provider, Tool dockingTool, Program program, Plugin plugin,
             String owner, GhidraUtil ghidra, ConversationContainer container, ModelConf model_conf, PromptConf conf,
-            Ai ai, Logger logger) {
+            Ai ai, Logger logger, DecomGUI decom_gui) {
         super();
         this.program = program;
         this.plugin = plugin.getTool();
+        this.provider = provider;
         this.ghidra = ghidra;
+        this.decom_gui = decom_gui;
         this.container = container;
         this.logger = logger;
         this.llm_decompile = new LlmDecompile(ai, ghidra, model_conf, conf);
-        this.refactor_guess = new Guess(ghidra, ai, model_conf, conf);
-        this.refactor = new Refactor(ghidra, ai, conf, msg -> msg);
         this.decompile_results = new ConcurrentHashMap<>();
         this.decompile_updated = new ConcurrentHashMap<>();
         this.current_func_entry = null;
@@ -203,7 +200,7 @@ public class LlmDecompileGUI extends JPanel {
 
         JPanel button_panel = new JPanel(new FlowLayout(FlowLayout.LEFT, 4, 4));
         regen_btn = new JButton("Regenerate");
-        refactor_btn = new JButton("Refactor Ghidra");
+        refactor_btn = new JButton("Send to Refactor");
         instruction_btn = new JButton("Apply Instruction");
         copy_btn = new JButton("Copy");
         info_label = new JLabel("");
@@ -219,6 +216,7 @@ public class LlmDecompileGUI extends JPanel {
         function_selector.setEnabled(false);
         search_prev_btn.setEnabled(false);
         search_next_btn.setEnabled(false);
+        refactor_btn.setToolTipText("Generate refactoring candidates in the Refactor tab using this output");
 
         regen_btn.addActionListener(new ActionListener() {
             @Override
@@ -444,55 +442,17 @@ public class LlmDecompileGUI extends JPanel {
             return;
         }
 
-        if (!check_and_set_busy(true)) {
-            logger.append_message("Another process running");
+        if (decom_gui == null) {
+            logger.append_message("Refactor tab not found");
+            info_label.setText("Refactor tab not found");
             return;
         }
 
-        set_operation_controls_enabled(false);
-        info_label.setText("Refactoring ...");
-        final Address target_entry = func_entry;
-        final String target_code = reference_code;
-
-        SwingWorker<DecomDiff, Void> worker = new SwingWorker<>() {
-            @Override
-            protected DecomDiff doInBackground() {
-                DecomDiff[] diffs = refactor_guess.guess_selected(target_entry, false, target_code);
-                if (diffs.length == 0) {
-                    // simple retry
-                    diffs = refactor_guess.guess_selected(target_entry, false, target_code);
-                }
-                if (diffs.length == 0) {
-                    return null;
-                }
-                refactor.refact(diffs[0], true, target_code);
-                return diffs[0];
-            }
-
-            @Override
-            protected void done() {
-                try {
-                    DecomDiff diff = get();
-                    if (diff == null) {
-                        info_label.setText("Refactor failed");
-                    } else {
-                        refresh_function_selector(target_entry);
-                        if (current_func_entry != null && current_func_entry.equals(target_entry)) {
-                            show_code_for_function(target_entry, true);
-                        }
-                        info_label.setText("Refactor applied");
-                    }
-                } catch (Exception e) {
-                    info_label.setText("Refactor failed");
-                } finally {
-                    set_operation_controls_enabled(true);
-                    check_and_set_busy(false);
-                    validate();
-                    repaint();
-                }
-            }
-        };
-        worker.execute();
+        boolean started = decom_gui.run_refactor_from_reference(func_entry, reference_code);
+        if (started) {
+            info_label.setText("Sent to Refactor");
+            provider.change_tab("Refactor");
+        }
     }
 
     private void run_llm_decompile_with_instruction() {

@@ -58,7 +58,7 @@ Generates rename/datatype proposals and can apply them to Ghidra.
 ### DecomView
 
 - Generates LLM-based C view per function.
-- Stores generated views in conversation history and supports regeneration/refactor.
+- Stores generated views in conversation history and can send the current output to the Refactor tab for review/apply.
 
 ![DecomView Example](./img/decomview.png)
 

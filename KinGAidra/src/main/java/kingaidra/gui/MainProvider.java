@@ -68,7 +68,8 @@ public class MainProvider extends ComponentProvider {
         decom_panel = new DecomGUI(this, this.dockingTool, program, plugin, owner, srv, ghidra, refactor_model_conf, conf, ai, logger);
         main_panel.add("Refactor", decom_panel);
 
-        llm_decom_panel = new LlmDecompileGUI(this, this.dockingTool, program, plugin, owner, ghidra, container, chat_model_conf, conf, ai, logger);
+        llm_decom_panel = new LlmDecompileGUI(this, this.dockingTool, program, plugin, owner, ghidra,
+                container, chat_model_conf, conf, ai, logger, decom_panel);
         main_panel.add("DecomView", llm_decom_panel);
 
         // Currently considering a feature to identify areas that should be prioritized for analysis in binary analysis

@@ -39,6 +39,7 @@ public class DecomGUI extends JPanel {
     private JButton restart_btn;
     private JButton guess_btn;
     private JButton refact_btn;
+    private JLabel info_label;
 
     private Program program;
     private PluginTool plugin;
@@ -99,7 +100,7 @@ public class DecomGUI extends JPanel {
         rgui = new RefactorGUI(refactor, logger);
 
         JPanel btn_panel = new JPanel();
-        JLabel info_label = new JLabel();
+        info_label = new JLabel();
         info_label.setPreferredSize(new Dimension(0, 40));
         add(info_label);
         restart_btn = new JButton("Clean");
@@ -137,51 +138,7 @@ public class DecomGUI extends JPanel {
         guess_btn.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
-                if (!check_and_set_busy(true)) {
-                    logger.append_message("Another process running");
-                    return;
-                }
-                restart_btn.setEnabled(false);
-                guess_btn.setEnabled(false);
-                refact_btn.setEnabled(false);
-                info_label.setText("Working ...");
-                SwingWorker<DecomDiff[], Void> worker = new SwingWorker<>() {
-                    @Override
-                    protected DecomDiff[] doInBackground() {
-                        Address addr = ghidra.get_current_addr();
-                        if (addr == null) {
-                            return null;
-                        }
-                        return ggui.run_guess(addr);
-                    }
-
-                    @Override
-                    protected void done() {
-                        DecomDiff[] diffs = null;
-                        try {
-                            diffs = get();
-                            if (diffs != null) {
-                                for (DecomDiff d : diffs) {
-                                    rgui.add_tab(d.get_model().get_name(), d);
-                                }
-                            }
-                        } catch (Exception e) {
-                            diffs = null;
-                        } finally {
-                            boolean ok = diffs != null && diffs.length > 0;
-                            info_label.setText(ok ? "Finished!" : "Failed!");
-                            restart_btn.setEnabled(true);
-                            guess_btn.setEnabled(true);
-                            refact_btn.setEnabled(ok);
-                            check_and_set_busy(false);
-                            validate();
-                            repaint();
-                        }
-                    }
-                };
-                worker.execute();
-
-                validate();
+                run_guess(ghidra.get_current_addr(), null);
             }
         });
         guess_btn.setPreferredSize(button_size);
@@ -237,9 +194,77 @@ public class DecomGUI extends JPanel {
                     provider.toFront();
                     provider.change_tab("Refactor");
 
-                    guess_btn.doClick();
+                    run_guess(func.getEntryPoint(), null);
                 }).popupMenuPath(new String[] {"Refactor using AI"}).popupMenuGroup("KinGAidra")
                 .buildAndInstall(plugin);
+    }
+
+    public boolean run_refactor_from_reference(Address addr, String reference_code) {
+        if (reference_code == null || reference_code.trim().isEmpty()) {
+            logger.append_message("Reference code not found");
+            return false;
+        }
+        return run_guess(addr, reference_code);
+    }
+
+    private boolean run_guess(Address addr, String reference_code) {
+        if (addr == null) {
+            logger.append_message("Function not found");
+            return false;
+        }
+        if (!check_and_set_busy(true)) {
+            logger.append_message("Another process running");
+            return false;
+        }
+        restart_btn.setEnabled(false);
+        guess_btn.setEnabled(false);
+        refact_btn.setEnabled(false);
+        info_label.setText("Working ...");
+        SwingWorker<DecomDiff[], Void> worker = new SwingWorker<>() {
+            @Override
+            protected DecomDiff[] doInBackground() {
+                if (reference_code == null) {
+                    return ggui.run_guess(addr);
+                }
+                return ggui.run_guess(addr, reference_code);
+            }
+
+            @Override
+            protected void done() {
+                DecomDiff[] diffs = null;
+                try {
+                    diffs = get();
+                    if (diffs != null) {
+                        for (DecomDiff d : diffs) {
+                            rgui.add_tab(get_refactor_tab_name(d, reference_code), d, reference_code);
+                        }
+                    }
+                } catch (Exception e) {
+                    diffs = null;
+                } finally {
+                    boolean ok = diffs != null && diffs.length > 0;
+                    info_label.setText(ok ? "Finished!" : "Failed!");
+                    restart_btn.setEnabled(true);
+                    guess_btn.setEnabled(true);
+                    refact_btn.setEnabled(ok);
+                    check_and_set_busy(false);
+                    validate();
+                    repaint();
+                }
+            }
+        };
+        worker.execute();
+
+        validate();
+        return true;
+    }
+
+    private String get_refactor_tab_name(DecomDiff diff, String reference_code) {
+        String name = diff.get_model().get_name();
+        if (reference_code != null) {
+            return name + " (DecomView)";
+        }
+        return name;
     }
 
     synchronized private boolean check_and_set_busy(boolean v) {

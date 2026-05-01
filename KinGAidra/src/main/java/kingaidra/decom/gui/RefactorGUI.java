@@ -14,9 +14,15 @@ import kingaidra.log.Logger;
 
 class DiffTableModel extends DefaultTableModel {
     private DecomDiff diff;
+    private String reference_code;
 
     public DiffTableModel() {
+        this(null);
+    }
+
+    public DiffTableModel(String reference_code) {
         super(new Object[] {"ON/OFF", "Id", "Type", "Old", "New", "DataType"}, 0);
+        this.reference_code = reference_code;
     }
 
     public void add_diff(DecomDiff d) {
@@ -79,6 +85,10 @@ class DiffTableModel extends DefaultTableModel {
         return diff;
     }
 
+    public String get_reference_code() {
+        return reference_code;
+    }
+
     @Override
     public boolean isCellEditable(int row, int column) {
         return column != 1 && column != 2 && column != 3;
@@ -139,11 +149,15 @@ public class RefactorGUI extends JPanel {
 
 
     public void add_tab(String tab_name, DecomDiff diff) {
-        if (addr != null && addr != diff.get_addr()) {
+        add_tab(tab_name, diff, null);
+    }
+
+    public void add_tab(String tab_name, DecomDiff diff, String reference_code) {
+        if (addr != null && !addr.equals(diff.get_addr())) {
             logger.append_message("Invalid address function added");
             return;
         }
-        if (name != null && name != diff.get_name().get_var_name()) {
+        if (name != null && !name.equals(diff.get_name().get_var_name())) {
             logger.append_message("Invalid name function added");
             return;
         }
@@ -154,7 +168,7 @@ public class RefactorGUI extends JPanel {
         datatype_chkbox.setSelected(false);
         set_info_label();
 
-        DiffTableModel tableModel = new DiffTableModel();
+        DiffTableModel tableModel = new DiffTableModel(reference_code);
         tableModel.add_diff(diff);
 
         JTable table = new JTable(tableModel);
@@ -207,7 +221,7 @@ public class RefactorGUI extends JPanel {
         DecomDiff diff = model.get_diff(rename_chkbox.isSelected(), retype_chkbox.isSelected());
 
         try {
-            refactor.refact(diff, datatype_chkbox.isSelected());
+            refactor.refact(diff, datatype_chkbox.isSelected(), model.get_reference_code());
         } finally {
             reset();
         }

@@ -6,6 +6,10 @@
 
 - Added Planner mode in Chat to turn the current request into workflow JSON and execute the first planned workflow.
 
+### Changed
+
+- Changed DecomView refactoring so `Send to Refactor` creates reviewable candidates in the Refactor tab instead of applying directly from DecomView.
+
 ## [2.0.0]
 
 ### Added
