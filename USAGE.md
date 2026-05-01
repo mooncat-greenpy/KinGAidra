@@ -37,6 +37,7 @@ Notes:
 - `Clean`: reset current conversation view.
 - `Delete`: delete currently loaded conversation from history.
 - `Refresh`: rebuild chat rendering while keeping current input text.
+- `planner` checkbox: convert the current Chat request into workflow JSON and execute the first planned workflow.
 - `markdown` checkbox: switch message rendering between plain text and markdown/html rendering.
 - `detail` checkbox: hide/show detail messages (`system` role, `tool` role, and messages containing `tool_call_id` or `tool_calls`).
 - In markdown mode, single-click `0x...` token to jump to address.
@@ -149,6 +150,7 @@ Editable options are exposed in Tool options:
 
 - `KinGAidra -> Prompts -> Default System Prompt`
 - `KinGAidra -> Prompts -> Chat/Decom/DecomView/KeyFunc/...` task prompts
+- `KinGAidra -> Prompts -> Chat -> Plan`
 - `KinGAidra -> Prompts -> Chat -> Workflows -> Action Workflows (JSON)`
 - Workflow popup actions are refreshed when workflow JSON changes.
 

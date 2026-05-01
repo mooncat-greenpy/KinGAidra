@@ -1,5 +1,10 @@
 # Changelog
 
+## [Unreleased]
+
+### Added
+
+- Added Planner mode in Chat to turn the current request into workflow JSON and execute the first planned workflow.
 
 ## [2.0.0]
 

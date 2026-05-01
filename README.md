@@ -7,6 +7,7 @@ It also supports repeatable actions in both the GUI and headless modes.
 ## What You Get
 
 - **SOP-as-code:** define multi-step workflows as JSON and run them as UI actions.
+- **Planner-assisted chat:** convert a free-form analysis request into executable workflow JSON on the fly from Chat.
 - **Built-in traceability:** conversations and generated results are saved per program in and can be reopened directly in Ghidra (no external chat tools needed). Exporting the program also lets you share the conversation history together.
 - **UI & headless parity:** run the same named actions/workflows via UI or headless.
 - **Analyst-friendly navigation:** AI outputs can be rendered in Markdown and include clickable addresses to jump to relevant locations in Ghidra (Chat/DecomView/KeyFunc).
@@ -42,7 +43,7 @@ Quick overview of the main KinGAidra UI screens.
 
 ### Chat
 
-Ask free-form reverse engineering questions in Ghidra, click addresses or function names to jump to them, and reopen saved conversations later from the History view.
+Ask free-form reverse engineering questions in Ghidra, click addresses or function names to jump to them, and reopen saved conversations later from the History view. Enable `planner` to have KinGAidra first convert the current request into workflow JSON and then execute the planned workflow automatically.
 
 **Chat Example**
 
@@ -138,6 +139,12 @@ When you switch program files, you see that program's own history.
 
 Yes. Define workflows as JSON in `KinGAidra -> Prompts -> Chat -> Workflows -> Action Workflows (JSON)`.
 Each workflow appears as a popup action and can also be executed in headless mode.
+
+### What is `planner` and how is it different from custom workflows?
+
+`planner` is an on-demand workflow generator in the Chat tab.
+Instead of selecting a pre-registered workflow, you describe the task in free-form text, KinGAidra converts it to workflow JSON, and then runs the first planned workflow immediately.
+Custom workflows are better when you want a stable named action that also runs in headless mode.
 
 ### Can the same workflow run in CI or batch mode?
 
