@@ -13,12 +13,8 @@ import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.Comparator;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 import java.util.UUID;
-import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.ConcurrentMap;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -84,8 +80,7 @@ public class LlmDecompileGUI extends JPanel {
     private ConversationContainer container;
     private Logger logger;
     private LlmDecompile llm_decompile;
-    private ConcurrentMap<Address, String> decompile_results;
-    private ConcurrentMap<Address, String> decompile_updated;
+    private List<SavedResult> decompile_saved_results;
 
     private JLabel info_label;
     private JLabel func_label;
@@ -144,16 +139,16 @@ public class LlmDecompileGUI extends JPanel {
     }
 
     private static class FunctionSelectionItem {
-        private Address entry;
+        private SavedResult result;
         private String label;
 
-        FunctionSelectionItem(Address entry, String label) {
-            this.entry = entry;
+        FunctionSelectionItem(SavedResult result, String label) {
+            this.result = result;
             this.label = label;
         }
 
-        public Address get_entry() {
-            return entry;
+        public SavedResult get_result() {
+            return result;
         }
 
         @Override
@@ -174,8 +169,7 @@ public class LlmDecompileGUI extends JPanel {
         this.container = container;
         this.logger = logger;
         this.llm_decompile = new LlmDecompile(ai, ghidra, model_conf, conf);
-        this.decompile_results = new ConcurrentHashMap<>();
-        this.decompile_updated = new ConcurrentHashMap<>();
+        this.decompile_saved_results = new ArrayList<>();
         this.current_func_entry = null;
         this.updating_function_selector = false;
         this.location_selected_symbol = null;
@@ -261,10 +255,10 @@ public class LlmDecompileGUI extends JPanel {
                 }
                 FunctionSelectionItem item =
                         (FunctionSelectionItem) function_selector.getSelectedItem();
-                if (item == null || item.get_entry() == null) {
+                if (item == null || item.get_result() == null) {
                     return;
                 }
-                show_code_for_function(item.get_entry(), false);
+                show_saved_result(item.get_result(), null, false);
             }
         });
         search_prev_btn.addActionListener(new ActionListener() {
@@ -318,7 +312,7 @@ public class LlmDecompileGUI extends JPanel {
         instruction_panel.add(instruction_btn);
 
         JPanel function_selector_panel = new JPanel(new FlowLayout(FlowLayout.LEFT, 4, 0));
-        function_selector_panel.add(new JLabel("Saved Function:"));
+        function_selector_panel.add(new JLabel("Saved Version:"));
         function_selector_panel.add(function_selector);
 
         JPanel search_panel = new JPanel(new FlowLayout(FlowLayout.LEFT, 4, 0));
@@ -403,8 +397,9 @@ public class LlmDecompileGUI extends JPanel {
 
         Address entry = func.getEntryPoint();
         current_func_entry = entry;
-        select_function_entry(entry);
-        show_code_for_function(entry, true);
+        SavedResult latest = get_latest_saved_result(entry);
+        select_saved_result(latest);
+        show_saved_result(latest, entry, true);
         local_selected_symbol = null;
         set_location_selected_symbol(resolve_selected_symbol(loc, func));
     }
@@ -426,17 +421,14 @@ public class LlmDecompileGUI extends JPanel {
     }
 
     private void run_refactor_from_decompile_view() {
-        Address func_entry = get_selected_function_entry();
-        if (func_entry == null) {
-            func_entry = current_func_entry;
-        }
-        if (func_entry == null) {
+        SavedResult result = get_active_saved_result();
+        if (result == null) {
             logger.append_message("Function not selected");
             info_label.setText("Function not selected");
             return;
         }
 
-        String reference_code = decompile_results.get(func_entry);
+        String reference_code = result.code;
         if (reference_code == null || reference_code.trim().isEmpty()) {
             info_label.setText("No existing output");
             return;
@@ -448,7 +440,7 @@ public class LlmDecompileGUI extends JPanel {
             return;
         }
 
-        boolean started = decom_gui.run_refactor_from_reference(func_entry, reference_code);
+        boolean started = decom_gui.run_refactor_from_reference(result.entry, reference_code);
         if (started) {
             info_label.setText("Sent to Refactor");
             provider.change_tab("Refactor");
@@ -461,21 +453,18 @@ public class LlmDecompileGUI extends JPanel {
             info_label.setText("Instruction is empty");
             return;
         }
-        Address func_entry = get_selected_function_entry();
-        if (func_entry == null) {
-            func_entry = current_func_entry;
-        }
-        if (func_entry == null) {
+        SavedResult result = get_active_saved_result();
+        if (result == null) {
             logger.append_message("Function not selected");
             info_label.setText("Function not selected");
             return;
         }
-        String current_code = decompile_results.get(func_entry);
+        String current_code = result.code;
         if (current_code == null || current_code.trim().isEmpty()) {
             info_label.setText("No existing output");
             return;
         }
-        run_llm_decompile(func_entry, instruction.trim(), current_code);
+        run_llm_decompile(result.entry, instruction.trim(), current_code);
     }
 
     private void run_llm_decompile(Address func_entry) {
@@ -515,9 +504,10 @@ public class LlmDecompileGUI extends JPanel {
                 try {
                     String code = get();
                     if (code != null && !code.isEmpty()) {
-                        decompile_results.put(func_entry, code);
-                        decompile_updated.put(func_entry, LocalDateTime.now().format(DATE_FORMAT));
-                        refresh_function_selector(func_entry);
+                        SavedResult result = new SavedResult(
+                                func_entry, code, LocalDateTime.now().format(DATE_FORMAT));
+                        merge_saved_result(result);
+                        refresh_function_selector(result.entry, result);
                         if (instruction_text != null && !instruction_text.isEmpty()) {
                             instruction_field.setText("");
                         }
@@ -529,7 +519,7 @@ public class LlmDecompileGUI extends JPanel {
                     info_label.setText("Failed!");
                 } finally {
                     if (current_func_entry != null && current_func_entry.equals(func_entry)) {
-                        show_code_for_function(func_entry, true);
+                        show_saved_result(get_latest_saved_result(func_entry), func_entry, true);
                     }
                     set_operation_controls_enabled(true);
                     check_and_set_busy(false);
@@ -552,7 +542,6 @@ public class LlmDecompileGUI extends JPanel {
         }
         set_operation_controls_enabled(false);
         info_label.setText("Loading ...");
-        Address selected_entry = get_selected_function_entry();
 
         SwingWorker<List<SavedResult>, Void> worker = new SwingWorker<>() {
             @Override
@@ -562,15 +551,16 @@ public class LlmDecompileGUI extends JPanel {
 
             @Override
             protected void done() {
-                int merged = 0;
                 try {
                     List<SavedResult> saved = get();
-                    merged = merge_saved_results(saved);
-                    refresh_function_selector(selected_entry);
+                    merge_saved_results(saved);
+                    refresh_function_selector(current_func_entry, null);
                     if (current_func_entry != null) {
-                        show_code_for_function(current_func_entry, true);
+                        show_saved_result(get_latest_saved_result(current_func_entry),
+                                current_func_entry, true);
                     }
-                    info_label.setText(merged > 0 ? ("Loaded " + merged + " result(s)") : "No saved result");
+                    int total = decompile_saved_results.size();
+                    info_label.setText(total > 0 ? ("Loaded " + total + " version(s)") : "No saved result");
                 } catch (Exception e) {
                     info_label.setText("Load failed");
                 } finally {
@@ -591,32 +581,18 @@ public class LlmDecompileGUI extends JPanel {
             return result_list;
         }
 
-        Map<Long, SavedResult> latest_by_entry = new HashMap<>();
         for (UUID id : ids) {
             Conversation convo = container.get_convo(id);
             if (!is_llm_decompile_conversation(convo)) {
                 continue;
             }
 
-            Address entry = get_entry_from_conversation(convo);
-            if (entry == null) {
+            SavedResult result = get_saved_result_from_conversation(convo);
+            if (result == null) {
                 continue;
             }
-
-            String code = get_code_from_conversation(convo);
-            if (code == null || code.isEmpty()) {
-                continue;
-            }
-
-            String updated = convo.get_updated();
-            SavedResult candidate = new SavedResult(entry, code, updated);
-            SavedResult previous = latest_by_entry.get(entry.getOffset());
-            if (should_replace_saved_result(candidate, previous)) {
-                latest_by_entry.put(entry.getOffset(), candidate);
-            }
+            result_list.add(result);
         }
-
-        result_list.addAll(latest_by_entry.values());
         return result_list;
     }
 
@@ -624,14 +600,23 @@ public class LlmDecompileGUI extends JPanel {
         return convo != null && convo.get_type() == ConversationType.SYSTEM_DECOMPILE_VIEW;
     }
 
-    private boolean should_replace_saved_result(SavedResult incoming, SavedResult current) {
-        if (incoming == null) {
-            return false;
+    private SavedResult get_saved_result_from_conversation(Conversation convo) {
+        if (convo == null) {
+            return null;
         }
-        if (current == null) {
-            return true;
+        Address entry = get_entry_from_conversation(convo);
+        if (entry == null) {
+            return null;
         }
-        return is_newer(incoming.updated, current.updated);
+        String code = get_code_from_conversation(convo);
+        if (code == null || code.isEmpty()) {
+            return null;
+        }
+        String updated = convo.get_updated();
+        if (updated == null || updated.isEmpty()) {
+            updated = LocalDateTime.now().format(DATE_FORMAT);
+        }
+        return new SavedResult(entry, code, updated);
     }
 
     private Address get_entry_from_conversation(Conversation convo) {
@@ -680,29 +665,20 @@ public class LlmDecompileGUI extends JPanel {
         return null;
     }
 
-    private int merge_saved_results(List<SavedResult> saved_results) {
+    private void merge_saved_results(List<SavedResult> saved_results) {
         if (saved_results == null || saved_results.isEmpty()) {
-            return 0;
+            return;
         }
-        int count = 0;
         for (SavedResult result : saved_results) {
-            if (result == null || result.entry == null || result.code == null || result.code.isEmpty()) {
-                continue;
-            }
-            String prev_updated = decompile_updated.get(result.entry);
-            String prev_code = decompile_results.get(result.entry);
-            boolean same_timestamp_but_changed =
-                    result.updated != null && result.updated.equals(prev_updated)
-                            && prev_code != null && !result.code.equals(prev_code);
-            if (!decompile_results.containsKey(result.entry)
-                    || is_newer(result.updated, prev_updated)
-                    || same_timestamp_but_changed) {
-                decompile_results.put(result.entry, result.code);
-                decompile_updated.put(result.entry, result.updated);
-                count++;
-            }
+            merge_saved_result(result);
         }
-        return count;
+    }
+
+    private void merge_saved_result(SavedResult result) {
+        if (result == null || result.entry == null || result.code == null || result.code.isEmpty()) {
+            return;
+        }
+        decompile_saved_results.add(result);
     }
 
     private boolean is_newer(String lhs, String rhs) {
@@ -715,24 +691,32 @@ public class LlmDecompileGUI extends JPanel {
         return lhs.compareTo(rhs) > 0;
     }
 
-    private void refresh_function_selector(Address selected_entry) {
-        List<Address> entries = new ArrayList<>(decompile_results.keySet());
-        entries.sort(new Comparator<Address>() {
+    private void refresh_function_selector(Address selected_entry, SavedResult selected_result) {
+        List<SavedResult> results = new ArrayList<>(decompile_saved_results);
+        results.sort(new Comparator<SavedResult>() {
             @Override
-            public int compare(Address left, Address right) {
-                String left_name = get_function_name(left);
-                String right_name = get_function_name(right);
+            public int compare(SavedResult left, SavedResult right) {
+                String left_name = get_function_name(left.entry);
+                String right_name = get_function_name(right.entry);
                 int result = left_name.compareToIgnoreCase(right_name);
                 if (result != 0) {
                     return result;
                 }
-                return left.toString().compareTo(right.toString());
+                result = left.entry.toString().compareTo(right.entry.toString());
+                if (result != 0) {
+                    return result;
+                }
+                result = compare_updated_desc(left.updated, right.updated);
+                if (result != 0) {
+                    return result;
+                }
+                return Integer.compare(left.code.hashCode(), right.code.hashCode());
             }
         });
 
         DefaultComboBoxModel<FunctionSelectionItem> model = new DefaultComboBoxModel<>();
-        for (Address entry : entries) {
-            model.addElement(new FunctionSelectionItem(entry, get_function_label(entry)));
+        for (SavedResult result : results) {
+            model.addElement(new FunctionSelectionItem(result, get_function_label(result)));
         }
 
         updating_function_selector = true;
@@ -744,13 +728,44 @@ public class LlmDecompileGUI extends JPanel {
             return;
         }
 
+        if (selected_result != null && select_saved_result(selected_result)) {
+            function_selector.setEnabled(!busy);
+            return;
+        }
+
         Address preferred = selected_entry != null ? selected_entry : current_func_entry;
         if (preferred != null) {
-            select_function_entry(preferred);
+            select_saved_result(get_latest_saved_result(preferred));
         } else {
             function_selector.setSelectedIndex(0);
         }
         function_selector.setEnabled(!busy);
+    }
+
+    private SavedResult get_latest_saved_result(Address entry) {
+        if (entry == null) {
+            return null;
+        }
+        SavedResult latest = null;
+        for (SavedResult result : decompile_saved_results) {
+            if (result == null || result.entry == null || !result.entry.equals(entry)) {
+                continue;
+            }
+            if (latest == null || is_newer(result.updated, latest.updated)) {
+                latest = result;
+            }
+        }
+        return latest;
+    }
+
+    private int compare_updated_desc(String left, String right) {
+        if (left == null || left.isEmpty()) {
+            return (right == null || right.isEmpty()) ? 0 : 1;
+        }
+        if (right == null || right.isEmpty()) {
+            return -1;
+        }
+        return right.compareTo(left);
     }
 
     private String get_function_name(Address entry) {
@@ -764,58 +779,73 @@ public class LlmDecompileGUI extends JPanel {
         return func.getName();
     }
 
-    private String get_function_label(Address entry) {
-        String updated = decompile_updated.get(entry);
-        String label = String.format("%s @ %s", get_function_name(entry), entry);
-        if (updated != null && !updated.isEmpty()) {
-            return label + " (" + updated + ")";
+    private String get_function_label(SavedResult result) {
+        if (result == null) {
+            return "";
+        }
+        String label = String.format("%s @ %s", get_function_name(result.entry), result.entry);
+        if (result.updated != null && !result.updated.isEmpty()) {
+            return label + " (" + result.updated + ")";
         }
         return label;
     }
 
-    private Address get_selected_function_entry() {
+    private SavedResult get_selected_saved_result() {
         FunctionSelectionItem item = (FunctionSelectionItem) function_selector.getSelectedItem();
         if (item == null) {
             return null;
         }
-        return item.get_entry();
+        return item.get_result();
     }
 
-    private void select_function_entry(Address entry) {
-        if (entry == null || function_selector.getItemCount() <= 0) {
-            return;
+    private SavedResult get_active_saved_result() {
+        SavedResult selected = get_selected_saved_result();
+        if (selected != null) {
+            return selected;
+        }
+        return get_latest_saved_result(current_func_entry);
+    }
+
+    private boolean select_saved_result(SavedResult result) {
+        if (result == null || function_selector.getItemCount() <= 0) {
+            return false;
         }
         updating_function_selector = true;
         for (int i = 0; i < function_selector.getItemCount(); i++) {
             FunctionSelectionItem item = function_selector.getItemAt(i);
-            if (item == null || item.get_entry() == null) {
+            if (item == null || item.get_result() == null) {
                 continue;
             }
-            if (item.get_entry().equals(entry)) {
+            if (item.get_result() == result) {
                 function_selector.setSelectedIndex(i);
                 updating_function_selector = false;
-                return;
+                return true;
             }
         }
         updating_function_selector = false;
+        return false;
     }
 
-    private void show_code_for_function(Address entry, boolean use_no_output_placeholder) {
+    private void show_saved_result(SavedResult result, Address fallback_entry,
+            boolean use_no_output_placeholder) {
+        Address entry = result == null ? fallback_entry : result.entry;
         if (entry == null) {
             func_label.setText("Function: (none)");
             set_code(MSG_NO_FUNCTION);
             return;
         }
         func_label.setText(String.format("Function: %s @ %s", get_function_name(entry), entry));
-        String code = decompile_results.get(entry);
-        if (code == null && use_no_output_placeholder) {
+        if (result == null || result.code == null) {
+            if (!use_no_output_placeholder) {
+                return;
+            }
             set_code(MSG_NO_OUTPUT);
             return;
         }
-        if (code == null) {
-            return;
+        if (result.updated != null && !result.updated.isEmpty()) {
+            func_label.setText(func_label.getText() + " (" + result.updated + ")");
         }
-        set_code(code);
+        set_code(result.code);
     }
 
     private void set_code(String code) {
