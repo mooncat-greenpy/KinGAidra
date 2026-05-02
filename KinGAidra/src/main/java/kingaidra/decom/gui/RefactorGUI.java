@@ -109,6 +109,7 @@ public class RefactorGUI extends JPanel {
     private JCheckBox rename_chkbox;
     private JCheckBox retype_chkbox;
     private JCheckBox datatype_chkbox;
+    private JCheckBox skip_user_chkbox;
     private Refactor refactor;
     private JTabbedPane tabbed_panel;
 
@@ -134,6 +135,10 @@ public class RefactorGUI extends JPanel {
         datatype_chkbox = new JCheckBox("Resolve datatype");
         datatype_chkbox.setSelected(false);
         datatype_chkbox.setToolTipText("Enabling this option may result in incorrect data types being added.");
+        skip_user_chkbox = new JCheckBox("Skip user check");
+        skip_user_chkbox.setSelected(false);
+        skip_user_chkbox.setToolTipText("Skip the manual struct definition confirmation dialog when resolving datatypes.");
+
         JPanel panel = new JPanel();
         panel.setLayout(new BoxLayout(panel, BoxLayout.X_AXIS));
         panel.add(info_label);
@@ -141,6 +146,7 @@ public class RefactorGUI extends JPanel {
         panel.add(retype_chkbox);
         // A lot of noise
         panel.add(datatype_chkbox);
+        panel.add(skip_user_chkbox);
 
         tabbed_panel = new JTabbedPane();
         add(panel, BorderLayout.NORTH);
@@ -166,6 +172,7 @@ public class RefactorGUI extends JPanel {
         rename_chkbox.setSelected(true);
         retype_chkbox.setSelected(false);
         datatype_chkbox.setSelected(false);
+        skip_user_chkbox.setSelected(true);
         set_info_label();
 
         DiffTableModel tableModel = new DiffTableModel(reference_code);
@@ -219,9 +226,12 @@ public class RefactorGUI extends JPanel {
 
         DiffTableModel model = (DiffTableModel) t.getModel();
         DecomDiff diff = model.get_diff(rename_chkbox.isSelected(), retype_chkbox.isSelected());
+        boolean skip_user_check = retype_chkbox.isSelected()
+                && datatype_chkbox.isSelected()
+                && skip_user_chkbox.isSelected();
 
         try {
-            refactor.refact(diff, datatype_chkbox.isSelected(), model.get_reference_code());
+            refactor.refact(diff, datatype_chkbox.isSelected(), model.get_reference_code(), skip_user_check);
         } finally {
             reset();
         }

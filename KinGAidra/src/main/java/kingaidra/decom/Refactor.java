@@ -35,11 +35,16 @@ public class Refactor {
     }
 
     public DataType resolve_datatype(String datatype_name, Model model) {
-        return resolve_datatype(datatype_name, model, null, null);
+        return resolve_datatype(datatype_name, model, null, null, true);
     }
 
     public DataType resolve_datatype(String datatype_name, Model model,
             String ghidra_code, String reference_code) {
+        return resolve_datatype(datatype_name, model, ghidra_code, reference_code, true);
+    }
+
+    public DataType resolve_datatype(String datatype_name, Model model,
+            String ghidra_code, String reference_code, boolean skip_user_check) {
         String target_name = normalize_datatype_name(datatype_name);
         if (target_name == null) {
             return null;
@@ -64,7 +69,7 @@ public class Refactor {
             }
 
             String rsp_msg = convo.get_msg(convo.get_msgs_len() - 1);
-            String target = extract_target_code(rsp_msg);
+            String target = extract_target_code(rsp_msg, skip_user_check);
             if (target == null) {
                 if (attempt >= MAX_RESOLVE_DATATYPE_ATTEMPTS) {
                     return null;
@@ -101,10 +106,14 @@ public class Refactor {
     }
 
     public void refact(DecomDiff diff, boolean datatype_resolving) {
-        refact(diff, datatype_resolving, null);
+        refact(diff, datatype_resolving, null, true);
     }
 
     public void refact(DecomDiff diff, boolean datatype_resolving, String reference_code) {
+        refact(diff, datatype_resolving, reference_code, true);
+    }
+
+    public void refact(DecomDiff diff, boolean datatype_resolving, String reference_code, boolean skip_user_check) {
         if (datatype_resolving) {
             Set<String> datatype_names = new HashSet<>();
             for (DiffPair pair : diff.get_datatypes()) {
@@ -128,7 +137,7 @@ public class Refactor {
                     continue;
                 }
 
-                DataType dt = resolve_datatype(name, diff.get_model(), diff.get_src_code(), reference_code);
+                DataType dt = resolve_datatype(name, diff.get_model(), diff.get_src_code(), reference_code, skip_user_check);
                 if (dt == null) {
                     continue;
                 }
@@ -140,11 +149,18 @@ public class Refactor {
     }
 
     private String extract_target_code(String rsp_msg) {
+        return extract_target_code(rsp_msg, true);
+    }
+
+    private String extract_target_code(String rsp_msg, boolean skip_user_check) {
         if (rsp_msg == null) {
             return null;
         }
 
-        String fixed = fix_func.apply(rsp_msg);
+        String fixed = rsp_msg;
+        if (!skip_user_check) {
+            fixed = fix_func.apply(rsp_msg);
+        }
         if (fixed == null) {
             return null;
         }
