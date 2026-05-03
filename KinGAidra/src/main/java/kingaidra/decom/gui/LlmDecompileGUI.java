@@ -71,6 +71,9 @@ public class LlmDecompileGUI extends JPanel {
     private static final int MAX_SYMBOL_TEXT_LENGTH = 256;
     private static final DateTimeFormatter DATE_FORMAT =
             DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
+    private static final Pattern CODE_BLOCK_PATTERN = Pattern.compile(
+            "```(?:c|cpp|cc|c\\+\\+)?\\s*(.*?)\\s*```",
+            Pattern.CASE_INSENSITIVE | Pattern.DOTALL);
 
     private Program program;
     private PluginTool plugin;
@@ -88,6 +91,7 @@ public class LlmDecompileGUI extends JPanel {
     private JButton refactor_btn;
     private JButton instruction_btn;
     private JButton copy_btn;
+    private JButton delete_btn;
     private JButton search_prev_btn;
     private JButton search_next_btn;
     private JComboBox<FunctionSelectionItem> function_selector;
@@ -117,11 +121,13 @@ public class LlmDecompileGUI extends JPanel {
     private boolean busy;
 
     private static class SavedResult {
+        private UUID uuid;
         private Address entry;
         private String code;
         private String updated;
 
-        SavedResult(Address entry, String code, String updated) {
+        SavedResult(UUID uuid, Address entry, String code, String updated) {
+            this.uuid = uuid;
             this.entry = entry;
             this.code = code;
             this.updated = updated;
@@ -197,6 +203,8 @@ public class LlmDecompileGUI extends JPanel {
         refactor_btn = new JButton("Send to Refactor");
         instruction_btn = new JButton("Apply Instruction");
         copy_btn = new JButton("Copy");
+        delete_btn = new JButton("Delete");
+        delete_btn.setEnabled(false);
         info_label = new JLabel("");
         func_label = new JLabel("Function: (none)");
         function_selector = new JComboBox<>();
@@ -211,6 +219,7 @@ public class LlmDecompileGUI extends JPanel {
         search_prev_btn.setEnabled(false);
         search_next_btn.setEnabled(false);
         refactor_btn.setToolTipText("Generate refactoring candidates in the Refactor tab using this output");
+        delete_btn.setToolTipText("Delete selected saved version and its History conversation");
 
         regen_btn.addActionListener(new ActionListener() {
             @Override
@@ -247,6 +256,12 @@ public class LlmDecompileGUI extends JPanel {
                 info_label.setText("Copied");
             }
         });
+        delete_btn.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                run_delete_selected_saved_version();
+            }
+        });
         function_selector.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
@@ -259,6 +274,7 @@ public class LlmDecompileGUI extends JPanel {
                     return;
                 }
                 show_saved_result(item.get_result(), null, false);
+                delete_btn.setEnabled(!busy && item.get_result() != null);
             }
         });
         search_prev_btn.addActionListener(new ActionListener() {
@@ -314,6 +330,7 @@ public class LlmDecompileGUI extends JPanel {
         JPanel function_selector_panel = new JPanel(new FlowLayout(FlowLayout.LEFT, 4, 0));
         function_selector_panel.add(new JLabel("Saved Version:"));
         function_selector_panel.add(function_selector);
+        function_selector_panel.add(delete_btn);
 
         JPanel search_panel = new JPanel(new FlowLayout(FlowLayout.LEFT, 4, 0));
         search_panel.add(new JLabel("Search:"));
@@ -418,6 +435,7 @@ public class LlmDecompileGUI extends JPanel {
         instruction_btn.setEnabled(enabled);
         instruction_field.setEnabled(enabled);
         function_selector.setEnabled(enabled && function_selector.getItemCount() > 0);
+        delete_btn.setEnabled(enabled && get_selected_saved_result() != null);
     }
 
     private void run_refactor_from_decompile_view() {
@@ -490,9 +508,9 @@ public class LlmDecompileGUI extends JPanel {
         final String instruction_text = instruction;
         final String base_code = current_code;
 
-        SwingWorker<String, Void> worker = new SwingWorker<>() {
+        SwingWorker<Conversation, Void> worker = new SwingWorker<>() {
             @Override
-            protected String doInBackground() {
+            protected Conversation doInBackground() {
                 if (instruction_text == null || instruction_text.isEmpty()) {
                     return llm_decompile.guess(func_entry);
                 }
@@ -502,10 +520,8 @@ public class LlmDecompileGUI extends JPanel {
             @Override
             protected void done() {
                 try {
-                    String code = get();
-                    if (code != null && !code.isEmpty()) {
-                        SavedResult result = new SavedResult(
-                                func_entry, code, LocalDateTime.now().format(DATE_FORMAT));
+                    SavedResult result = get_saved_result_from_conversation(get());
+                    if (result != null) {
                         merge_saved_result(result);
                         refresh_function_selector(result.entry, result);
                         if (instruction_text != null && !instruction_text.isEmpty()) {
@@ -528,6 +544,72 @@ public class LlmDecompileGUI extends JPanel {
                 }
             }
         };
+        worker.execute();
+    }
+
+    private void run_delete_selected_saved_version() {
+        if (container == null) {
+            info_label.setText("History is unavailable.");
+            return;
+        }
+        SavedResult result = get_selected_saved_result();
+        if (result == null) {
+            info_label.setText("No saved version selected.");
+            return;
+        }
+        if (!check_and_set_busy(true)) {
+            logger.append_message("Another process is running.");
+            return;
+        }
+
+        set_operation_controls_enabled(false);
+        info_label.setText("Deleting saved version...");
+
+        SwingWorker<Boolean, Void> worker = new SwingWorker<Boolean, Void>() {
+            @Override
+            protected Boolean doInBackground() throws Exception {
+                UUID id = result.uuid;
+                if (id == null)
+                    return false;
+
+                container.del_convo(id);
+                return container.get_convo(id) == null;
+            }
+
+            @Override
+            protected void done() {
+                boolean deleted = false;
+                try {
+                    deleted = get();
+                }
+                catch (Exception e) {
+                }
+
+                check_and_set_busy(false);
+
+                if (deleted) {
+                    decompile_saved_results.removeIf(stored -> stored.uuid.equals(result.uuid));
+
+                    refresh_function_selector(current_func_entry, null);
+
+                    SavedResult next = get_selected_saved_result();
+                    if (next == null && current_func_entry != null)
+                        next = get_latest_saved_result(current_func_entry);
+
+                    Address fallback_entry = next != null ? next.entry : current_func_entry;
+                    show_saved_result(next, fallback_entry, true);
+                    info_label.setText("Deleted saved version.");
+                }
+                else {
+                    info_label.setText("Failed to find matching History conversation.");
+                }
+
+                set_operation_controls_enabled(true);
+                validate();
+                repaint();
+            }
+        };
+
         worker.execute();
     }
 
@@ -616,7 +698,7 @@ public class LlmDecompileGUI extends JPanel {
         if (updated == null || updated.isEmpty()) {
             updated = LocalDateTime.now().format(DATE_FORMAT);
         }
-        return new SavedResult(entry, code, updated);
+        return new SavedResult(convo.get_uuid(), entry, code, updated);
     }
 
     private Address get_entry_from_conversation(Conversation convo) {
@@ -627,21 +709,10 @@ public class LlmDecompileGUI extends JPanel {
         if (addrs == null || addrs.length == 0) {
             return null;
         }
-        Address match = null;
-        for (Address addr : addrs) {
-            if (addr == null) {
-                continue;
-            }
-            if (match == null || addr.compareTo(match) < 0) {
-                match = addr;
-            }
-        }
-        if (match == null) {
-            return null;
-        }
-        Function func = program.getFunctionManager().getFunctionContaining(match);
+        Address addr = addrs[0];
+        Function func = program.getFunctionManager().getFunctionContaining(addr);
         if (func == null) {
-            return match;
+            return addr;
         }
         return func.getEntryPoint();
     }
@@ -656,13 +727,24 @@ public class LlmDecompileGUI extends JPanel {
                 continue;
             }
             String msg = convo.get_msg(i);
-            String code = LlmDecompile.normalize_code(msg);
-            if (code == null || code.isEmpty()) {
+            String code = normalize_code(msg);
+            if (code.isEmpty()) {
                 continue;
             }
             return code;
         }
         return null;
+    }
+
+    public static String normalize_code(String code) {
+        Matcher matcher = CODE_BLOCK_PATTERN.matcher(code);
+        if (matcher.find()) {
+            String group = matcher.group(1);
+            if (group != null) {
+                return group.trim();
+            }
+        }
+        return code.trim();
     }
 
     private void merge_saved_results(List<SavedResult> saved_results) {
@@ -725,11 +807,13 @@ public class LlmDecompileGUI extends JPanel {
 
         if (model.getSize() <= 0) {
             function_selector.setEnabled(false);
+            delete_btn.setEnabled(false);
             return;
         }
 
         if (selected_result != null && select_saved_result(selected_result)) {
             function_selector.setEnabled(!busy);
+            delete_btn.setEnabled(!busy && get_selected_saved_result() != null);
             return;
         }
 
@@ -740,6 +824,7 @@ public class LlmDecompileGUI extends JPanel {
             function_selector.setSelectedIndex(0);
         }
         function_selector.setEnabled(!busy);
+        delete_btn.setEnabled(!busy && get_selected_saved_result() != null);
     }
 
     private SavedResult get_latest_saved_result(Address entry) {

@@ -20,10 +20,6 @@ public class LlmDecompile {
     private static final int CONTEXT_FUNC_LIMIT = 8;
     private static final int REF_LIMIT = 24;
 
-    private static final Pattern CODE_BLOCK_PATTERN = Pattern.compile(
-            "```(?:c|cpp|cc|c\\+\\+)?\\s*(.*?)\\s*```",
-            Pattern.CASE_INSENSITIVE | Pattern.DOTALL);
-
     private Ai ai;
     private GhidraUtil ghidra;
     private ModelConf model_conf;
@@ -36,11 +32,11 @@ public class LlmDecompile {
         this.conf = conf;
     }
 
-    public String guess(Address addr) {
+    public Conversation guess(Address addr) {
         return guess(addr, null, null);
     }
 
-    public String guess(Address addr, String additional_instruction, String current_code) {
+    public Conversation guess(Address addr, String additional_instruction, String current_code) {
         if (addr == null) {
             return null;
         }
@@ -57,9 +53,7 @@ public class LlmDecompile {
         if (convo == null || convo.get_msgs_len() <= 0) {
             return null;
         }
-        String rsp = convo.get_msg(convo.get_msgs_len() - 1);
-        String code = normalize_code(rsp);
-        return code;
+        return convo;
     }
 
     private Model get_active_model() {
@@ -174,19 +168,5 @@ public class LlmDecompile {
 
     private boolean is_blank(String text) {
         return text == null || text.trim().isEmpty();
-    }
-
-    public static String normalize_code(String code) {
-        if (code == null) {
-            return null;
-        }
-        Matcher matcher = CODE_BLOCK_PATTERN.matcher(code);
-        if (matcher.find()) {
-            String group = matcher.group(1);
-            if (group != null) {
-                return group.trim();
-            }
-        }
-        return code.trim();
     }
 }
