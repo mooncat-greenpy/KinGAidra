@@ -12,6 +12,7 @@
 ### Changed
 
 - Changed DecomView refactoring so `Send to Refactor` creates reviewable candidates in the Refactor tab instead of applying directly from DecomView.
+- Changed asm/decomp retrieval to fall back to raw address-based output when no defined function is found.
 
 ## [2.0.0]
 

@@ -281,6 +281,15 @@ def build_server(binary_id: str) -> FastMCP:
         """Retrieve the assembly code of the specified function. `function` accepts a function name or hex address (e.g. 0x401000)."""
         try:
             funcs, error = _get_target_funcs(ghidra, function)
+            if len(funcs) < 1:
+                try:
+                    addr = ghidra.get_addr(int(function, 16))
+                except ValueError:
+                    pass
+                if addr:
+                    asm = ghidra.get_asm(addr, True)
+                    if asm:
+                        return "%s [%#x]\n%s\n\n" % ("No function", addr.getOffset(), asm)
             if error:
                 return error
             if len(funcs) < 1:
@@ -300,6 +309,15 @@ def build_server(binary_id: str) -> FastMCP:
         """Retrieve the decompiled code of the specified function in C language. `function` accepts a function name or hex address (e.g. 0x401000)."""
         try:
             funcs, error = _get_target_funcs(ghidra, function)
+            if len(funcs) < 1:
+                try:
+                    addr = ghidra.get_addr(int(function, 16))
+                except ValueError:
+                    pass
+                if addr:
+                    decom = ghidra.get_decom(addr)
+                    if decom:
+                        return "%s [%#x]\n%s\n\n" % ("No function", addr.getOffset(), decom)
             if error:
                 return error
             if len(funcs) < 1:

@@ -543,6 +543,15 @@ def handle_tool_call(tool_call, ghidra):
             content += "\n"
     elif func_name == "get_asm":
         func_list, error = _get_target_funcs(ghidra, args["function"])
+        if len(func_list) < 1:
+            try:
+                addr = ghidra.get_addr(int(args["function"], 16))
+            except ValueError:
+                pass
+            if addr:
+                asm = ghidra.get_asm(addr, True)
+                if asm:
+                    return "%s [%#x]\n%s\n\n" % ("No function", addr.getOffset(), asm)
         if error:
             content = error
             return content
@@ -559,6 +568,15 @@ def handle_tool_call(tool_call, ghidra):
             return content
     elif func_name == "get_decompiled_code":
         func_list, error = _get_target_funcs(ghidra, args["function"])
+        if len(func_list) < 1:
+            try:
+                addr = ghidra.get_addr(int(args["function"], 16))
+            except ValueError:
+                pass
+            if addr:
+                decom = ghidra.get_decom(addr)
+                if decom:
+                    return "%s [%#x]\n%s\n\n" % ("No function", addr.getOffset(), decom)
         if error:
             content = error
             return content

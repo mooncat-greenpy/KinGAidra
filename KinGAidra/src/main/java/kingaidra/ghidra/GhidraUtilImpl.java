@@ -39,6 +39,7 @@ import ghidra.app.script.ScriptControls;
 import ghidra.app.services.CodeViewerService;
 import ghidra.app.services.ConsoleService;
 import ghidra.app.util.cparser.C.CParser;
+import ghidra.util.UndefinedFunction;
 import ghidra.framework.model.Project;
 import ghidra.framework.plugintool.PluginTool;
 import ghidra.jython.GhidraJythonInterpreter;
@@ -475,13 +476,18 @@ public class GhidraUtilImpl implements GhidraUtil {
 
     public String get_asm(Address addr, boolean include_addr) {
         String result = "";
+        Address start_addr;
+        Address end_addr;
         Function func = get_func(addr);
         if (func == null) {
-            return null;
+            start_addr = addr;
+            end_addr = addr.add(0x50);
+        } else {
+            start_addr = func.getEntryPoint();
+            end_addr = func.getBody().getMaxAddress();
         }
-        Address end_addr = func.getBody().getMaxAddress();
 
-        Instruction inst = program_listing.getInstructionAt(func.getEntryPoint());
+        Instruction inst = program_listing.getInstructionAt(start_addr);
         while (inst != null && inst.getAddress().getOffset() <= end_addr.getOffset()) {
             String asm = inst.toString();
             String comment = "";
@@ -562,7 +568,10 @@ public class GhidraUtilImpl implements GhidraUtil {
     public String get_decom(Address addr) {
         Function func = get_func(addr);
         if (func == null) {
-            return null;
+            func = UndefinedFunction.findFunction(program, addr, monitor);
+            if (func == null) {
+                return null;
+            }
         }
         DecompileResults decom_result = get_decom_results(func);
         DecompiledFunction decom_func = decom_result.getDecompiledFunction();
