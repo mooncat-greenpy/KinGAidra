@@ -49,6 +49,7 @@ def _init_mcp_tools(kingaidra_mcp_url):
         connections[KINGAIDRA_MCP_NAME] = {
             "transport": KINGAIDRA_MCP_TRANSPORT,
             "url": kingaidra_mcp_url,
+            "timeout": 60 * 5,
         }
     client = MultiServerMCPClient(
         connections,
@@ -62,7 +63,7 @@ def _init_mcp_tools(kingaidra_mcp_url):
 # The same applies when copying and using this script.
 
 
-# <KinGAidra Marker For Update: kingaidra_chat_langchain.py v1.1.0>
+# <KinGAidra Marker For Update: kingaidra_chat_langchain.py v2.1.0>
 
 
 import kingaidra
@@ -73,6 +74,26 @@ import asyncio
 from langchain.agents import create_agent
 from langchain_core.messages import convert_to_messages, messages_to_dict as _messages_to_dict
 from langgraph.checkpoint.memory import InMemorySaver
+
+MCP_TOOL_LOCK = asyncio.Lock()
+
+def _wrap_tool_ignore_error(tool):
+    original_coroutine = getattr(tool, "coroutine", None)
+    response_format = getattr(tool, "response_format", None)
+
+    if original_coroutine is None:
+        return tool
+
+    async def safe_coroutine(*args, **kwargs):
+        async with MCP_TOOL_LOCK:
+            try:
+                return await original_coroutine(*args, **kwargs)
+            except Exception:
+                if response_format == "content_and_artifact":
+                    return "Unknown error", None
+                return "Unknown error"
+
+    return tool.model_copy(update={"coroutine": safe_coroutine})
 
 def _create_agent(model, tools, thread_id):
     checkpointer = InMemorySaver()
@@ -188,6 +209,7 @@ def main():
     if TOOLS_FLAG:
         kingaidra_mcp_url = _ensure_kingaidra_mcp_url()
         tools = _init_mcp_tools(kingaidra_mcp_url)
+        tools = [_wrap_tool_ignore_error(t) for t in tools]
     model = _init_llm()
 
     import httpx

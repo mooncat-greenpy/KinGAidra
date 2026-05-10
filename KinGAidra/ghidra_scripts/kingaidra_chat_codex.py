@@ -29,7 +29,7 @@ KINGAIDRA_MCP_NAME = "ghidra_mcp"
 # The same applies when copying and using this script.
 
 
-# <KinGAidra Marker For Update: kingaidra_chat_codex.py v1.1.0>
+# <KinGAidra Marker For Update: kingaidra_chat_codex.py v2.1.0>
 
 
 import kingaidra
