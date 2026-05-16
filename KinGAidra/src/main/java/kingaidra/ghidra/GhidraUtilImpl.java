@@ -42,8 +42,6 @@ import ghidra.app.util.cparser.C.CParser;
 import ghidra.util.UndefinedFunction;
 import ghidra.framework.model.Project;
 import ghidra.framework.plugintool.PluginTool;
-import ghidra.jython.GhidraJythonInterpreter;
-import ghidra.jython.JythonScriptProvider;
 import ghidra.program.model.address.Address;
 import ghidra.program.model.address.AddressSetView;
 import ghidra.program.model.data.Category;
@@ -942,19 +940,9 @@ public class GhidraUtilImpl implements GhidraUtil {
 
         GhidraScript script;
         try {
-            script = provider.getScriptInstance(file, stdout_writer);
+            script = provider.getScriptInstance(file, stderr_writer);
         } catch (Exception e) {
-            if ("ghidra.pyghidra.PyGhidraScriptProvider".equals(provider.getClass().getName())
-                    && file.getName().endsWith(".py")) {
-                try {
-                    provider = new JythonScriptProvider();
-                    script = provider.getScriptInstance(file, stdout_writer);
-                } catch (Exception e2) {
-                    return new ScriptRunResult(false, "", e.toString());
-                }
-            } else {
-                return new ScriptRunResult(false, "", e.toString());
-            }
+            return new ScriptRunResult(false, "", e.toString());
         }
         GhidraState state = new GhidraState(
                 tool,
@@ -963,12 +951,6 @@ public class GhidraUtilImpl implements GhidraUtil {
                 location,
                 null,
                 null);
-        GhidraJythonInterpreter interpreter = GhidraJythonInterpreter.get();
-        if (interpreter != null) {
-            interpreter.setOut(stdout_writer);
-            interpreter.setErr(stderr_writer);
-            state.addEnvironmentVar("ghidra.jython.interpreter", interpreter);
-        }
         Exception run_exception = null;
         try {
             String[] script_args = new String[]{};
@@ -987,9 +969,6 @@ public class GhidraUtilImpl implements GhidraUtil {
         String stderr = stderr_capture.toString();
         if (run_exception != null && stderr.isEmpty()) {
             stderr = run_exception.toString();
-        }
-        if (interpreter != null) {
-            interpreter.cleanup();
         }
         return new ScriptRunResult(run_exception == null, stdout, stderr);
     }

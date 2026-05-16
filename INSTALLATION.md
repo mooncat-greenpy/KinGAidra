@@ -21,7 +21,10 @@ This guide separates setup into:
    - <https://github.com/mooncat-greenpy/KinGAidra/releases>
 2. Open Ghidra.
 3. In Ghidra: `File -> Install Extensions...`
-4. Add the ZIP, enable `KinGAidra`, then restart Ghidra.
+4. Add the ZIP downloaded in step 1 using the `Add extension` button in the upper-right corner.
+5. Enable `KinGAidra`.
+6. If you are using Ghidra 12.1 or later, enable Jython.
+7. Restart Ghidra.
 
 ### Verify Core Installation
 

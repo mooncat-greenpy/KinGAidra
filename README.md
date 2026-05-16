@@ -23,11 +23,13 @@ It also supports repeatable actions in both the GUI and headless modes.
 ## Quick Start
 
 1. Download extension ZIP from [releases](https://github.com/mooncat-greenpy/KinGAidra/releases).
-2. Open Ghidra and enable `KinGAidra` in `File -> Install Extensions`, then restart.
-3. In `Window -> Script Manager`, open a chat script (for example `kingaidra_chat.py`) and set required values such as `URL`, `MODEL`, and `API_KEY`, then save the script.
-4. In KinGAidra config (gear icon), enable one model for Chat.
-5. Right-click a function and run `Explain using AI`.
-6. Open History and confirm the conversation was saved for the current program.
+2. Open Ghidra and add the ZIP downloaded in step 1 using the `Add extension` button in the upper-right corner of `File -> Install Extensions`.
+3. Enable `KinGAidra` in `File -> Install Extensions`, then restart Ghidra.
+4. If you are using Ghidra 12.1 or later, enable `Jython`.
+5. In `Window -> Script Manager`, open a chat script (for example `kingaidra_chat.py`) and set required values such as `URL`, `MODEL`, and `API_KEY`, then save the script.
+6. In KinGAidra config (gear icon), enable one model for Chat.
+7. Right-click a function and run `Explain using AI`.
+8. Open History and confirm the conversation was saved for the current program.
 
 ## Use Cases
 
