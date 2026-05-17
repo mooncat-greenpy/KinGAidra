@@ -23,6 +23,34 @@ KINGAIDRA_MCP_NAME = "ghidra_mcp"
 KINGAIDRA_MCP_TRANSPORT = "http"
 
 from langchain_openai import ChatOpenAI
+
+# Error: Ghidra 12.1 + Windows
+#  File "C:\Users\aigo\AppData\Roaming\ghidra\ghidra_12.1_PUBLIC\venv\Lib\site-packages\langchain_core\language_models\chat_models.py", line 1810, in agenerate
+#    RunInfo(run_id=run_manager.run_id) for run_manager in run_managers
+#    ~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^
+#  File "C:\Users\aigo\AppData\Roaming\ghidra\ghidra_12.1_PUBLIC\venv\Lib\site-packages\pydantic\main.py", line 263, in __init__
+#    validated_self = self.__pydantic_validator__.validate_python(data, self_instance=self)
+#pydantic_core._pydantic_core.ValidationError: 1 validation error for RunInfo
+#run_id
+#  UUID input should be a string, bytes or UUID object [type=uuid_type, input_value=UUID('019e3195-c904-71f0-9d98-674adcd586db'), input_type=UUID]
+#    For further information visit https://errors.pydantic.dev/2.13/v/uuid_type
+#During task with name 'model' and id '0587e114-6bea-1d02-7a4b-07e93bad874e'
+try:
+    import os
+    import langchain_core.language_models.chat_models as _lc_chat_models
+
+    if os.name == "nt":
+        _original_run_info = _lc_chat_models.RunInfo
+
+        def _kingaidra_run_info_compat(*args, **kwargs):
+            if "run_id" in kwargs:
+                kwargs["run_id"] = str(kwargs["run_id"])
+            return _original_run_info(*args, **kwargs)
+
+        _lc_chat_models.RunInfo = _kingaidra_run_info_compat
+except Exception as e:
+    print("[KinGAidra] Warning: failed to patch LangChain RunInfo:", e)
+
 from langchain_mcp_adapters.client import MultiServerMCPClient
 
 def _init_llm():
