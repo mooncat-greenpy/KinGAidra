@@ -76,6 +76,7 @@ Additional operations:
 - `Rename` checkbox enables/disables renaming application.
 - `Retype` checkbox enables/disables datatype replacement for params/locals.
 - `Resolve datatype` checkbox enables/disables struct/datatype resolution pass.
+- `Skip user check` checkbox skips the user confirmation dialog for generated struct definitions during datatype resolution.
 
 ## DecomView Tab
 
@@ -91,7 +92,8 @@ Additional operations:
 
 - `Regenerate` reruns decompile-view generation for the selected/current function.
 - `Copy` copies the currently shown generated C text to clipboard.
-- `Saved Function` entries include update timestamp and load most recent saved output per function.
+- `Saved Version` entries include update timestamp; multiple saved versions for the same function can be browsed, and the latest version for the current function is selected by default.
+- `Delete` removes the selected saved version and deletes its matching History conversation.
 - `Search` supports interactive match highlighting with `Prev`/`Next` and Enter key navigation.
 - Caret/selection symbol highlighting is supported in the code view.
 - Double-clicking an identifier in generated code jumps to matching function entry.

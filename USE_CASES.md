@@ -103,7 +103,7 @@ Chat output with markdown and tool traces:
 ## Use Case 3: Make Decompiled Output Easier to Read and Apply It to Ghidra
 
 Goal:
-Generate DecomView output, improve it with instructions, and apply refactor changes to Ghidra decompile state.
+Generate DecomView output, improve it with instructions, send it to Refactor, and apply reviewed changes to Ghidra decompile state.
 
 ### Steps
 
@@ -129,8 +129,9 @@ Improved DecomView after additional instruction:
 ![Use Case 3: Improved DecomView after additional instruction](./img/usecase3_decomview_improved_result2.png)
 
 
-5. Apply changes with `Refactor Ghidra`.
-6. Check updated function names/types in the standard Ghidra decompiler.
+5. Click `Send to Refactor` to open the `Refactor` tab with candidates generated from the current DecomView output.
+6. Review the `(DecomView)` candidate tab and apply selected changes.
+7. Check updated function names/types in the standard Ghidra decompiler.
 
 Refactor result in Ghidra decompiler:
 
