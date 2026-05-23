@@ -152,6 +152,30 @@ Custom workflows are better when you want a stable named action that also runs i
 
 Yes. Use `kingaidra_headless_chat.java --action "<workflow name>"` to execute the same named action/workflow without GUI.
 
+### Can we migrate conversation history from versions before 12.1?
+
+If you want to keep conversation history created before KinGAidra 12.1, add the following entries to Ghidra's serial filter before opening the program.
+
+Path: `Ghidra/Framework/FileSystem/data/kingaidra.serial.filter`
+
+```text
+kingaidra.ai.model.ModelByScript;
+kingaidra.ai.model.ModelType;
+java.lang.Enum;
+kingaidra.ai.convo.Message;
+java.util.ArrayList;
+java.lang.Object;
+java.util.LinkedHashMap;
+java.util.HashMap;
+java.util.Map$Entry;
+java.lang.Long;
+java.lang.Integer;
+java.lang.Number;
+```
+
+Run Ghidra after adding the filter. Migrated history will be saved in the new format. New history does not require this setting.
+
+
 ## License
 
 KinGAidra is licensed under the Apache License 2.0.
