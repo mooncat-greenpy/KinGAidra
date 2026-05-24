@@ -7,19 +7,14 @@
 
 import java.io.BufferedWriter;
 import java.io.FileWriter;
-import java.util.HashSet;
 import java.util.List;
 import java.util.LinkedList;
 import java.util.Map;
-import java.util.Set;
 
 import ghidra.app.script.GhidraScript;
 import ghidra.framework.plugintool.PluginTool;
-import ghidra.program.model.address.Address;
-import ghidra.program.model.listing.Data;
 import ghidra.program.model.listing.Function;
 import ghidra.program.model.listing.FunctionIterator;
-import ghidra.program.model.symbol.Reference;
 import ghidra.util.exception.CancelledException;
 import ghidra.util.task.TaskMonitor;
 
@@ -340,30 +335,16 @@ public class kingaidra_auto extends GhidraScript {
     private List<Function> list_analyze_function_from_str() throws Exception {
         List<Function> analyze_func_list = new LinkedList();
 
-        Data[] str_data_list = keyfunc_guess.guess_string_data();
-        for (Data data : str_data_list) {
-            Address addr = data.getAddress();
-            String value = data.getDefaultValueRepresentation();
-            List<Reference> refs = ghidra.get_ref_to(addr);
-            if (refs == null || refs.size() == 0) {
+        Map.Entry[] keyfunc_list = keyfunc_guess.guess_by_chat_histories(currentAddress);
+        for (Map.Entry item : keyfunc_list) {
+            Function func = (Function)item.getKey();
+            if (func == null) {
                 continue;
             }
-            Set<Address> from_addr_set = new HashSet<>();
-            for (Reference ref : refs) {
-                from_addr_set.add(ref.getFromAddress());
-            }
-            for (Address from_addr : from_addr_set) {
-                Function func = ghidra.get_func(from_addr);
-                if (func == null) {
-                    continue;
-                }
 
-                add_called_func_recur(analyze_func_list, func, called_recursive_count);
-
-                add_func(analyze_func_list, func);
-
-                add_calling_func_recur(analyze_func_list, func, calling_recursive_count);
-            }
+            add_called_func_recur(analyze_func_list, func, called_recursive_count);
+            add_func(analyze_func_list, func);
+            add_calling_func_recur(analyze_func_list, func, calling_recursive_count);
         }
         return analyze_func_list;
     }
