@@ -77,7 +77,7 @@ Workflow JSON configuration screen:
 ![Use Case 2: Workflow JSON configuration for dynamic API loading](./img/usecase2_workflow_json.png)
 
 3. Run popup action:
-`Custom Workflow using AI -> Dynamic API Loading Hunt`
+`Custom Workflow using AI -> Dynamic API Resolution Analyst`
 
 Popup action selection:
 
@@ -85,7 +85,7 @@ Popup action selection:
 
 4. In Chat view:
    - Enable `markdown` to read the report and click addresses.
-   - Enable `tool` to display tool call/result messages.
+   - Enable `detail` to display tool call/result messages.
 
 Chat output with markdown and tool traces:
 

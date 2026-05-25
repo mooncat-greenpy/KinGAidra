@@ -124,7 +124,7 @@ Behavior:
 analyzeHeadless <PROJECT_DIR> <PROJECT_NAME> \
   -process <PROGRAM_NAME> \
   -postScript kingaidra_headless_chat.java \
-  --action "Triage: Behavior + IOC" \
+  --action "Quick malware behavior overview with AI" \
   --output workflow_result.md
 ```
 
@@ -134,7 +134,8 @@ More examples: [USAGE.md](./USAGE.md)
 
 ### Where is conversation history stored?
 
-KinGAidra stores conversation records in the current program database table `KinGAidra_Conversation`.
+KinGAidra stores conversation records in the current program database table `KinGAidra_Conversation_V2`.
+Older records may be migrated from `KinGAidra_Conversation` when they are opened.
 When you switch program files, you see that program's own history.
 
 ### Can we define our own team workflow?

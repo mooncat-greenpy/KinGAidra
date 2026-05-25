@@ -1,18 +1,22 @@
 # Changelog
 
-## [Unreleased]
+## [2.1.0]
 
 ### Added
 
+- Added a `get_binary_info` tool to retrieve program name, language, architecture, compiler, image base, and Ghidra version.
 - Added Planner mode in Chat to turn the current request into workflow JSON and execute the first planned workflow.
 - Added support for multiple timestamped saved decompile versions per function.
 - Added a Refactor option to skip the manual datatype confirmation dialog when resolving datatypes.
 - Added a DecomView `Delete` button to remove the selected saved version and its matching History conversation.
+- Added support for Ghidra 12.1.
 
 ### Changed
 
 - Changed DecomView refactoring so `Send to Refactor` creates reviewable candidates in the Refactor tab instead of applying directly from DecomView.
 - Changed asm/decomp retrieval to fall back to raw address-based output when no defined function is found.
+- Unified function/address-based Ghidra tools so asm/decompile/caller/callee queries accept a function name or hex address via a common `function` argument.
+- Store conversation history in a JSON/string-based V2 table instead of Java serialized objects.
 
 ### Fixed
 

@@ -438,7 +438,9 @@ public class kingaidra_headless_chat extends GhidraScript {
                     throw new IllegalArgumentException("Unknown action: " + opts.action);
                 }
                 Conversation convo = new Conversation(ConversationType.USER_CHAT, model);
-                result = ai.guess(TaskType.CHAT, convo, opts.question, addr);
+                TaskType type = TaskType.CHAT;
+                convo.add_system_msg(conf.get_system_prompt(type, model.get_name()));
+                result = ai.guess(type, convo, opts.question, addr);
             }
 
             if (result == null) {

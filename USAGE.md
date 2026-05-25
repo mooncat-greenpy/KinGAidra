@@ -151,7 +151,7 @@ Additional operations:
 Editable options are exposed in Tool options:
 
 - `KinGAidra -> Prompts -> Default System Prompt`
-- `KinGAidra -> Prompts -> Chat/Decom/DecomView/KeyFunc/...` task prompts
+- `KinGAidra -> Prompts -> Chat/Refactor/DecomView/KeyFunc/...` task prompts
 - `KinGAidra -> Prompts -> Chat -> Plan`
 - `KinGAidra -> Prompts -> Chat -> Workflows -> Action Workflows (JSON)`
 - Workflow popup actions are refreshed when workflow JSON changes.

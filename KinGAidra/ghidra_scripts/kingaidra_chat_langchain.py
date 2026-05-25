@@ -16,7 +16,6 @@ API_KEY = os.environ.get("OPENAI_API_KEY", "")
 POST_MSG = ""  # e.g. "Please respond in XXXX."
 TOOLS_FLAG = True
 OPTIONAL_HEADERS = {}
-OPTIONAL_DATA = {}
 HEADLESS_MCP_URL_ENV = "KINGAIDRA_MCP_URL"
 
 KINGAIDRA_MCP_NAME = "ghidra_mcp"

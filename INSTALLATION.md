@@ -33,7 +33,7 @@ Open any program and confirm:
 - KinGAidra provider is visible.
 - Tabs are available:
   - `Chat`
-  - `Decom`
+  - `Refactor`
   - `DecomView`
   - `KeyFunc`
 - Right-click actions such as `Explain using AI` appear in Code Browser.
@@ -65,7 +65,7 @@ For `kingaidra_chat_langchain.py` and `kingaidra_chat_codex.py`, install Python 
 First, run `pyghidraRun` once to confirm which Python executable is used:
 
 ```bash
-<GHIDRA_INSTALL_DIR>/support/pyghidraRun beef
+<GHIDRA_INSTALL_DIR>/support/pyghidraRun
 ```
 
 Check this line in the output:
@@ -136,7 +136,6 @@ If you need a non-default endpoint/model, configure these fields in `kingaidra_c
 - `POST_MSG`: Text appended to selected KinGAidra tasks before sending.
 - `TOOLS_FLAG`: Enables/disables MCP tool loading for the agent.
 - `OPTIONAL_HEADERS`: Extra headers applied to HTTP clients used by the model.
-- `OPTIONAL_DATA`: Reserved optional field in this script header (not applied in current `v1.1.0` logic).
 
 Add external MCP servers in `kingaidra_chat_langchain.py`:
 
@@ -252,7 +251,7 @@ Prompt options path:
 You can customize:
 
 - Default system prompt
-- Task-specific user prompts (`Chat`, `Decom`, `DecomView`, `KeyFunc`, etc.)
+- Task-specific user prompts (`Chat`, `Refactor`, `DecomView`, `KeyFunc`, etc.)
 
 ### Custom Workflow JSON
 
