@@ -4,6 +4,7 @@ import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.util.ArrayList;
+import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
 import java.util.LinkedList;
 import java.util.List;
@@ -88,23 +89,18 @@ public class ConversationContainerGhidraProgram implements ConversationContainer
 
     private static final int RECORD_UUID_INDEX_V2 = 0;
     private static final int RECORD_TYPE_INDEX_V2 = 1;
-    private static final int RECORD_MODEL_CLASS_INDEX_V2 = 2;
-    private static final int RECORD_MODEL_NAME_INDEX_V2 = 3;
-    private static final int RECORD_MODEL_SCRIPT_INDEX_V2 = 4;
-    private static final int RECORD_MODEL_TYPE_INDEX_V2 = 5;
-    private static final int RECORD_CREATED_INDEX_V2 = 6;
-    private static final int RECORD_UPDATED_INDEX_V2 = 7;
-    private static final int RECORD_MESSAGES_JSON_INDEX_V2 = 8;
-    private static final int RECORD_ADDRESSES_JSON_INDEX_V2 = 9;
+    private static final int RECORD_MODEL_JSON_INDEX_V2 = 2;
+    private static final int RECORD_CREATED_INDEX_V2 = 3;
+    private static final int RECORD_UPDATED_INDEX_V2 = 4;
+    private static final int RECORD_MESSAGES_JSON_INDEX_V2 = 5;
+    private static final int RECORD_ADDRESSES_JSON_INDEX_V2 = 6;
     private static final Schema CONVERSATION_SCHEMA_V2 =
             new Schema(2, StringField.INSTANCE, "Conversation",
-                    new Field[] {StringField.INSTANCE, StringField.INSTANCE, StringField.INSTANCE,
+                    new Field[] {StringField.INSTANCE, StringField.INSTANCE,
                             StringField.INSTANCE, StringField.INSTANCE, StringField.INSTANCE,
-                            StringField.INSTANCE, StringField.INSTANCE, StringField.INSTANCE,
-                            StringField.INSTANCE,},
-                    new String[] {"UUID", "Type", "ModelClass", "ModelName", "ModelScript",
-                            "ModelType", "Created", "Updated", "MessagesJson",
-                            "AddressesJson"});
+                            StringField.INSTANCE, StringField.INSTANCE,},
+                    new String[] {"UUID", "Type", "ModelJson", "Created", "Updated",
+                            "MessagesJson", "AddressesJson"});
 
     private boolean has_schema(Table table, Schema schema) {
         return table != null && table.getSchema().equals(schema);
@@ -273,7 +269,7 @@ public class ConversationContainerGhidraProgram implements ConversationContainer
             String uuid = record.getString(RECORD_UUID_INDEX_V2);
             ConversationType type =
                     ConversationType.valueOf(record.getString(RECORD_TYPE_INDEX_V2));
-            Model model = get_model_v2(record);
+            Model model = model_from_json(record.getString(RECORD_MODEL_JSON_INDEX_V2));
             if (model == null) {
                 return null;
             }
@@ -287,11 +283,16 @@ public class ConversationContainerGhidraProgram implements ConversationContainer
         return null;
     }
 
-    private Model get_model_v2(DBRecord record) {
-        String model_class = record.getString(RECORD_MODEL_CLASS_INDEX_V2);
-        String name = record.getString(RECORD_MODEL_NAME_INDEX_V2);
-        String script = record.getString(RECORD_MODEL_SCRIPT_INDEX_V2);
-        String type_value = record.getString(RECORD_MODEL_TYPE_INDEX_V2);
+    private Model model_from_json(String model_json) throws IOException {
+        if (model_json == null || model_json.isEmpty()) {
+            return null;
+        }
+        Map<String, Object> model_map =
+                JSON_MAPPER.readValue(model_json, new TypeReference<Map<String, Object>>() {});
+        String model_class = (String) model_map.get("class");
+        String name = (String) model_map.get("name");
+        String script = (String) model_map.get("script");
+        String type_value = (String) model_map.get("type");
         if ("ModelByScript".equals(model_class)) {
             ModelByScript model = new ModelByScript(name, script, true);
             if (type_value != null) {
@@ -303,6 +304,15 @@ public class ConversationContainerGhidraProgram implements ConversationContainer
             return model;
         }
         return null;
+    }
+
+    private String model_to_json(Model model) throws IOException {
+        Map<String, Object> model_map = new LinkedHashMap<>();
+        model_map.put("class", "ModelByScript");
+        model_map.put("name", model.get_name());
+        model_map.put("script", model.get_script());
+        model_map.put("type", model.get_type().toString());
+        return JSON_MAPPER.writeValueAsString(model_map);
     }
 
     private Message[] messages_from_json(String messages_json) throws IOException {
@@ -360,20 +370,12 @@ public class ConversationContainerGhidraProgram implements ConversationContainer
                 CONVERSATION_SCHEMA_V2.createRecord(new StringField(convo.get_uuid().toString()));
         record.setString(RECORD_UUID_INDEX_V2, convo.get_uuid().toString());
         record.setString(RECORD_TYPE_INDEX_V2, convo.get_type().toString());
-        set_model_v2(record, convo.get_model());
+        record.setString(RECORD_MODEL_JSON_INDEX_V2, model_to_json(convo.get_model()));
         record.setString(RECORD_CREATED_INDEX_V2, convo.get_created());
         record.setString(RECORD_UPDATED_INDEX_V2, convo.get_updated());
         record.setString(RECORD_MESSAGES_JSON_INDEX_V2, messages_to_json(convo));
         record.setString(RECORD_ADDRESSES_JSON_INDEX_V2, addresses_to_json(convo.get_addrs()));
         return record;
-    }
-
-    private void set_model_v2(DBRecord record, Model model) {
-        String model_class = model instanceof ModelByScript ? "ModelByScript" : model.getClass().getName();
-        record.setString(RECORD_MODEL_CLASS_INDEX_V2, model_class);
-        record.setString(RECORD_MODEL_NAME_INDEX_V2, ((ModelByScript) model).get_name());
-        record.setString(RECORD_MODEL_SCRIPT_INDEX_V2, ((ModelByScript) model).get_script());
-        record.setString(RECORD_MODEL_TYPE_INDEX_V2, model.get_type().toString());
     }
 
     private String messages_to_json(Conversation convo) throws IOException {
