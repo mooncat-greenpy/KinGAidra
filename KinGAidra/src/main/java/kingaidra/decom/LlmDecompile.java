@@ -19,6 +19,9 @@ import kingaidra.ghidra.PromptConf;
 public class LlmDecompile {
     private static final int CONTEXT_FUNC_LIMIT = 8;
     private static final int REF_LIMIT = 24;
+    private static final Pattern CODE_BLOCK_PATTERN = Pattern.compile(
+            "```(?:c|cpp|cc|c\\+\\+)?\\s*(.*?)\\s*```",
+            Pattern.CASE_INSENSITIVE | Pattern.DOTALL);
 
     private Ai ai;
     private GhidraUtil ghidra;
@@ -168,5 +171,19 @@ public class LlmDecompile {
 
     private boolean is_blank(String text) {
         return text == null || text.trim().isEmpty();
+    }
+
+    public static String normalize_code(String code) {
+        if (code == null) {
+            return null;
+        }
+        Matcher matcher = CODE_BLOCK_PATTERN.matcher(code);
+        if (matcher.find()) {
+            String group = matcher.group(1);
+            if (group != null) {
+                return group.trim();
+            }
+        }
+        return code.trim();
     }
 }

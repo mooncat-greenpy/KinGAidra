@@ -109,6 +109,7 @@ public class PromptConf {
     private static final String DEFAULT_WORKFLOWS_JSON = "[]";
 
     private final Map<TaskType, String> default_user_prompts = new EnumMap<>(TaskType.class);
+    private final Map<TaskType, String> user_prompt_overrides = new EnumMap<>(TaskType.class);
 
     private String system_prompt;
     private String workflows_json;
@@ -323,6 +324,10 @@ public class PromptConf {
             Options group_options = get_group_options(prompt_root, get_user_prompt_group_path(task));
             return group_options.getString(get_user_prompt_option_name(task), default_prompt);
         }
+        String override = user_prompt_overrides.get(task);
+        if (override != null) {
+            return override;
+        }
         return default_prompt;
     }
 
@@ -331,7 +336,9 @@ public class PromptConf {
             Options prompt_root = options.getOptions(PROMPT_OPTIONS_ROOT);
             Options group_options = get_group_options(prompt_root, get_user_prompt_group_path(task));
             group_options.setString(get_user_prompt_option_name(task), user_prompt);
+            return;
         }
+        user_prompt_overrides.put(task, user_prompt);
     }
 
     public String get_default_workflows_json_base() {

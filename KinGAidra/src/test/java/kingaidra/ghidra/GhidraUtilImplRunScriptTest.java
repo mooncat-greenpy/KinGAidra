@@ -28,22 +28,32 @@ class GhidraUtilImplRunScriptTest {
         GhidraUtilImpl ghidra = new GhidraUtilImpl(program, TaskMonitor.DUMMY);
 
         GhidraScriptUtil.acquireBundleHostReference();
-        String scriptName = "run_script_test.py";
-        String inlineScriptName = "run_script_inline_test.py";
+        String scriptName = "RunScriptTest.java";
+        String inlineScriptName = "RunScriptInlineTest.java";
         Path scriptDir = new File(GhidraScriptUtil.USER_SCRIPTS_DIR).toPath();
         Files.createDirectories(scriptDir);
         Path scriptPath = scriptDir.resolve(scriptName);
 
         String script = ""
-                + "#@category Test\n"
-                + "import sys\n"
-                + "sys.stdout.write(\"OUT:hello\\n\")\n"
-                + "sys.stderr.write(\"ERR:boom\\n\")\n";
+                + "//@category Test\n"
+                + "import ghidra.app.script.GhidraScript;\n"
+                + "public class RunScriptTest extends GhidraScript {\n"
+                + "    @Override\n"
+                + "    public void run() throws Exception {\n"
+                + "        println(\"OUT:hello\");\n"
+                + "        printerr(\"ERR:boom\");\n"
+                + "    }\n"
+                + "}\n";
         String inlineScript = ""
-                + "#@category Test\n"
-                + "import sys\n"
-                + "sys.stdout.write(\"OUT:inline\\n\")\n"
-                + "sys.stderr.write(\"ERR:inline\\n\")\n";
+                + "//@category Test\n"
+                + "import ghidra.app.script.GhidraScript;\n"
+                + "public class RunScriptInlineTest extends GhidraScript {\n"
+                + "    @Override\n"
+                + "    public void run() throws Exception {\n"
+                + "        println(\"OUT:inline\");\n"
+                + "        printerr(\"ERR:inline\");\n"
+                + "    }\n"
+                + "}\n";
 
         boolean existed = Files.exists(scriptPath);
         byte[] original = existed ? Files.readAllBytes(scriptPath) : null;

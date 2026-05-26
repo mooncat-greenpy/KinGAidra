@@ -239,6 +239,9 @@ public class Ai {
                     calltree = ghidra.get_func_call_tree();
                 } else {
                     Function match_func = ghidra.get_func(func_addr);
+                    if (match_func == null) {
+                        return null;
+                    }
                     if (depth != null) {
                         calltree = ghidra.get_func_call_tree(match_func, depth.intValue());
                     } else {

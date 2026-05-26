@@ -71,10 +71,6 @@ public class LlmDecompileGUI extends JPanel {
     private static final int MAX_SYMBOL_TEXT_LENGTH = 256;
     private static final DateTimeFormatter DATE_FORMAT =
             DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
-    private static final Pattern CODE_BLOCK_PATTERN = Pattern.compile(
-            "```(?:c|cpp|cc|c\\+\\+)?\\s*(.*?)\\s*```",
-            Pattern.CASE_INSENSITIVE | Pattern.DOTALL);
-
     private Program program;
     private PluginTool plugin;
     private MainProvider provider;
@@ -737,14 +733,7 @@ public class LlmDecompileGUI extends JPanel {
     }
 
     public static String normalize_code(String code) {
-        Matcher matcher = CODE_BLOCK_PATTERN.matcher(code);
-        if (matcher.find()) {
-            String group = matcher.group(1);
-            if (group != null) {
-                return group.trim();
-            }
-        }
-        return code.trim();
+        return LlmDecompile.normalize_code(code);
     }
 
     private void merge_saved_results(List<SavedResult> saved_results) {

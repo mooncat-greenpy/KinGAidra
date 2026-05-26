@@ -985,7 +985,7 @@ public class GhidraUtilImpl implements GhidraUtil {
         Path run_path = null;
         try {
             Files.createDirectories(script_dir);
-            run_path = createRandomScriptPath(script_dir, script_file);
+            run_path = createScriptPath(script_dir, script_file);
             Files.write(run_path, script_code.getBytes(StandardCharsets.UTF_8));
             return run_script(run_path.getFileName().toString(), args);
         } catch (Exception e) {
@@ -1083,5 +1083,16 @@ public class GhidraUtilImpl implements GhidraUtil {
             }
         }
         return Files.createTempFile(parent_dir, "kai_", suffix);
+    }
+
+    private static Path createScriptPath(Path parent_dir, String base_name) throws IOException {
+        if (base_name != null && base_name.endsWith(".java")) {
+            Path candidate = parent_dir.resolve(base_name).normalize();
+            if (Files.exists(candidate)) {
+                throw new IOException("Inline Java script already exists: " + base_name);
+            }
+            return candidate;
+        }
+        return createRandomScriptPath(parent_dir, base_name);
     }
 }
