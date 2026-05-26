@@ -53,6 +53,7 @@ dependencies {
 
 test {
 	useJUnitPlatform()
+	jvmArgs '-Djdk.serialFilterFactory=ghidra.framework.remote.GhidraSerialFilterFactory'
 }
 
 task replaceJavaCode(type: Copy) {
