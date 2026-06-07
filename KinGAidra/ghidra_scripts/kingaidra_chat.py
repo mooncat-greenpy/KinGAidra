@@ -13,6 +13,7 @@ MODEL = "gpt-5.2" # e.g. "gpt-oss:120b"
 API_KEY = os.environ.get("OPENAI_API_KEY", "")
 POST_MSG = "" # e.g. "Please respond in XXXX."
 TOOLS_FLAG = True
+LOG_FLAG = False
 OPTIONAL_HEADERS = {}
 OPTIONAL_DATA = {}
 FIXED_SCRIPT_FILE = "kingaidra_mcp_tool_tmp_script.py"
@@ -39,6 +40,10 @@ import kingaidra
 from ghidra.framework import Application
 import ghidra.util.task.TaskMonitor as TaskMonitor
 import ghidra.program.model.data.DataTypeWriter as DataTypeWriter
+
+def log(s):
+    if LOG_FLAG:
+        print(s[:200])
 
 def _hexdump(base_addr, buf):
     if buf is None:
@@ -790,6 +795,8 @@ def main():
         type == kingaidra.ai.task.TaskType.ADD_COMMENTS.toString()):
         data["messages"][-1]["content"] += "\n\n" + POST_MSG
 
+    log("LLM Request: %s" % data["messages"][-1])
+
     fail_count = 0
     while True:
         headers = {
@@ -822,6 +829,7 @@ def main():
         data["messages"].append(response["choices"][0]["message"])
         if response["choices"][0]["finish_reason"] == "tool_calls":
             for i in response["choices"][0]["message"]["tool_calls"]:
+                log("Tool Call: %s" % i)
                 try:
                     content = handle_tool_call(i, ghidra)
                 except (Exception, JException) as e:
@@ -838,9 +846,12 @@ def main():
 
     result = response["choices"][0]["message"]["content"]
 
+    log("LLM Response: %s" % response["choices"][0]["message"])
+
     state.addEnvironmentVar("RESPONSE", result)
     state.addEnvironmentVar("MESSAGES_OUT", json.dumps(data["messages"]))
 
 if __name__ == "__main__":
     TOOLS_FLAG = globals().get("TOOLS_FLAG", True)
+    LOG_FLAG = globals().get("LOG_FLAG", True)
     main()

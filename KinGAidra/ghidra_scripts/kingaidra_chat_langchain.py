@@ -15,6 +15,7 @@ MODEL = "gpt-5.2"
 API_KEY = os.environ.get("OPENAI_API_KEY", "")
 POST_MSG = ""  # e.g. "Please respond in XXXX."
 TOOLS_FLAG = True
+LOG_FLAG = False
 OPTIONAL_HEADERS = {}
 HEADLESS_MCP_URL_ENV = "KINGAIDRA_MCP_URL"
 
@@ -102,6 +103,10 @@ from langchain.agents import create_agent
 from langchain_core.messages import convert_to_messages, messages_to_dict as _messages_to_dict
 from langgraph.checkpoint.memory import InMemorySaver
 
+def log(s):
+    if LOG_FLAG:
+        print(s[:200])
+
 MCP_TOOL_LOCK = asyncio.Lock()
 
 def _wrap_tool_ignore_error(tool):
@@ -114,6 +119,7 @@ def _wrap_tool_ignore_error(tool):
     async def safe_coroutine(*args, **kwargs):
         async with MCP_TOOL_LOCK:
             try:
+                log("Tool Call: %s %s" % (getattr(tool, "name", None), kwargs))
                 return await original_coroutine(*args, **kwargs)
             except Exception:
                 if response_format == "content_and_artifact":
@@ -231,6 +237,7 @@ def main():
         type == kingaidra.ai.task.TaskType.ADD_COMMENTS.toString()):
         data["messages"][-1]["content"] += "\n\n" + POST_MSG
 
+    log("LLM Request: %s" % data["messages"][-1])
 
     tools = []
     if TOOLS_FLAG:
@@ -255,8 +262,11 @@ def main():
 
     result = resp["messages"][-1].content
 
+    log("LLM Response: %s" % resp["messages"][-1])
+
     state.addEnvironmentVar("RESPONSE", result)
     state.addEnvironmentVar("MESSAGES_OUT", json.dumps(messages_to_dict(resp["messages"]), default=str))
 
 if __name__ == "__main__":
+    LOG_FLAG = globals().get("LOG_FLAG", True)
     main()
