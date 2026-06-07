@@ -102,7 +102,7 @@ public class LogGUI extends JPanel {
             descriptor.addVisibleColumn(new ConversationAddressTableColumn());
             descriptor.addVisibleColumn(new ConversationTypeTableColumn());
             descriptor.addVisibleColumn(new ConversationModelNameTableColumn());
-            descriptor.addVisibleColumn(new ConversationCreatedTableColumn());
+            descriptor.addVisibleColumn(new ConversationCreatedTableColumn(), 1, true);
             descriptor.addVisibleColumn(new ConversationDataTableColumn());
 
             return descriptor;
