@@ -961,12 +961,26 @@ public class ChatGUI extends JPanel {
                     return;
                 }
                 try {
-                    cur_convo = get();
+                    Conversation result = get();
+                    if (result == null && base_convo != null) {
+                        cur_convo = container.get_convo(base_convo.get_uuid());
+                    } else {
+                        cur_convo = result;
+                    }
                     build_panel();
-                    info_label.setText(cur_convo == null ? "Failed!" : "Finished!");
+                    if (result == null) {
+                        input_area.setText(input_text);
+                    }
+                    info_label.setText(result == null ? "Failed!" : "Finished!");
                 } catch (Exception e) {
-                    cur_convo = null;
-                     info_label.setText("Failed!");
+                    if (base_convo != null) {
+                        cur_convo = container.get_convo(base_convo.get_uuid());
+                    } else {
+                        cur_convo = null;
+                    }
+                    build_panel();
+                    input_area.setText(input_text);
+                    info_label.setText("Failed!");
                 } finally {
                     restart_btn.setEnabled(true);
                     submit_btn.setEnabled(true);
@@ -1024,11 +1038,25 @@ public class ChatGUI extends JPanel {
                 }
 
                 try {
-                    cur_convo = get();
+                    Conversation result = get();
+                    if (result == null && base_convo != null) {
+                        cur_convo = container.get_convo(base_convo.get_uuid());
+                    } else {
+                        cur_convo = result;
+                    }
                     build_panel();
-                    info_label.setText(cur_convo == null ? "Failed!" : "Finished!");
+                    if (result == null) {
+                        input_area.setText(input_text);
+                    }
+                    info_label.setText(result == null ? "Failed!" : "Finished!");
                 } catch (Exception e) {
-                    cur_convo = null;
+                    if (base_convo != null) {
+                        cur_convo = container.get_convo(base_convo.get_uuid());
+                    } else {
+                        cur_convo = null;
+                    }
+                    build_panel();
+                    input_area.setText(input_text);
                     info_label.setText("Failed!");
                 } finally {
                     restart_btn.setEnabled(true);
