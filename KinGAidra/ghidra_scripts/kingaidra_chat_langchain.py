@@ -15,6 +15,7 @@ MODEL = "gpt-5.2"
 API_KEY = os.environ.get("OPENAI_API_KEY", "")
 POST_MSG = ""  # e.g. "Please respond in XXXX."
 TOOLS_FLAG = True
+TOOL_BLACKLIST = []  # e.g. ["ghidra_mcp_run_script"]
 LOG_FLAG = False
 OPTIONAL_HEADERS = {}
 HEADLESS_MCP_URL_ENV = "KINGAIDRA_MCP_URL"
@@ -83,7 +84,7 @@ def _init_mcp_tools(kingaidra_mcp_url):
         connections,
         tool_name_prefix=True,
     )
-    return asyncio.run(client.get_tools())
+    return [tool for tool in asyncio.run(client.get_tools()) if not _is_tool_blacklisted(tool.name)]
 
 
 # Only modify the code above this comment.
@@ -127,6 +128,14 @@ def _wrap_tool_ignore_error(tool):
                 return "Unknown error"
 
     return tool.model_copy(update={"coroutine": safe_coroutine})
+
+def _is_tool_blacklisted(name):
+    if not name:
+        return False
+    for blocked in TOOL_BLACKLIST:
+        if blocked == name:
+            return True
+    return False
 
 def _create_agent(model, tools, thread_id):
     checkpointer = InMemorySaver()

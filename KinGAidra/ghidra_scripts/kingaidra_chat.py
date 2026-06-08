@@ -13,6 +13,7 @@ MODEL = "gpt-5.2" # e.g. "gpt-oss:120b"
 API_KEY = os.environ.get("OPENAI_API_KEY", "")
 POST_MSG = "" # e.g. "Please respond in XXXX."
 TOOLS_FLAG = True
+TOOL_BLACKLIST = []  # e.g. ["ghidra_mcp_run_script"]
 LOG_FLAG = False
 OPTIONAL_HEADERS = {}
 OPTIONAL_DATA = {}
@@ -117,7 +118,16 @@ def _get_target_funcs(ghidra, target):
         return [], "Invalid address"
     return [func], None
 
+def _is_tool_blacklisted(name):
+    if not name:
+        return False
+    for blocked in TOOL_BLACKLIST:
+        if blocked == name:
+            return True
+    return False
+
 KINGAIDRA_MCP_NAME = "ghidra_mcp"
+
 def add_tools(data):
     data["tools"] = [
         {
@@ -491,6 +501,7 @@ def add_tools(data):
         func = tool.get("function")
         name = func.get("name")
         func["name"] = KINGAIDRA_MCP_NAME + "_" + name
+    data["tools"] = [tool for tool in data["tools"] if not _is_tool_blacklisted(tool.get("function", {}).get("name"))]
 
 def handle_tool_call(tool_call, ghidra):
     func_name = tool_call["function"]["name"][len(KINGAIDRA_MCP_NAME + "_"):]
