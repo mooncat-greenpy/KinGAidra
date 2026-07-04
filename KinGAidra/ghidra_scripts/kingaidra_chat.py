@@ -88,6 +88,20 @@ def _datatype_to_c_text(dt):
     dt_writer.write(dt_list, TaskMonitor.DUMMY)
     return writer.toString().strip()
 
+def _get_external_entry_points(prog):
+    entries = []
+    symtab = prog.getSymbolTable()
+    func_manager = prog.getFunctionManager()
+    itr = symtab.getExternalEntryPointIterator()
+    while itr.hasNext():
+        addr = itr.next()
+        entry = {"address": "%#x" % (addr.getOffset())}
+        func = func_manager.getFunctionAt(addr)
+        if func is not None:
+            entry["function_name"] = func.getName()
+        entries.append(entry)
+    return entries
+
 def _find_datatype(ghidra, datatype_name):
     dt_list = LinkedList()
     ghidra.find_datatypes(datatype_name, dt_list)
@@ -517,6 +531,7 @@ def handle_tool_call(tool_call, ghidra):
             "arch": str(prog.getLanguage().getProcessor()),
             "compiler": str(prog.getCompilerSpec().getCompilerSpecID()),
             "image_base": prog.getImageBase().toString(),
+            "entry_addresses": _get_external_entry_points(prog),
             "ghidra_version": Application.getApplicationVersion(),
         }, indent=2, ensure_ascii=False)
     elif func_name == "get_function_address_by_name":

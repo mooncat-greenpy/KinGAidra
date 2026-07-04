@@ -128,6 +128,20 @@ def _datatype_to_c_text(dt) -> str:
     dt_writer.write(dt_list, TaskMonitor.DUMMY)
     return writer.toString().strip()
 
+def _get_external_entry_points(prog):
+    entries = []
+    symtab = prog.getSymbolTable()
+    func_manager = prog.getFunctionManager()
+    itr = symtab.getExternalEntryPointIterator()
+    while itr.hasNext():
+        addr = itr.next()
+        entry = {"address": "%#x" % (addr.getOffset())}
+        func = func_manager.getFunctionAt(addr)
+        if func is not None:
+            entry["function_name"] = func.getName()
+        entries.append(entry)
+    return entries
+
 def _find_datatype(ghidra, datatype_name: str):
     dt_list = LinkedList()
     ghidra.find_datatypes(datatype_name, dt_list)
@@ -208,6 +222,7 @@ def build_server(binary_id: str) -> FastMCP:
             "arch": str(prog.getLanguage().getProcessor()),
             "compiler": str(prog.getCompilerSpec().getCompilerSpecID()),
             "image_base": prog.getImageBase().toString(),
+            "entry_addresses": _get_external_entry_points(prog),
             "ghidra_version": Application.getApplicationVersion(),
         }
 

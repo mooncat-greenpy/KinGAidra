@@ -4,7 +4,7 @@
 
 ### Added
 
-- Added a `get_binary_info` tool to retrieve program name, language, architecture, compiler, image base, and Ghidra version.
+- Added a `get_binary_info` tool to retrieve program name, language, architecture, compiler, image base, external entry points, and Ghidra version.
 - Added Planner mode in Chat to turn the current request into workflow JSON and execute the first planned workflow.
 - Added support for multiple timestamped saved decompile versions per function.
 - Added a Refactor option to skip the manual datatype confirmation dialog when resolving datatypes.
