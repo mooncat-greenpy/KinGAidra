@@ -11,7 +11,7 @@
 import os
 
 URL = "https://api.openai.com/v1"
-MODEL = "gpt-5.2"
+MODEL = "gpt-5.5"
 API_KEY = os.environ.get("OPENAI_API_KEY", "")
 POST_MSG = ""  # e.g. "Please respond in XXXX."
 TOOLS_FLAG = True

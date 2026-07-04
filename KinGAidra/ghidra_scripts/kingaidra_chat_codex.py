@@ -10,7 +10,7 @@
 
 import os
 
-MODEL = "gpt-5.3-codex"
+MODEL = "gpt-5.5"
 MODEL_REASONING_EFFORT = "xhigh" # e.g. "high", "medium"
 POST_MSG = ""
 TOOLS_FLAG = True
@@ -174,6 +174,8 @@ def _mcp_config_args():
     return [
         "-c",
         "mcp_servers.%s.url=\"%s\"" % (KINGAIDRA_MCP_NAME, mcp_url),
+        "-c",
+        "mcp_servers.%s.default_tools_approval_mode=\"approve\"" % (KINGAIDRA_MCP_NAME),
     ]
 
 

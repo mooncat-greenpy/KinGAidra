@@ -9,7 +9,7 @@
 import os
 
 URL = "https://api.openai.com/v1/chat/completions" # e.g. "http://localhost:8000/v1/chat/completions"
-MODEL = "gpt-5.2" # e.g. "gpt-oss:120b"
+MODEL = "gpt-5.5" # e.g. "gpt-oss:120b"
 API_KEY = os.environ.get("OPENAI_API_KEY", "")
 POST_MSG = "" # e.g. "Please respond in XXXX."
 TOOLS_FLAG = True

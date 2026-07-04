@@ -227,7 +227,7 @@ public class kingaidra_headless_chat extends GhidraScript {
 
     private Model resolve_model(Opts opts) {
         if (opts.model_script != null && !opts.model_script.isEmpty()) {
-            return new ModelByScript("HeadlessChat", opts.model_script, true);
+            return new ModelByScript(opts.model_script, opts.model_script, true);
         }
 
         ModelConfSingle model_conf = new ModelConfSingle("Chat and others", new ChatModelPreferences("chat"));
