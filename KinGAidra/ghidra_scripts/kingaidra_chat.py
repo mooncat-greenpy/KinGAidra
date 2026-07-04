@@ -102,6 +102,26 @@ def _get_external_entry_points(prog):
         entries.append(entry)
     return entries
 
+def _get_memory_block_permissions(block):
+    return {
+        "read": bool(block.isRead()),
+        "write": bool(block.isWrite()),
+        "execute": bool(block.isExecute()),
+        "initialized": bool(block.isInitialized()),
+    }
+
+def _get_memory_map(prog):
+    blocks = []
+    for block in prog.getMemory().getBlocks():
+        blocks.append({
+            "name": block.getName(),
+            "start": "%#x" % (block.getStart().getOffset()),
+            "end": "%#x" % (block.getEnd().getOffset()),
+            "size": block.getSize(),
+            "permissions": _get_memory_block_permissions(block),
+        })
+    return blocks
+
 def _find_datatype(ghidra, datatype_name):
     dt_list = LinkedList()
     ghidra.find_datatypes(datatype_name, dt_list)
@@ -162,6 +182,19 @@ def add_tools(data):
             "function": {
                 "name": "get_binary_info",
                 "description": "Retrieve basic information about the current binary.",
+                "parameters": {
+                    "type": "object",
+                    "properties": {},
+                    "additionalProperties": False
+                },
+                "strict": True
+            }
+        },
+        {
+            "type": "function",
+            "function": {
+                "name": "get_memory_map",
+                "description": "Retrieve memory blocks with start address, end address, size, and read/write/execute permissions.",
                 "parameters": {
                     "type": "object",
                     "properties": {},
@@ -533,6 +566,10 @@ def handle_tool_call(tool_call, ghidra):
             "image_base": prog.getImageBase().toString(),
             "entry_addresses": _get_external_entry_points(prog),
             "ghidra_version": Application.getApplicationVersion(),
+        }, indent=2, ensure_ascii=False)
+    elif func_name == "get_memory_map":
+        content = json.dumps({
+            "memory_blocks": _get_memory_map(currentProgram),
         }, indent=2, ensure_ascii=False)
     elif func_name == "get_function_address_by_name":
         same_name_funcs = ghidra.get_func(args["name"])

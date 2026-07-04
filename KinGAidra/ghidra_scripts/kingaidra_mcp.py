@@ -142,6 +142,26 @@ def _get_external_entry_points(prog):
         entries.append(entry)
     return entries
 
+def _get_memory_block_permissions(block):
+    return {
+        "read": bool(block.isRead()),
+        "write": bool(block.isWrite()),
+        "execute": bool(block.isExecute()),
+        "initialized": bool(block.isInitialized()),
+    }
+
+def _get_memory_map(prog):
+    blocks = []
+    for block in prog.getMemory().getBlocks():
+        blocks.append({
+            "name": block.getName(),
+            "start": "%#x" % (block.getStart().getOffset()),
+            "end": "%#x" % (block.getEnd().getOffset()),
+            "size": block.getSize(),
+            "permissions": _get_memory_block_permissions(block),
+        })
+    return blocks
+
 def _find_datatype(ghidra, datatype_name: str):
     dt_list = LinkedList()
     ghidra.find_datatypes(datatype_name, dt_list)
@@ -225,6 +245,14 @@ def build_server(binary_id: str) -> FastMCP:
             "entry_addresses": _get_external_entry_points(prog),
             "ghidra_version": Application.getApplicationVersion(),
         }
+
+    @mcp.tool()
+    def get_memory_map() -> dict:
+        """Retrieve memory blocks with start address, end address, size, and read/write/execute permissions."""
+        try:
+            return {"memory_blocks": _get_memory_map(currentProgram)}
+        except Exception:
+            return {"memory_blocks": [], "error": "Failed"}
 
     @mcp.tool()
     def get_function_address_by_name(name: str) -> str:

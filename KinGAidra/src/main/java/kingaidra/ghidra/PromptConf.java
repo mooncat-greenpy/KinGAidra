@@ -92,7 +92,7 @@ public class PromptConf {
             "\n" +
             "Common MCP tool usage patterns (illustrative, not exhaustive):\n" +
             "- Orientation / discovery:\n" +
-            "  - get_function_list, get_strings, get_imports, get_exports, search_* \n" +
+            "  - get_memory_map, get_function_list, get_strings, get_imports, get_exports, search_* \n" +
             "- Code inspection:\n" +
             "  - get_decompiled_code*, get_asm*, get_bytes\n" +
             "- Relationship analysis:\n" +
