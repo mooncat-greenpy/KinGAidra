@@ -10,6 +10,7 @@ import anyio
 import uvicorn
 import socket
 
+from functools import partial, wraps
 from typing import Annotated, List
 from pydantic import BaseModel, Field
 
@@ -31,6 +32,14 @@ DEFAULT_HOST = "127.0.0.1"
 FIXED_SCRIPT_FILE = "kingaidra_mcp_tool_tmp_script.py"
 
 FunctionTargetArg = Annotated[str, Field(description="Function name or hex address (e.g. 0x401000)")]
+
+
+def run_in_thread(func):
+    @wraps(func)
+    async def wrapper(*args, **kwargs):
+        return await anyio.to_thread.run_sync(partial(func, *args, **kwargs))
+
+    return wrapper
 
 
 class RefactorParam(BaseModel):
@@ -224,6 +233,7 @@ def build_server(binary_id: str) -> FastMCP:
     )
 
     @mcp.tool()
+    @run_in_thread
     def get_current_address() -> str:
         """Returns the user's selected address."""
         try:
@@ -233,6 +243,7 @@ def build_server(binary_id: str) -> FastMCP:
             return "Failed"
 
     @mcp.tool()
+    @run_in_thread
     def get_binary_info() -> dict:
         """Retrieve basic information about the current binary."""
         prog = currentProgram
@@ -247,6 +258,7 @@ def build_server(binary_id: str) -> FastMCP:
         }
 
     @mcp.tool()
+    @run_in_thread
     def get_memory_map() -> dict:
         """Retrieve memory blocks with start address, end address, size, and read/write/execute permissions."""
         try:
@@ -255,6 +267,7 @@ def build_server(binary_id: str) -> FastMCP:
             return {"memory_blocks": [], "error": "Failed"}
 
     @mcp.tool()
+    @run_in_thread
     def get_function_address_by_name(name: str) -> str:
         """Retrieve the address of a function by its name. If multiple functions have the same name, return a list of addresses."""
         try:
@@ -269,6 +282,7 @@ def build_server(binary_id: str) -> FastMCP:
             return "Failed"
 
     @mcp.tool()
+    @run_in_thread
     def get_function_list() -> str:
         """Retrieve functions in the binary and return their names and addresses."""
         try:
@@ -282,6 +296,7 @@ def build_server(binary_id: str) -> FastMCP:
             return "Failed"
 
     @mcp.tool()
+    @run_in_thread
     def get_callee_function(function: FunctionTargetArg) -> str:
         """Retrieve functions that are called by the specified function and return their names and addresses. `function` accepts a function name or hex address."""
         try:
@@ -301,6 +316,7 @@ def build_server(binary_id: str) -> FastMCP:
             return "Failed"
 
     @mcp.tool()
+    @run_in_thread
     def get_caller_function(function: FunctionTargetArg) -> str:
         """Retrieve functions that call the specified function and return their names and addresses. `function` accepts a function name or hex address."""
         try:
@@ -320,6 +336,7 @@ def build_server(binary_id: str) -> FastMCP:
             return "Failed"
 
     @mcp.tool()
+    @run_in_thread
     def get_asm(function: FunctionTargetArg) -> str:
         """Retrieve the assembly code of the specified function. `function` accepts a function name or hex address (e.g. 0x401000)."""
         try:
@@ -348,6 +365,7 @@ def build_server(binary_id: str) -> FastMCP:
             return "Failed"
 
     @mcp.tool()
+    @run_in_thread
     def get_decompiled_code(function: FunctionTargetArg) -> str:
         """Retrieve the decompiled code of the specified function in C language. `function` accepts a function name or hex address (e.g. 0x401000)."""
         try:
@@ -430,6 +448,7 @@ def build_server(binary_id: str) -> FastMCP:
             return "Failed"
 
     @mcp.tool()
+    @run_in_thread
     def get_strings() -> str:
         """Retrieve strings in the binary and their addresses."""
         try:
@@ -444,6 +463,7 @@ def build_server(binary_id: str) -> FastMCP:
             return "Failed"
 
     @mcp.tool()
+    @run_in_thread
     def get_imports() -> str:
         """Retrieve imported functions and their addresses."""
         try:
@@ -465,6 +485,7 @@ def build_server(binary_id: str) -> FastMCP:
             return "Failed"
 
     @mcp.tool()
+    @run_in_thread
     def get_exports() -> str:
         """Retrieve exported functions and their addresses."""
         try:
@@ -485,6 +506,7 @@ def build_server(binary_id: str) -> FastMCP:
             return "Failed"
 
     @mcp.tool()
+    @run_in_thread
     def get_ref_to(address: str) -> str:
         """Returns a list of reference source addresses to the specified address. Address is hex string."""
         try:
@@ -509,6 +531,7 @@ def build_server(binary_id: str) -> FastMCP:
 
 
     @mcp.tool()
+    @run_in_thread
     def get_bytes(address: str, size: int = 1) -> str:
         """Get bytes at address and return a hexdump. Address is hex string, size is byte count."""
         try:
@@ -528,6 +551,7 @@ def build_server(binary_id: str) -> FastMCP:
             return "Failed"
 
     @mcp.tool()
+    @run_in_thread
     def search_asm(query: str) -> list:
         """Search assembly by substring match with whitespace ignored. Use ';' or newline to separate multiple instructions (sequence search)."""
         if not query:
@@ -545,6 +569,7 @@ def build_server(binary_id: str) -> FastMCP:
             return ["Failed"]
 
     @mcp.tool()
+    @run_in_thread
     def search_decom(query: str) -> list:
         """Search decompiled C code by substring match with whitespace ignored. Searches all functions and can be slow."""
         if not query:
@@ -580,6 +605,7 @@ def build_server(binary_id: str) -> FastMCP:
             return {"success": False, "stdout": "", "stderr": msg if msg else "Failed"}
 
     @mcp.tool()
+    @run_in_thread
     def search_bytes(bytes_hex: str) -> list:
         """Search for byte sequence in memory and return addresses. bytes_hex is hex string, spaces allowed (e.g. '55 8B EC')."""
         if not _is_valid_hex_string(bytes_hex):
@@ -591,6 +617,7 @@ def build_server(binary_id: str) -> FastMCP:
             return ["Failed"]
 
     @mcp.tool()
+    @run_in_thread
     def get_datatype(datatype_name: str) -> str:
         """Retrieve a datatype definition in C syntax by datatype name."""
         dt = _find_datatype(ghidra, datatype_name)
@@ -687,6 +714,7 @@ async def serve(name: str, host: str, port: int, sock=None) -> None:
 def main() -> None:
     host, port, sock = _resolve_host_port(getScriptArgs())
     _publish_mcp_state(host, port)
+    end(True)
     anyio.run(serve, currentProgram.getName(), host, port, sock)
 
 

@@ -13,14 +13,21 @@ import codecs
 import re
 
 from jarray import zeros
+from java.io import StringWriter
 
+from ghidra.app.cmd.disassemble import DisassembleCommand
+from ghidra.app.cmd.function import CreateFunctionCmd
 from ghidra.app.decompiler import DecompInterface
 from ghidra.framework import Application
+from ghidra.program.model.data import DataTypeWriter
+from ghidra.program.model.mem import MemoryAccessException
 
 from kingaidra.ghidra import GhidraUtilImpl
 
 
 SEGMENT_HEXDUMP_CHUNK = 0x10000
+DECOMPILE_TIMEOUT_SEC = 10 * 60
+ASM_TIMEOUT_SEC = 10 * 60
 
 
 def _make_dir(p):
@@ -37,6 +44,170 @@ def write_text(path, s):
 def write_json(path, obj):
     write_text(path, json.dumps(obj, indent=2, ensure_ascii=False) + "\n")
 
+def is_executable_address(prog, addr):
+    if addr is None:
+        return False
+    return prog.getMemory().getExecuteSet().contains(addr)
+
+def read_pointer_target(prog, addr):
+    mem = prog.getMemory()
+    if addr is None or not mem.contains(addr):
+        return None
+
+    space = addr.getAddressSpace()
+    pointer_size = space.getPointerSize()
+
+    try:
+        if pointer_size == 8:
+            value = mem.getLong(addr)
+            if value < 0:
+                value += 0x10000000000000000
+        elif pointer_size == 4:
+            value = mem.getInt(addr)
+            if value < 0:
+                value += 0x100000000
+        else:
+            return None
+        return space.getAddress("%x" % value)
+    except MemoryAccessException:
+        return None
+    except Exception:
+        return None
+
+def find_function_candidates(prog, function_entry):
+    fm = prog.getFunctionManager()
+    listing = prog.getListing()
+    refman = prog.getReferenceManager()
+
+    func = fm.getFunctionAt(function_entry)
+    if func is None:
+        return []
+
+    candidates = []
+    seen = set()
+
+    def add_candidate(addr, source_addr, kind):
+        if addr is None:
+            return None
+        if not is_executable_address(prog, addr):
+            return None
+        if fm.getFunctionContaining(addr) is not None:
+            return None
+
+        key = addr.toString()
+        if key in seen:
+            return None
+
+        seen.add(key)
+        candidates.append({
+            "address": addr,
+            "source": source_addr,
+            "kind": kind,
+        })
+        return addr
+
+    instructions = listing.getInstructions(func.getBody(), True)
+
+    while instructions.hasNext():
+        inst = instructions.next()
+        inst_addr = inst.getAddress()
+        refs = refman.getReferencesFrom(inst_addr)
+
+        for ref in refs:
+            ref_addr = ref.getToAddress()
+            if ref_addr is None:
+                continue
+
+            add_candidate(
+                ref_addr,
+                inst_addr,
+                "instruction_reference"
+            )
+
+            if listing.getInstructionContaining(ref_addr) is not None:
+                continue
+
+            data_refs = refman.getReferencesFrom(ref_addr)
+            for data_ref in data_refs:
+                add_candidate(
+                    data_ref.getToAddress(),
+                    inst_addr,
+                    "data_reference"
+                )
+
+            i = 0
+            valid_pointer_count = 0
+            while i < 10 or valid_pointer_count * 2 >= i:
+                pointer_target = read_pointer_target(prog, ref_addr.add(ref_addr.getPointerSize() * i))
+                if add_candidate(
+                    pointer_target,
+                    inst_addr,
+                    "raw_pointer"
+                ):
+                    valid_pointer_count += 1
+                i += 1
+
+    return candidates
+
+def create_function_at(prog, entry, monitor):
+    fm = prog.getFunctionManager()
+    listing = prog.getListing()
+
+    if entry is None:
+        return None
+    if not is_executable_address(prog, entry):
+        return None
+    if fm.getFunctionContaining(entry) is not None:
+        return None
+
+    containing_inst = listing.getInstructionContaining(entry)
+    if containing_inst is not None:
+        if containing_inst.getAddress() != entry:
+            return None
+
+    if listing.getInstructionAt(entry) is None:
+        cmd = DisassembleCommand(
+            entry,
+            prog.getMemory().getExecuteSet(),
+            True
+        )
+        if not cmd.applyTo(prog, monitor):
+            print(
+                "Disassembly failed at %s: %s"
+                % (entry, cmd.getStatusMsg())
+            )
+            return None
+
+    cmd = CreateFunctionCmd(entry)
+    if not cmd.applyTo(prog, monitor):
+        print(
+            "Function creation failed at %s: %s"
+            % (entry, cmd.getStatusMsg())
+        )
+        return None
+
+    func = cmd.getFunction()
+    if func is None:
+        func = fm.getFunctionAt(entry)
+
+    return func
+
+def add_unknown_function(prog, func):
+    faddr = func.getEntryPoint()
+    candidates = find_function_candidates(prog, faddr)
+    for i in candidates:
+        new_func = create_function_at(prog, i["address"], monitor)
+        if new_func:
+            add_unknown_function(prog, new_func)
+
+def analyze_unknown_functions(prog, monitor):
+    itr = prog.getListing().getFunctions(True)
+    while itr.hasNext() and not monitor.isCancelled():
+        f = itr.next()
+        try:
+            add_unknown_function(prog, f)
+        except Exception as e:
+            print("Unknown function analyze failed at %s: %s" % (_addr_to_str(f.getEntryPoint()), e))
 
 def collect_imports_json(prog):
     fm = prog.getFunctionManager()
@@ -89,6 +260,24 @@ def make_decompiler(prog):
     dif = DecompInterface()
     dif.openProgram(prog)
     return dif
+
+
+def get_function_asm_with_timeout(prog, func, timeout_sec):
+    listing = prog.getListing()
+    instructions = listing.getInstructions(func.getBody(), True)
+    deadline = time.time() + timeout_sec
+    lines = []
+
+    while instructions.hasNext():
+        if time.time() >= deadline:
+            return None, True
+
+        inst = instructions.next()
+        lines.append("%s\t%s" % (_addr_to_str(inst.getAddress()), str(inst)))
+
+    if lines:
+        return "\n".join(lines) + "\n", False
+    return "", False
 
 
 def _sanitize_file_name(name):
@@ -190,8 +379,11 @@ def run():
     if not args:
         raise RuntimeError("Usage: kingaidra_export.py <OUT_DIR>")
     has_hexdump = False
+    has_datatype = False
     if "--hexdump" in args:
         has_hexdump = True
+    if "--datatype" in args:
+        has_datatype = True
 
     out_root = os.path.abspath(args[0])
 
@@ -209,7 +401,9 @@ def run():
     if has_hexdump:
         _make_dir(hexdump_dir)
 
-    kai = GhidraUtilImpl(prog, monitor);
+    kai = GhidraUtilImpl(prog, monitor)
+
+    analyze_unknown_functions(prog, monitor)
 
     # manifest
     manifest = {
@@ -234,7 +428,7 @@ def run():
 
     # strings
     str_ref = {}
-    str_list = kai.get_strings();
+    str_list = kai.get_strings()
     str_lines = []
     for data in str_list:
         str_lines.append("%s\t%s" % (_addr_to_str(data.getAddress()), data.getDefaultValueRepresentation()))
@@ -258,6 +452,13 @@ def run():
     exports = collect_exports_json(prog)
     write_json(os.path.join(base_dir, "exports.json"), {"exports": exports})
 
+    # datatypes
+    if has_datatype:
+        dtm = prog.getDataTypeManager()
+        writer = StringWriter()
+        DataTypeWriter(dtm, writer).write(dtm, monitor)
+        write_text(os.path.join(base_dir, "datatypes.h"), writer.toString())
+
     # call graph edges (for xrefs.csv)
     edges = set()
 
@@ -269,21 +470,30 @@ def run():
         try:
             f = itr.next()
             faddr = f.getEntryPoint()
+            print("%s: %s" % (faddr, f.getName()))
 
-            # decompile
-            decomp_func = dif.decompileFunction(f, 0, monitor).getDecompiledFunction()
-            if decomp_func:
-                decomp = decomp_func.getC()
+            decomp_result = dif.decompileFunction(f, DECOMPILE_TIMEOUT_SEC, monitor)
+            if decomp_result.isTimedOut():
+                decomp = "/* decompilation skipped: timeout after %d seconds */\n" % DECOMPILE_TIMEOUT_SEC
+                print(decomp)
             else:
-                decomp = "/* decompilation failed or empty */\n"
+                decomp_func = decomp_result.getDecompiledFunction()
+                if decomp_func:
+                    decomp = decomp_func.getC()
+                else:
+                    decomp = "/* decompilation failed or empty */\n"
 
             c_path = os.path.join(decomp_dir, "func_%s.c" % faddr.toString())
             write_text(c_path, decomp)
 
-            # asm
             asm_path = os.path.join(asm_dir, "func_%s.asm" % faddr.toString())
-            asm = kai.get_asm(faddr, True)
-            write_text(asm_path, asm if asm else "/* assembly dump failed or empty */\n")
+            asm, asm_timed_out = get_function_asm_with_timeout(prog, f, ASM_TIMEOUT_SEC)
+            if asm_timed_out:
+                asm = "/* assembly dump skipped: timeout after %d seconds */\n" % ASM_TIMEOUT_SEC
+                print(asm)
+            elif not asm:
+                asm = "/* assembly dump failed or empty */\n"
+            write_text(asm_path, asm)
 
             callers = kai.get_caller(f)
             callees = kai.get_callee(f)

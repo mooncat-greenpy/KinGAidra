@@ -880,6 +880,10 @@ def main():
         except urllib2.HTTPError as e:
             printerr(str(e))
             printerr(e.read())
+            if fail_count < 10:
+                printerr("retry")
+                fail_count += 1
+                continue
             exit()
 
         if fail_count < 10 and "choices" not in response:

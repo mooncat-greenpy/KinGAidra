@@ -13,6 +13,8 @@ public class McpServerController {
     private static final String MCP_SCRIPT_NAME = "kingaidra_mcp.py";
     private static final String MCP_URL_PATH = "/mcp";
     private static final long MCP_URL_POLL_INTERVAL_MS = 100L;
+    private static final String PYGHIDRA_MODULE_RESTORE_DISABLE =
+            "pyghidra.sys.modules.restore.disable";
 
     private final Object lock = new Object();
     private TaskMonitorAdapter monitor;
@@ -53,6 +55,8 @@ public class McpServerController {
     }
 
     public boolean start_server() {
+        System.setProperty(PYGHIDRA_MODULE_RESTORE_DISABLE, "true");
+
         Program run_program;
         TaskMonitorAdapter current_monitor;
         synchronized (lock) {
