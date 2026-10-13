@@ -1,11 +1,35 @@
 # Changelog
 
+## [2.2.0]
+
+### Added
+
+- Added a `get_memory_map` tool to retrieve memory block names, start/end addresses, sizes, and read/write/execute/initialized permissions.
+- Added a configurable `TOOL_BLACKLIST` option to exclude specific MCP tools from Chat execution.
+- Added optional diagnostic logging (`LOG_FLAG`) for LLM requests, responses, and tool calls.
+- Added automatic discovery and creation of previously undefined functions during binary export by analyzing instruction references, data references, and raw pointers.
+- Added a `--datatype` option to export Ghidra datatype definitions to `datatypes.h`.
+
+### Changed
+
+- Updated the default model to `gpt-6.1-sol` for OpenAI, LangChain, and Codex Chat backends.
+- Changed MCP tool execution to run in worker threads to prevent blocking the asynchronous server event loop.
+- Added 10-minute timeouts for decompilation and assembly extraction during binary export, with timeout indicators in the output files.
+- Changed Codex MCP tool configuration to use `default_tools_approval_mode="approve"`.
+- Changed MCP server startup to disable PyGhidra module restoration and complete script execution before entering the server loop.
+- Changed headless Chat model identification to use the specified model script name instead of a fixed `HeadlessChat` label.
+- Updated the History table's default sorting configuration for conversation creation timestamps.
+
+### Fixed
+
+- Fixed Chat failures causing the current conversation to be cleared and the user's input text to be lost.
+- Fixed transient HTTP request failures in the direct OpenAI Chat backend by adding up to 10 retries.
+
 ## [2.1.0]
 
 ### Added
 
 - Added a `get_binary_info` tool to retrieve program name, language, architecture, compiler, image base, external entry points, and Ghidra version.
-- Added a `get_memory_map` MCP/Ghidra tool to list memory blocks with start/end addresses, sizes, and read/write/execute permissions.
 - Added Planner mode in Chat to turn the current request into workflow JSON and execute the first planned workflow.
 - Added support for multiple timestamped saved decompile versions per function.
 - Added a Refactor option to skip the manual datatype confirmation dialog when resolving datatypes.

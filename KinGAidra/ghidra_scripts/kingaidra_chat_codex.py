@@ -10,7 +10,7 @@
 
 import os
 
-MODEL = "gpt-5.5"
+MODEL = "gpt-6.1-sol"
 MODEL_REASONING_EFFORT = "xhigh" # e.g. "high", "medium"
 POST_MSG = ""
 TOOLS_FLAG = True
